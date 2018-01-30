@@ -10,7 +10,7 @@ print(term.clear())
 
 symbols = [u'+', u'\u00D7']
 fps = 7
-resolution = (10, 100)
+resolution = (term.height // 8, term.width - 20)
 
 class Graph:
     def __init__(self, resolution, color, n_lines=1, total=None):
@@ -48,7 +48,7 @@ class Graph:
                     y = int(x / self.total * self.resolution[0])
 
                     self.charmap[y, i + 1] = self.charmap[y, i + 1].replace(' ', '')
-                    self.charmap[y, i + 1] += symbol
+                    self.charmap[y, i + 1] = symbol
         return '\n'.join(''.join(x) for x in self.charmap.astype(str)[::-1])
 
 
@@ -93,17 +93,20 @@ if __name__ == '__main__':
 
                 try:
                     gpu_graph.step(gpustats()[0])
+                    print()
                     print(term.on_red('GPU Usage in MiB:'))
                     print(gpu_graph)
                 except Exception as e:
                     print(term.on_red(str(e)))
 
                 ram_graph.step(psutil.virtual_memory().used / 1024**2)
+                print()
                 print(term.on_blue('RAM Usage in MiB:'))
                 print(ram_graph)
 
                 try:
                     io_graph.step(iostats())
+                    print()
                     print(term.on_yellow('Read / Write Speed in KiB:'))
                     print(io_graph)
                 except Exception as e:
