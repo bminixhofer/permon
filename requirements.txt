@@ -1,0 +1,3 @@
+blessings==1.6.1
+numpy==1.14.0
+psutil==5.4.1

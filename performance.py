@@ -1,8 +1,7 @@
+#!/usr/bin/env python
 import psutil
 import numpy as np
 import time
-from colorama import Fore, Style, Back
-import math
 import subprocess
 import blessings
 import sys
@@ -16,7 +15,7 @@ resolution = (10, 100)
 class Graph:
     def __init__(self, resolution, color, n_lines=1, total=None):
         self.resolution = resolution
-        self.color = [color] if type(color) is str else color
+        self.color = color
         self.total = total
         self.adaptive_total = total is None
         self.hist = np.ones((resolution[1], n_lines)) * -1
@@ -35,19 +34,21 @@ class Graph:
         self.hist = np.roll(self.hist, -1, axis=0)
         self.hist[-1] = list(value) if type(value) is tuple else [value]
         if self.adaptive_total:
-            self.total = self.hist.max()
-            self.charmap[:, 0] = np.linspace(0, self.total, resolution[0] + 1).astype(int)
-            self._padCharmap()
+            if int(self.hist.max() / (self.total or 1) * 2) > self.resolution[0]:
+                self.total = self.hist.max() * 2
+                self.charmap[:, 0] = np.linspace(0, self.total, resolution[0] + 1).astype(int)
+                self._padCharmap()
 
     def __str__(self):
         self.charmap[:, 1:].fill(' ')
         for i, values in enumerate(self.hist):
             for j, x in enumerate(values):
-                if(x != -1):
-                    symbol = self.color[j] + symbols[j] + Style.RESET_ALL
+                if x != -1:
+                    symbol = self.color[j](symbols[j])
                     y = int(x / self.total * self.resolution[0])
 
-                    self.charmap[y, i + 1] = symbol
+                    self.charmap[y, i + 1] = self.charmap[y, i + 1].replace(' ', '')
+                    self.charmap[y, i + 1] += symbol
         return '\n'.join(''.join(x) for x in self.charmap.astype(str)[::-1])
 
 
@@ -74,38 +75,40 @@ try:
 except Exception as e:
     total_gpu = None
 
+
 if __name__ == '__main__':
     try:
-        cpu_graph = Graph(resolution, Fore.GREEN, total=100)
-        gpu_graph = Graph(resolution, Fore.RED, total=total_gpu)
-        ram_graph = Graph(resolution, Fore.BLUE, total=total_ram)
-        io_graph = Graph(resolution, [Fore.YELLOW, Fore.CYAN], n_lines=2)
+        cpu_graph = Graph(resolution, [term.green], total=100)
+        gpu_graph = Graph(resolution, [term.red], total=total_gpu)
+        ram_graph = Graph(resolution, [term.blue], total=total_ram)
+        io_graph  = Graph(resolution, [term.yellow, term.cyan], n_lines=2)
 
         with term.hidden_cursor():
             while True:
                 print(term.move(0, 1))
 
                 cpu_graph.step(psutil.cpu_percent())
-                print(f'{Back.GREEN}CPU Usage in Percent:{Style.RESET_ALL}')
+                print(term.on_green('CPU Usage in Percent:'))
                 print(cpu_graph)
 
                 try:
                     gpu_graph.step(gpustats()[0])
-                    print(f'{Back.RED}GPU Usage in MiB:{Style.RESET_ALL}')
+                    print(term.on_red('GPU Usage in MiB:'))
                     print(gpu_graph)
                 except Exception as e:
-                    print(f'{Back.RED}{e}{Style.RESET_ALL}')
+                    print(term.on_red(str(e)))
 
                 ram_graph.step(psutil.virtual_memory().used / 1024**2)
-                print(f'{Back.BLUE}RAM Usage in MiB:{Style.RESET_ALL}')
+                print(term.on_blue('RAM Usage in MiB:'))
                 print(ram_graph)
 
                 try:
                     io_graph.step(iostats())
-                    print(f'{Back.YELLOW}Read / Write Speed in MiB:{Style.RESET_ALL}')
+                    print(term.on_yellow('Read / Write Speed in KiB:'))
                     print(io_graph)
                 except Exception as e:
-                    print(f'{Back.YELLOW}{e}{Style.RESET_ALL}')
+                    raise e
+                    # print(f'{Back.YELLOW}{e}{term.normal}')
 
                 time.sleep(1/fps)
     except KeyboardInterrupt:
