@@ -2,15 +2,16 @@
 import psutil
 import numpy as np
 import time
-import subprocess
+from subprocess import Popen, PIPE
 import blessings
 import sys
+import threading
 term = blessings.Terminal()
 print(term.clear())
 
-symbols = [u'+', u'\u00D7']
+symbols = [u'\u2501']
 fps = 7
-resolution = (term.height // 8, term.width - 20)
+resolution = ((term.height - 10) // 5, term.width - 20)
 
 class Graph:
     def __init__(self, resolution, color, n_lines=1, total=None):
@@ -34,8 +35,9 @@ class Graph:
         self.hist = np.roll(self.hist, -1, axis=0)
         self.hist[-1] = list(value) if type(value) is tuple else [value]
         if self.adaptive_total:
-            if int(self.hist.max() / (self.total or 1) * 2) > self.resolution[0]:
-                self.total = self.hist.max() * 2
+            if not self.total or self.hist.max() * 2 > self.total:
+                self.total = self.hist.max() * 2 if self.hist.max() * 2 > 10 else 10
+
                 self.charmap[:, 0] = np.linspace(0, self.total, resolution[0] + 1).astype(int)
                 self._padCharmap()
 
@@ -52,6 +54,18 @@ class Graph:
         return '\n'.join(''.join(x) for x in self.charmap.astype(str)[::-1])
 
 
+read_write = (0, 0)
+def worker():
+    global read_write
+    p = Popen('iostat -m 1 -g ALL -H'.split(), stdout=PIPE, stderr=PIPE)
+    for line in p.stdout:
+        line = line.decode('utf-8')
+        if line.strip().startswith('ALL'):
+            read_write = tuple(float(x.replace(',', '.')) for x in line.split()[2:4])
+
+t = threading.Thread(target=worker)
+t.start()
+
 def gpustats():
     try:
         out = subprocess.check_output(['nvidia-smi', '--display=MEMORY', '-q']).decode('utf-8').split('\n')[8:]
@@ -60,14 +74,6 @@ def gpustats():
     total = int(out[1].split()[2])
     used = int(out[2].split()[2])
     return used, total
-
-def iostats():
-    try:
-        out = subprocess.check_output(['iostat', '-g', 'ALL', '-H']).decode('utf-8').split('\n')[6]
-    except Exception as e:
-        raise Exception('iostat command not found.')
-    read, write = [float(x.replace(',', '.')) for x in out.split()[2:4]]
-    return read, write
 
 total_ram = psutil.virtual_memory().total / 1024**2
 try:
@@ -81,7 +87,8 @@ if __name__ == '__main__':
         cpu_graph = Graph(resolution, [term.green], total=100)
         gpu_graph = Graph(resolution, [term.red], total=total_gpu)
         ram_graph = Graph(resolution, [term.blue], total=total_ram)
-        io_graph  = Graph(resolution, [term.yellow, term.cyan], n_lines=2)
+        write_graph = Graph(resolution, [term.cyan])
+        read_graph = Graph(resolution, [term.yellow])
 
         with term.hidden_cursor():
             while True:
@@ -105,13 +112,22 @@ if __name__ == '__main__':
                 print(ram_graph)
 
                 try:
-                    io_graph.step(iostats())
+                    read_graph.step(read_write[0])
                     print()
-                    print(term.on_yellow('Read / Write Speed in KiB:'))
-                    print(io_graph)
+                    print(term.on_yellow('Read Speed in MiB per Second:'))
+                    print(read_graph)
                 except Exception as e:
                     raise e
-                    # print(f'{Back.YELLOW}{e}{term.normal}')
+                    print(term.on_yellow(str(e)))
+
+                try:
+                    write_graph.step(read_write[1])
+                    print()
+                    print(term.on_cyan('Write Speed in MiB per Second:'))
+                    print(write_graph)
+                except Exception as e:
+                    raise e
+                    print(term.on_cyan(str(e)))
 
                 time.sleep(1/fps)
     except KeyboardInterrupt:
