@@ -2,12 +2,12 @@
 import psutil
 import numpy as np
 import time
-from subprocess import Popen, PIPE
 import blessings
 import sys
 import threading
 term = blessings.Terminal()
 print(term.clear())
+from backend import get_cpu_percent, get_ram, get_vram, get_read, get_write, TOTAL_GPU, TOTAL_RAM
 
 symbols = [u'\u2501']
 fps = 7
@@ -53,40 +53,11 @@ class Graph:
                     self.charmap[y, i + 1] = symbol
         return '\n'.join(''.join(x) for x in self.charmap.astype(str)[::-1])
 
-
-read_write = (0, 0)
-def worker():
-    global read_write
-    p = Popen('iostat -m 1 -g ALL -H'.split(), stdout=PIPE, stderr=PIPE)
-    for line in p.stdout:
-        line = line.decode('utf-8')
-        if line.strip().startswith('ALL'):
-            read_write = tuple(float(x.replace(',', '.')) for x in line.split()[2:4])
-
-t = threading.Thread(target=worker)
-t.start()
-
-def gpustats():
-    try:
-        out = subprocess.check_output(['nvidia-smi', '--display=MEMORY', '-q']).decode('utf-8').split('\n')[8:]
-    except Exception as e:
-        raise Exception('nvidia-smi command not found.')
-    total = int(out[1].split()[2])
-    used = int(out[2].split()[2])
-    return used, total
-
-total_ram = psutil.virtual_memory().total / 1024**2
-try:
-    total_gpu = gpustats()[1]
-except Exception as e:
-    total_gpu = None
-
-
 if __name__ == '__main__':
     try:
         cpu_graph = Graph(resolution, [term.green], total=100)
-        gpu_graph = Graph(resolution, [term.red], total=total_gpu)
-        ram_graph = Graph(resolution, [term.blue], total=total_ram)
+        gpu_graph = Graph(resolution, [term.red], total=TOTAL_GPU)
+        ram_graph = Graph(resolution, [term.blue], total=TOTAL_RAM)
         write_graph = Graph(resolution, [term.cyan])
         read_graph = Graph(resolution, [term.yellow])
 
@@ -94,25 +65,25 @@ if __name__ == '__main__':
             while True:
                 print(term.move(0, 1))
 
-                cpu_graph.step(psutil.cpu_percent())
+                cpu_graph.step(get_cpu_percent())
                 print(term.on_green('CPU Usage in Percent:'))
                 print(cpu_graph)
 
                 try:
-                    gpu_graph.step(gpustats()[0])
+                    gpu_graph.step(get_vram())
                     print()
                     print(term.on_red('GPU Usage in MiB:'))
                     print(gpu_graph)
                 except Exception as e:
                     print(term.on_red(str(e)))
 
-                ram_graph.step(psutil.virtual_memory().used / 1024**2)
+                ram_graph.step(get_ram())
                 print()
                 print(term.on_blue('RAM Usage in MiB:'))
                 print(ram_graph)
 
                 try:
-                    read_graph.step(read_write[0])
+                    read_graph.step(get_read())
                     print()
                     print(term.on_yellow('Read Speed in MiB per Second:'))
                     print(read_graph)
@@ -121,7 +92,7 @@ if __name__ == '__main__':
                     print(term.on_yellow(str(e)))
 
                 try:
-                    write_graph.step(read_write[1])
+                    write_graph.step(get_write())
                     print()
                     print(term.on_cyan('Write Speed in MiB per Second:'))
                     print(write_graph)
