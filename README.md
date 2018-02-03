@@ -1,5 +1,5 @@
 # performance
-A command line tool to measure GPU, CPU, RAM and disk performance in one place.
+A tool to measure GPU, CPU, RAM and disk performance in one place.
 
 ## Getting started
 This project measures CPU, RAM, GPU and Disk I/O stats and displays a simple line chart.
