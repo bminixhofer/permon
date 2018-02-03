@@ -2,7 +2,8 @@
 A command line tool to measure GPU, CPU, RAM and disk performance in one place.
 
 ## Getting started
-This project measures CPU, RAM, GPU and Disk I/O stats and displays a simple line chart in the console.
+This project measures CPU, RAM, GPU and Disk I/O stats and displays a simple line chart.
+The chart can be displayed either in the console or in a simple GUI.
 
 ![performance in the CLI](https://user-images.githubusercontent.com/13353204/35585240-bb1f8356-05f7-11e8-93c3-6d9d188968f9.png)
 ### Installing
@@ -15,7 +16,8 @@ Alternatively, you can manually install the python packages in `requirements.txt
 
 ## Running the tool
 
-Once installed, run `./performance.py` in the terminal to use the tool.
+Once installed, run `./performance.py` in the terminal to use the GUI version of the tool.
+To use the terminal frontend, run `./performance.py -t` or `./performance.py --terminal`.
 
 ## License
 
