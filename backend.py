@@ -1,5 +1,6 @@
 import psutil
 import threading
+import subprocess
 from subprocess import Popen, PIPE
 
 def gpustats():
@@ -43,4 +44,4 @@ TOTAL_GPU = None
 try:
     TOTAL_GPU = gpustats()[1]
 except Exception as e:
-    'GPU unavailable.'
+    print('GPU unavailable.')
