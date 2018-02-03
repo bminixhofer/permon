@@ -11,7 +11,7 @@ from backend import get_cpu_percent, get_ram, get_vram, get_read, get_write, TOT
 
 symbols = [u'\u2501']
 fps = 7
-resolution = ((term.height - 10) // 5, term.width - 20)
+resolution = ((term.height - 10) // 6, term.width - 20)
 
 class Graph:
     def __init__(self, resolution, color, n_lines=1, total=None):
@@ -53,55 +53,54 @@ class Graph:
                     self.charmap[y, i + 1] = symbol
         return '\n'.join(''.join(x) for x in self.charmap.astype(str)[::-1])
 
-if __name__ == '__main__':
-    try:
-        cpu_graph = Graph(resolution, [term.green], total=100)
-        gpu_graph = Graph(resolution, [term.red], total=TOTAL_GPU)
-        ram_graph = Graph(resolution, [term.blue], total=TOTAL_RAM)
-        write_graph = Graph(resolution, [term.cyan])
-        read_graph = Graph(resolution, [term.yellow])
+try:
+    cpu_graph = Graph(resolution, [term.green], total=100)
+    gpu_graph = Graph(resolution, [term.red], total=TOTAL_GPU)
+    ram_graph = Graph(resolution, [term.blue], total=TOTAL_RAM)
+    write_graph = Graph(resolution, [term.cyan])
+    read_graph = Graph(resolution, [term.yellow])
 
-        with term.hidden_cursor():
-            while True:
-                print(term.move(0, 1))
+    with term.hidden_cursor():
+        while True:
+            print(term.move(0, 1))
 
-                cpu_graph.step(get_cpu_percent())
-                print(term.on_green('CPU Usage in Percent:'))
-                print(cpu_graph)
+            cpu_graph.step(get_cpu_percent())
+            print(term.on_green('CPU Usage in Percent:'))
+            print(cpu_graph)
 
-                try:
-                    gpu_graph.step(get_vram())
-                    print()
-                    print(term.on_red('GPU Usage in MiB:'))
-                    print(gpu_graph)
-                except Exception as e:
-                    print(term.on_red(str(e)))
-
-                ram_graph.step(get_ram())
+            try:
+                gpu_graph.step(get_vram())
                 print()
-                print(term.on_blue('RAM Usage in MiB:'))
-                print(ram_graph)
+                print(term.on_red('GPU Usage in MiB:'))
+                print(gpu_graph)
+            except Exception as e:
+                print(term.on_red(str(e)))
 
-                try:
-                    read_graph.step(get_read())
-                    print()
-                    print(term.on_yellow('Read Speed in MiB per Second:'))
-                    print(read_graph)
-                except Exception as e:
-                    raise e
-                    print(term.on_yellow(str(e)))
+            ram_graph.step(get_ram())
+            print()
+            print(term.on_blue('RAM Usage in MiB:'))
+            print(ram_graph)
 
-                try:
-                    write_graph.step(get_write())
-                    print()
-                    print(term.on_cyan('Write Speed in MiB per Second:'))
-                    print(write_graph)
-                except Exception as e:
-                    raise e
-                    print(term.on_cyan(str(e)))
+            try:
+                read_graph.step(get_read())
+                print()
+                print(term.on_yellow('Read Speed in MiB per Second:'))
+                print(read_graph)
+            except Exception as e:
+                raise e
+                print(term.on_yellow(str(e)))
 
-                time.sleep(1/fps)
-    except KeyboardInterrupt:
-        print('Stopping..')
-        print(term.clear())
-        sys.exit(0)
+            try:
+                write_graph.step(get_write())
+                print()
+                print(term.on_cyan('Write Speed in MiB per Second:'))
+                print(write_graph)
+            except Exception as e:
+                raise e
+                print(term.on_cyan(str(e)))
+
+            time.sleep(1/fps)
+except KeyboardInterrupt:
+    print('Stopping..')
+    print(term.clear())
+    sys.exit(0)
