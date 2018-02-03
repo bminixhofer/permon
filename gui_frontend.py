@@ -12,27 +12,15 @@ matplotlib.rcParams['toolbar'] = 'None'
 to_plot = [[get_cpu_percent], [get_ram], [get_vram], [get_read, get_write]]
 is_adaptive = [False, False, False, True]
 
-colors = ["#9b59b6", "#3498db", "#95a5a6", "#e74c3c", "#34495e", "#2ecc71"]
+colors = ["#6A4A3C", "#CC333F", "#EB6841", "#00A0B0", "#EDC951"]
 n = 500
 x = np.arange(n)
 n_metrics = sum(len(x) for x in to_plot)
 y = np.ones((n, n_metrics)) * -1
 
 fig, ax = plt.subplots(nrows=len(to_plot))
+fig.canvas.set_window_title('performance')
 plt.subplots_adjust(hspace=0.4)
-
-
-# CPU Graph
-ax[0].set_ylim([0, 100])
-ax[0].set_title('CPU Usage', loc='left')
-# RAM Graph
-ax[1].set_ylim([0, TOTAL_RAM])
-ax[1].set_title('RAM Usage', loc='left')
-# GPU Graph
-ax[2].set_ylim([0, TOTAL_GPU])
-ax[2].set_title('vRAM Usage', loc='left')
-# Read / Write Graph
-ax[3].set_title('Read / Write Speed', loc='left')
 
 lines = []
 for i, axis in enumerate(ax):
@@ -40,10 +28,23 @@ for i, axis in enumerate(ax):
     axis.set_xlim([0, n])
 
     axis_lines = []
-    for _ in range(len(to_plot[i])):
-        line = axis.plot(x, y[:, 0], color=colors[i])[0]
+    for j in range(len(to_plot[i])):
+        line = axis.plot(x, y[:, 0], color=colors[i + j])[0]
         axis_lines.append(line)
     lines.append(axis_lines)
+
+# CPU Graph
+ax[0].set_ylim([0, 100])
+ax[0].set_title('CPU Usage in Percent', loc='left')
+# RAM Graph
+ax[1].set_ylim([0, TOTAL_RAM])
+ax[1].set_title('RAM Usage in MiB', loc='left')
+# GPU Graph
+ax[2].set_ylim([0, TOTAL_GPU])
+ax[2].set_title('vRAM Usage in MiB', loc='left')
+# Read / Write Graph
+ax[3].set_title('Read and Write Speed in MiB / s', loc='left')
+ax[3].legend(['Read Speed', 'Write Speed'], fontsize='xx-small')
 
 def update(num, lines):
     global x, y, fig
@@ -62,8 +63,8 @@ def update(num, lines):
 
         if is_adaptive[n_line]:
             ax = lines[n_line][0].axes
-            if mx * 2 != ax.get_ylim()[1]:
-                ax.set_ylim([0, mx * 2])
+            if mx * 1.5 != ax.get_ylim()[1]:
+                ax.set_ylim([0, mx * 1.5])
 
     return [line for sublist in lines for line in sublist]
 
