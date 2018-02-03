@@ -13,7 +13,7 @@ to_plot = [[get_cpu_percent], [get_ram], [get_vram], [get_read, get_write]]
 is_adaptive = [False, False, False, True]
 
 colors = ["#9b59b6", "#3498db", "#95a5a6", "#e74c3c", "#34495e", "#2ecc71"]
-n = 300
+n = 500
 x = np.arange(n)
 n_metrics = sum(len(x) for x in to_plot)
 y = np.ones((n, n_metrics)) * -1
@@ -45,14 +45,12 @@ for i, axis in enumerate(ax):
         axis_lines.append(line)
     lines.append(axis_lines)
 
-
 def update(num, lines):
     global x, y, fig
 
     y = np.roll(y, -1, axis=0)
 
     index = 0
-    ticks = []
     for n_line, value_list in enumerate(num):
         mx = 0
         for i, val in enumerate(value_list):
@@ -64,9 +62,8 @@ def update(num, lines):
 
         if is_adaptive[n_line]:
             ax = lines[n_line][0].axes
-            if mx * 2 != ax.get_ylim[1]:
+            if mx * 2 != ax.get_ylim()[1]:
                 ax.set_ylim([0, mx * 2])
-                fig.canvas.draw()
 
     return [line for sublist in lines for line in sublist]
 
@@ -81,5 +78,5 @@ def generator(funcs):
         yield results
 
 
-ani = animation.FuncAnimation(fig, update, generator(to_plot), fargs=[lines], interval=100, repeat=False, blit=True)
+ani = animation.FuncAnimation(fig, update, generator(to_plot), fargs=[lines], interval=200, repeat=False, blit=False)
 plt.show()
