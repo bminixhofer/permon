@@ -5,7 +5,9 @@ A tool to measure GPU, CPU, RAM and disk performance in one place.
 This project measures CPU, RAM, GPU and Disk I/O stats and displays a simple line chart.
 The chart can be displayed either in the console or in a simple GUI.
 
-![performance in the CLI](https://user-images.githubusercontent.com/13353204/35585240-bb1f8356-05f7-11e8-93c3-6d9d188968f9.png)
+![performance with a GUI](https://user-images.githubusercontent.com/13353204/35768304-e6dcb9a0-08f9-11e8-8588-664a25fef891.png)
+![performance in the CLI](https://user-images.githubusercontent.com/13353204/35768298-cf8f1e5a-08f9-11e8-9879-07b923f2c429.png)
+
 ### Installing
 *Note: At the moment, performance only works on Linux systems.*
 
