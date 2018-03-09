@@ -94,35 +94,19 @@ class MonitorModel(QAbstractListModel):
 
 
 class SettingsModel(QObject):
-    submitted = Signal(set)
+    statsChanged = Signal(list)
 
     def __init__(self, displayed_monitors):
         super(SettingsModel, self).__init__()
-        all_stats = backend.get_all_stats()
-
-        self.stats = all_stats
+        self.all_stats = backend.get_all_stats()
         self.monitors = displayed_monitors
-        self.resetSettings()
 
     def get_displayed_stats(self):
         return [type(monitor.stat) for monitor in self.monitors]
 
     def get_not_displayed_stats(self):
-        stats = list(set(self.stats) - set(self.get_displayed_stats()))
+        stats = list(set(self.all_stats) - set(self.get_displayed_stats()))
         return sorted(stats, key=lambda stat: stat.tag)
-
-    @Slot()
-    def resetSettings(self):
-        self.removed_stats = set()
-        self.added_stats = set()
-
-    @Slot()
-    def submitSettings(self):
-        displayed_stats = set(self.get_displayed_stats())
-        displayed_stats -= self.removed_stats
-        displayed_stats |= self.added_stats
-
-        self.submitted.emit(list(displayed_stats))
 
     @Slot(int, str, result=str)
     def addStat(self, index, settings_str):
@@ -135,22 +119,13 @@ class SettingsModel(QObject):
         except exceptions.StatNotAvailableError as e:
             return str(e)
 
-        self.added_stats.add(stat)
-        try:
-            self.removed_stats.remove(stat)
-        except KeyError:
-            pass
-        return ''
+        self.statsChanged.emit(self.get_displayed_stats() + [stat])
 
     @Slot(int)
     def removeStat(self, index):
         stat = self.get_displayed_stats()[index]
-        self.removed_stats.add(stat)
-
-        try:
-            self.added_stats.remove(stat)
-        except KeyError:
-            pass
+        stats_without_removed = list(set(self.get_displayed_stats()) - {stat})
+        self.statsChanged.emit(stats_without_removed)
 
     @Slot(int, result=str)
     def getSettings(self, index):
@@ -167,12 +142,6 @@ class SettingsModel(QObject):
         stats = self.get_displayed_stats() if displayed else \
                 self.get_not_displayed_stats()
         return json.dumps([stat.name for stat in stats])
-
-    def rowCount(self, parent=QModelIndex()):
-        return len(self.stats)
-
-    def roleNames(self):
-        return self._roles
 
 
 class NativeApp(MonitorApp):
@@ -193,7 +162,7 @@ class NativeApp(MonitorApp):
         self.monitors = self.monitor_model.monitors
 
         self.settings_model = SettingsModel(self.monitors)
-        self.settings_model.submitted.connect(self.adjust_monitors)
+        self.settings_model.statsChanged.connect(self.adjust_monitors)
 
     def adjust_monitors(self, stats):
         displayed_stats = []

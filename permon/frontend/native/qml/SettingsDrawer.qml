@@ -42,7 +42,7 @@ Drawer {
                 }
                 Layout.topMargin: 5
                 Layout.alignment: Qt.AlignTop
-                id: statBox
+                id: addStatBox
                 Layout.fillWidth: true
 
                 Component.onCompleted: refreshModel()
@@ -128,10 +128,9 @@ Drawer {
                             settings[key] = value;
                         }
 
-                        var errorMessage = settingsModel.addStat(statBox.currentIndex, JSON.stringify(settings));
-                        settingsModel.submitSettings();
+                        var errorMessage = settingsModel.addStat(addStatBox.currentIndex, JSON.stringify(settings));
                         removeStatBox.refreshModel();
-                        statBox.refreshModel();
+                        addStatBox.refreshModel();
 
                         page.errorMessage = errorMessage;
                     }
@@ -194,9 +193,8 @@ Drawer {
                             return;
                         }
                         var errorMessage = settingsModel.removeStat(removeStatBox.currentIndex);
-                        settingsModel.submitSettings();
                         removeStatBox.refreshModel();
-                        statBox.refreshModel();
+                        addStatBox.refreshModel();
                     }
                 }
             }
