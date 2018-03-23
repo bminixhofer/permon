@@ -1,5 +1,5 @@
 #!/bin/bash
-pip install -r requirements.txt
+pip install -r requirements.txt --user
 
 echo ""
 read -n1 -p "Install nvidia-smi to monitor GPU RAM? [y,n]" gpu
