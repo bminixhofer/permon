@@ -9,17 +9,21 @@ The chart can be displayed either in the console or in a simple GUI.
 ![performance in the CLI](https://user-images.githubusercontent.com/13353204/35768298-cf8f1e5a-08f9-11e8-9879-07b923f2c429.png)
 
 ### Installing
-*Note: At the moment, performance only works on Linux systems.*
+*Note: At the moment, performance only works on Linux systems. GPU monitoring works only with NVIDIA GPUs.*
 
 Install the project with
 
 `pip install permon`
 
+
+`nvidia-smi` and `sysstats` are also needed to display GPU RAM and disk read / write performance, respectively. You can install them with
+
+`sudo apt install sysstats nvidia-smi`
+
+RAM and CPU measurements will work without these though.
 If you want the latest, possibly unstable version you can also clone the repository and run
 
 `python setup.py install`
-
-`nvidia-smi` and `sysstats` are also needed to display GPU RAM and disk read / write performance, respectively. RAM and CPU measurements will work without these though.
 
 ## Running the tool
 
