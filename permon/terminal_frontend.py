@@ -7,7 +7,7 @@ import sys
 import threading
 term = blessings.Terminal()
 print(term.clear())
-from backend import get_cpu_percent, get_ram, get_vram, get_read, get_write, TOTAL_GPU, TOTAL_RAM
+from permon.backend import get_cpu_percent, get_ram, get_vram, get_read, get_write, TOTAL_GPU, TOTAL_RAM
 
 symbols = [u'\u2501']
 fps = 7

@@ -3,9 +3,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import seaborn as sns
-from backend import get_cpu_percent
 import time
-from backend import get_cpu_percent, get_ram, get_vram, get_read, get_write, TOTAL_GPU, TOTAL_RAM
+from permon.backend import get_cpu_percent, get_ram, get_vram, get_read, get_write, TOTAL_GPU, TOTAL_RAM
 
 matplotlib.rcParams['toolbar'] = 'None'
 
