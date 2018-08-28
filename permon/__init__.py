@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 __version__ = '1.0.0'
 
+from permon.frontend import gui, terminal
+
 def main():
     from argparse import ArgumentParser
 
@@ -9,10 +11,9 @@ def main():
     args = parser.parse_args()
 
     if args.terminal:
-        import permon.terminal_frontend
+        terminal.main()
     else:
-        import permon.gui_frontend
-
+        gui.main()
 
 if __name__ == '__main__':
     main()
