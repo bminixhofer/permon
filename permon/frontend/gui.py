@@ -2,8 +2,10 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-import seaborn as sns
-import time
+
+x = None
+y = None
+is_adaptive = None
 
 def generator(funcs):
     while True:
@@ -11,12 +13,38 @@ def generator(funcs):
         for func in funcs:
             try:
                 results.append([f() for f in func])
-            except:
+            except Exception as ex:
                 results.append([-1])
         yield results
 
+
+def update(num, lines):
+    global x, y, fig, is_adaptive
+    y = np.roll(y, -1, axis=0)
+
+    index = 0
+    for n_line, value_list in enumerate(num):
+        mx = 0
+        for i, val in enumerate(value_list):
+            y[-1, index] = val
+            lines[n_line][i].set_data(x, y[:, index])
+
+            mx = max(mx, y[:, index].max())
+            index += 1
+
+        if is_adaptive[n_line]:
+            ax = lines[n_line][0].axes
+            if mx * 1.5 != ax.get_ylim()[1]:
+                ax.set_ylim([0, mx * 1.5])
+
+    return [line for sublist in lines for line in sublist]
+
+
 def main():
-    from permon.backend import get_cpu_percent, get_ram, get_vram, get_read, get_write, TOTAL_GPU, TOTAL_RAM
+    global x, y, is_adaptive
+
+    from permon.backend import get_cpu_percent, get_ram, get_vram, get_read, \
+        get_write, TOTAL_GPU, TOTAL_RAM
 
     matplotlib.rcParams['toolbar'] = 'None'
 
@@ -57,27 +85,6 @@ def main():
     ax[3].set_title('Read and Write Speed in MiB / s', loc='left')
     ax[3].legend(['Read Speed', 'Write Speed'], fontsize='xx-small')
 
-    def update(num, lines):
-        global x, y, fig
-
-        y = np.roll(y, -1, axis=0)
-
-        index = 0
-        for n_line, value_list in enumerate(num):
-            mx = 0
-            for i, val in enumerate(value_list):
-                y[-1, index] = val
-                lines[n_line][i].set_data(x, y[:, index])
-
-                mx = max(mx, y[:, index].max())
-                index += 1
-
-            if is_adaptive[n_line]:
-                ax = lines[n_line][0].axes
-                if mx * 1.5 != ax.get_ylim()[1]:
-                    ax.set_ylim([0, mx * 1.5])
-
-        return [line for sublist in lines for line in sublist]
-
-    ani = animation.FuncAnimation(fig, update, generator(to_plot), fargs=[lines], interval=200, repeat=False, blit=False)
+    ani = animation.FuncAnimation(fig, update, generator(to_plot), fargs=[lines],
+                                  interval=200, repeat=False, blit=False)
     plt.show()

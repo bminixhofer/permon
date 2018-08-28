@@ -1,15 +1,15 @@
-#!/usr/bin/env python
-import psutil
 import numpy as np
 import time
 import blessings
 import sys
-import threading
+
 
 class Graph:
-    def __init__(self, resolution, color, format_fn=lambda x: np.round(x, 2), minimum=None, maximum=None):
+    def __init__(self, resolution, color, format_fn=lambda x: np.round(x, 2),
+                 minimum=None, maximum=None):
         if minimum and maximum:
-            assert np.abs(maximum - minimum) > 0, 'Graph range must be greater than zero.'
+            assert np.abs(maximum - minimum) > 0, \
+                'Graph range must be greater than zero.'
 
         self.resolution = resolution
         self.color = color
@@ -66,14 +66,15 @@ class Graph:
         line = [[' '] * width for i in range(rows + 1)]
         axis = []
 
-        for y in range(min_cell, max_cell + 1):
-            label = str(self.format_fn(float(maximum) - ((y - min_cell) * interval / rows))).rjust(5)
+        for y in range(rows + 1):
+            label_value = float(maximum) - y * interval / rows
+            label = str(self.format_fn(label_value)).rjust(5)
             axis.append(label + ' ┤')
 
         def get_cell(value):
             return int(round(value * ratio) - min_cell)
 
-        for x in range(0, len(self.values) - 1): # plot the line
+        for x in range(0, len(self.values) - 1):  # plot the line
             value = get_cell(self.values[x])
             next_value = get_cell(self.values[x + 1])
 
@@ -81,8 +82,8 @@ class Graph:
                 line[rows - value][x] = self.symbols['horizontal']
             else:
                 if value > next_value:
-                    line[rows - next_value][x] = self.symbols['fall_then_flat'] 
-                    line[rows - value][x] = self.symbols['flat_then_fall'] 
+                    line[rows - next_value][x] = self.symbols['fall_then_flat']
+                    line[rows - value][x] = self.symbols['flat_then_fall']
                 else:
                     line[rows - next_value][x] = self.symbols['rise_then_flat']
                     line[rows - value][x] = self.symbols['flat_then_rise']
@@ -94,20 +95,32 @@ class Graph:
 
         return '\n'.join(axis[i] + ''.join(line[i]) for i in range(rows + 1))
 
+
+def round_pre_comma(x, precision):
+    return int(x / precision) * precision
+
+
 def main():
     term = blessings.Terminal()
     print(term.enter_fullscreen())
-    from permon.backend import get_cpu_percent, get_ram, get_vram, get_read, get_write, TOTAL_GPU, TOTAL_RAM
+    from permon.backend import get_cpu_percent, get_ram, get_vram, get_read, \
+        get_write, TOTAL_GPU, TOTAL_RAM
 
     fps = 7
     padding = 15
     n_charts = 5
-    resolution = ((term.height - n_charts * 2) // n_charts, term.width - padding)
+
+    # each chart needs 2 lines (title + 1 blank line)
+    height = (term.height - n_charts * 2) // n_charts
+    resolution = (height, term.width - padding)
 
     try:
-        cpu_graph = Graph(resolution, term.green, format_fn=lambda x: int(x), minimum=0, maximum=100)
-        gpu_graph = Graph(resolution, term.red, format_fn=lambda x: int(x / 100) * 50, minimum=0, maximum=TOTAL_GPU)
-        ram_graph = Graph(resolution, term.blue, format_fn=lambda x: int(x / 100) * 100, minimum=0, maximum=TOTAL_RAM)
+        cpu_graph = Graph(resolution, term.green, minimum=0, maximum=100,
+                          format_fn=lambda x: int(x))
+        gpu_graph = Graph(resolution, term.red, minimum=0, maximum=TOTAL_GPU,
+                          format_fn=lambda x: round_pre_comma(x, 100))
+        ram_graph = Graph(resolution, term.blue, minimum=0, maximum=TOTAL_RAM,
+                          format_fn=lambda x: int(x / 100) * 100)
         write_graph = Graph(resolution, term.cyan, minimum=0)
         read_graph = Graph(resolution, term.yellow, minimum=0)
 
