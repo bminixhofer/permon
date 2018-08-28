@@ -7,6 +7,7 @@ x = None
 y = None
 is_adaptive = None
 
+
 def generator(funcs):
     while True:
         results = []
@@ -85,6 +86,7 @@ def main():
     ax[3].set_title('Read and Write Speed in MiB / s', loc='left')
     ax[3].legend(['Read Speed', 'Write Speed'], fontsize='xx-small')
 
-    ani = animation.FuncAnimation(fig, update, generator(to_plot), fargs=[lines],
-                                  interval=200, repeat=False, blit=False)
+    _ = animation.FuncAnimation(fig, update, generator(to_plot),  # noqa: F841
+                                fargs=[lines], interval=200,
+                                repeat=False, blit=False)
     plt.show()
