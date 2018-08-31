@@ -5,7 +5,7 @@ import io
 import os
 import sys
 from shutil import rmtree
-from setuptools import setup, Command
+from setuptools import setup, Command, find_packages
 import permon
 
 # Package meta-data.
@@ -74,7 +74,7 @@ setup(
     author_email=EMAIL,
     python_requires=REQUIRES_PYTHON,
     url=URL,
-    packages=['permon'],
+    packages=find_packages(),
     entry_points={
         'console_scripts': ['permon=permon:main'],
     },
