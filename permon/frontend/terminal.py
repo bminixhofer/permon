@@ -2,20 +2,36 @@ import numpy as np
 import time
 import blessings
 import sys
+from permon.classes import Monitor, MonitorApp
 
 
-class Graph:
-    def __init__(self, resolution, color, format_fn=lambda x: np.round(x, 2),
+def format_labels(axis_values):
+    max_value = abs(max(axis_values))
+
+    def format_value(x):
+        if max_value <= 10:
+            return '{:.3f}'.format(x)
+        elif max_value <= 100:
+            return '{:.2f}'.format(x)
+        elif max_value <= 1000:
+            return '{:.1f}'.format(x)
+        elif max_value <= 10000:
+            return str(int(x / 50) * 50)
+        elif max_value > 10000:
+            return str(int(x / 100) * 100)
+
+    return [format_value(x) for x in axis_values]
+
+
+class TerminalMonitor(Monitor):
+    def __init__(self, stat_func, title, buffer_size, fps, color, resolution,
                  minimum=None, maximum=None):
-        if minimum and maximum:
-            assert np.abs(maximum - minimum) > 0, \
-                'Graph range must be greater than zero.'
+        super(TerminalMonitor, self).__init__(stat_func, title, buffer_size,
+                                              fps, color, minimum=minimum,
+                                              maximum=maximum)
 
+        self.title = title
         self.resolution = resolution
-        self.color = color
-        self.format_fn = format_fn
-        self.minimum = minimum
-        self.maximum = maximum
         self.values = np.full(resolution[1], self.minimum or 0)
         self.symbols = {
             'horizontal': '─',
@@ -27,13 +43,13 @@ class Graph:
         }
         # apply color to symbols
         for key, symbol in self.symbols.items():
-            self.symbols[key] = color(symbol)
+            self.symbols[key] = self.color(symbol)
 
-    def step(self, value):
+    def update(self):
         self.values = np.roll(self.values, -1, axis=0)
-        self.values[-1] = value
+        self.values[-1] = self.stat_func()
 
-    def __str__(self):
+    def paint(self):
         minimum = self.minimum
         maximum = self.maximum
 
@@ -68,8 +84,9 @@ class Graph:
 
         for y in range(rows + 1):
             label_value = float(maximum) - y * interval / rows
-            label = str(self.format_fn(label_value)).rjust(5)
-            axis.append(label + ' ┤')
+            axis.append(label_value)
+        axis = format_labels(axis)
+        axis = [x.rjust(7) + ' ┤' for x in axis]
 
         def get_cell(value):
             return int(round(value * ratio) - min_cell)
@@ -93,78 +110,47 @@ class Graph:
                 for y in range(start, end):
                     line[rows - y][x] = self.symbols['vertical']
 
-        return '\n'.join(axis[i] + ''.join(line[i]) for i in range(rows + 1))
+        print(self.color(self.title))
+        print('\n'.join(axis[i] + ''.join(line[i]) for i in range(rows + 1)))
 
 
-def round_pre_comma(x, precision):
-    return int(x / precision) * precision
+class TerminalApp(MonitorApp):
+    def initialize(self):
+        self.term = blessings.Terminal()
+        self.colors = [self.term.green, self.term.red, self.term.blue,
+                       self.term.cyan, self.term.yellow]
 
+        chart_padding = 15
+        n_charts = len(self.stat_funcs)
 
-def main():
-    term = blessings.Terminal()
-    print(term.enter_fullscreen())
-    from permon.backend import get_cpu_percent, get_ram, get_vram, get_read, \
-        get_write, TOTAL_GPU, TOTAL_RAM
+        # each chart needs 2 lines (title + 1 blank line)
+        height = (self.term.height - n_charts * 2) // n_charts - 1
+        resolution = (height, self.term.width - chart_padding)
 
-    fps = 7
-    padding = 15
-    n_charts = 5
+        for i, (func, info) in enumerate(self.stat_funcs):
+            monitor = TerminalMonitor(func, info['title'],
+                                      buffer_size=self.buffer_size,
+                                      fps=self.fps,
+                                      color=self.colors[i],
+                                      resolution=resolution,
+                                      minimum=info['minimum'],
+                                      maximum=info['maximum'])
+            self.monitors.append(monitor)
 
-    # each chart needs 2 lines (title + 1 blank line)
-    height = (term.height - n_charts * 2) // n_charts
-    resolution = (height, term.width - padding)
+        print(self.term.enter_fullscreen())
+        print(self.term.hide_cursor())
 
-    try:
-        cpu_graph = Graph(resolution, term.green, minimum=0, maximum=100,
-                          format_fn=lambda x: int(x))
-        gpu_graph = Graph(resolution, term.red, minimum=0, maximum=TOTAL_GPU,
-                          format_fn=lambda x: round_pre_comma(x, 100))
-        ram_graph = Graph(resolution, term.blue, minimum=0, maximum=TOTAL_RAM,
-                          format_fn=lambda x: int(x / 100) * 100)
-        write_graph = Graph(resolution, term.cyan, minimum=0)
-        read_graph = Graph(resolution, term.yellow, minimum=0)
-
-        with term.hidden_cursor():
+        try:
             while True:
-                print(term.move(0, 1))
+                self.update()
+                self.paint()
+                time.sleep(1 / self.fps)
+        finally:
+            print('Stopping..')
+            print(self.term.exit_fullscreen())
+            sys.exit(0)
 
-                cpu_graph.step(get_cpu_percent())
-                print(term.on_green('CPU Usage in Percent:'))
-                print(cpu_graph)
-
-                try:
-                    gpu_graph.step(get_vram())
-                    print()
-                    print(term.on_red('GPU Usage in MiB:'))
-                    print(gpu_graph)
-                except Exception as e:
-                    print(term.on_red(str(e)))
-
-                ram_graph.step(get_ram())
-                print()
-                print(term.on_blue('RAM Usage in MiB:'))
-                print(ram_graph)
-
-                try:
-                    read_graph.step(get_read())
-                    print()
-                    print(term.on_yellow('Read Speed in MiB per Second:'))
-                    print(read_graph)
-                except Exception as e:
-                    raise e
-                    print(term.on_yellow(str(e)))
-
-                try:
-                    write_graph.step(get_write())
-                    print()
-                    print(term.on_cyan('Write Speed in MiB per Second:'))
-                    print(write_graph)
-                except Exception as e:
-                    raise e
-                    print(term.on_cyan(str(e)))
-
-                time.sleep(1 / fps)
-    except KeyboardInterrupt:
-        print('Stopping..')
-        print(term.exit_fullscreen())
-        sys.exit(0)
+    def paint(self):
+        print(self.term.move(0, 1))
+        for monitor in self.monitors:
+            monitor.paint()
