@@ -1,9 +1,9 @@
 import sys
-from permon.classes import Monitor, MonitorApp
 from PySide2 import QtWidgets, QtCore
 from PySide2.QtCore import Qt
 from PySide2.QtCharts import QtCharts
 from PySide2.QtGui import QPainter, QPalette, QFont, QPen, QColor
+from permon.classes import Monitor, MonitorApp
 
 
 class NativeMonitor(Monitor):
@@ -63,6 +63,25 @@ class NativeMonitor(Monitor):
             self.buffer[i].setX(i)
 
         self.widget.series.replace(self.buffer)
+
+        if self.minimum is None or self.maximum is None:
+            buffer_values = [point.y() for point in self.buffer]
+
+            range_is_zero = max(buffer_values) == min(buffer_values)
+            minimum = self.minimum
+            maximum = self.maximum
+            if minimum is None:
+                if range_is_zero:
+                    minimum = -1
+                else:
+                    minimum = min(buffer_values)
+            if maximum is None:
+                if range_is_zero:
+                    maximum = 1
+                else:
+                    maximum = max(buffer_values)
+
+            self.widget.axisY.setRange(minimum, maximum)
 
     def paint(self):
         pass
