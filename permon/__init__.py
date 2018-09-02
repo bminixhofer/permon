@@ -13,6 +13,7 @@ def main():
                         action='store_true')
     args = parser.parse_args()
 
+    # determines which tags are displayed
     tags = ['cpu_usage', 'ram_usage', 'read_speed', 'write_speed']
     stat_funcs = []
     for stat_class in backend.get_available_stats():

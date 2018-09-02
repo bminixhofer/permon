@@ -9,25 +9,31 @@ from permon.frontend import utils
 
 class NativeMonitor(Monitor):
     def __init__(self, stat_func, title, buffer_size, fps, color,
-                 minimum=None, maximum=None):
+                 minimum=None, maximum=None, thickness=3, fontsize=14):
         super(NativeMonitor, self).__init__(stat_func, title, buffer_size,
                                             fps, color, minimum=minimum,
                                             maximum=maximum)
         self.widget = QtWidgets.QWidget()
 
+        # the widget consists of a title and the chart
+        # we have to create a vertical layout in order to
+        # position the title above the chart
         layout = QtWidgets.QVBoxLayout(self.widget)
         layout.setMargin(0)
 
         self.widget.series = QtCharts.QLineSeries()
-        pen = QPen(self.color, 3)
+        pen = QPen(self.color, thickness)
         self.widget.series.setPen(pen)
 
         self.widget.chart = QtCharts.QChart()
         self.widget.chart.addSeries(self.widget.series)
 
+        # a QValueAxis has tick labels per default
+        # so we use a QCategoryAxis
         self.widget.axisX = QtCharts.QCategoryAxis()
         self.widget.axisX.setRange(0, buffer_size)
 
+        # use a QCategoryAxis again for more customizability
         self.widget.axisY = QtCharts.QCategoryAxis()
         self.widget.axisY.setLabelsPosition(
             QtCharts.QCategoryAxis.AxisLabelsPositionOnValue
@@ -39,14 +45,16 @@ class NativeMonitor(Monitor):
         self.widget.chart.legend().hide()
         self.widget.chart.layout().setContentsMargins(0, 0, 0, 0)
 
+        # create the title label and add it to the layout
         titleFont = QFont()
-        titleFont.setPixelSize(14)
+        titleFont.setPixelSize(fontsize)
         titleFont.setBold(True)
 
         titleLabel = QtWidgets.QLabel(self.title)
         titleLabel.setFont(titleFont)
         layout.addWidget(titleLabel)
 
+        # create a view for the chart and add it to the layout
         self.widget.chartView = QtCharts.QChartView(self.widget.chart)
         self.widget.chartView.setRenderHint(QPainter.Antialiasing)
         layout.addWidget(self.widget.chartView)
@@ -54,23 +62,31 @@ class NativeMonitor(Monitor):
         self.buffer = [QtCore.QPointF(x, 0) for x in range(buffer_size)]
         self.widget.series.append(self.buffer)
 
+        # run an update every 1 / fps seconds
         timer = QtCore.QTimer(self.widget)
         timer.start(1000 / fps)
         timer.timeout.connect(self.update)
 
     def update(self):
+        # every frame, we remove the last point of the history and
+        # append a new measurement to the end
         new_point = QtCore.QPointF(self.buffer_size, self.stat_func())
         self.buffer.append(new_point)
         del self.buffer[0]
 
+        # now that the buffer moved one to the left, we have to
+        # reposition the x values
         for i in range(self.buffer_size):
             self.buffer[i].setX(i)
 
         self.widget.series.replace(self.buffer)
 
+        # if minimum or maximum is unknown, we have to adjust the axis limits
         if self.minimum is None or self.maximum is None:
             buffer_values = [point.y() for point in self.buffer]
 
+            # if we dont know the min or max and they cant be determined by
+            # the history, we have to set some defaults (e. g. -1 and 1)
             range_is_zero = max(buffer_values) == min(buffer_values)
             minimum = self.minimum
             maximum = self.maximum
@@ -116,10 +132,13 @@ class NativeApp(MonitorApp):
         self.qapp = QtWidgets.QApplication(sys.argv)
         self.window = QtWidgets.QMainWindow()
 
+        # make the background white (the default is some ugly gray)
         palette = self.qapp.palette()
         palette.setColor(QPalette.Window, Qt.white)
         self.qapp.setPalette(palette)
 
+        # resize the app to take up 3 / 4 of the vertical space
+        # this is relatively arbitrary, but 3 / 4 is reasonably large
         availableGeometry = self.qapp.desktop().availableGeometry(self.window)
         size = availableGeometry.height() * 3 / 4
         self.window.resize(size, size)
@@ -131,9 +150,6 @@ class NativeApp(MonitorApp):
         self._main = QtWidgets.QWidget()
         self.window.setCentralWidget(self._main)
         layout = QtWidgets.QVBoxLayout(self._main)
-
-        # graph_selector = GraphSelector()
-        # layout.addWidget(graph_selector)
 
         for i, (func, info) in enumerate(self.stat_funcs):
             monitor = NativeMonitor(func, info['title'],

@@ -8,15 +8,19 @@ from permon.frontend import utils
 
 class TerminalMonitor(Monitor):
     def __init__(self, stat_func, title, buffer_size, fps, color, resolution,
-                 minimum=None, maximum=None):
+                 minimum=None, maximum=None, axis_width=10):
         super(TerminalMonitor, self).__init__(stat_func, title, buffer_size,
                                               fps, color, minimum=minimum,
                                               maximum=maximum)
 
         self.title = title
         self.resolution = resolution
-        self.values = np.full(resolution[1], self.minimum or 0)
+        self.axis_width = axis_width
+        # fill unknown history with the minimum value
+        self.values = np.full(resolution[1] - self.axis_width,
+                              self.minimum or 0)
         self.symbols = {
+            'axis': ' ┤',
             'horizontal': '─',
             'vertical': '│',
             'fall_then_flat': '╰',
@@ -24,9 +28,6 @@ class TerminalMonitor(Monitor):
             'flat_then_fall': '╮',
             'flat_then_rise': '╯'
         }
-        # apply color to symbols
-        for key, symbol in self.symbols.items():
-            self.symbols[key] = self.color(symbol)
 
     def update(self):
         self.values = np.roll(self.values, -1, axis=0)
@@ -36,6 +37,8 @@ class TerminalMonitor(Monitor):
         minimum = self.minimum
         maximum = self.maximum
 
+        # if we dont know the min or max and they cant be determined by
+        # the history, we have to set some defaults (e. g. -1 and 1)
         range_is_zero = np.max(self.values) == np.min(self.values)
         if minimum is None:
             if range_is_zero:
@@ -49,10 +52,11 @@ class TerminalMonitor(Monitor):
                 maximum = max(self.values)
 
         interval = float(abs(maximum - minimum))
-        height = self.resolution[0]
+        # we have to reserve 1 line for the chart title
+        height = self.resolution[0] - 1
 
         if interval > 0:
-            ratio = height / interval
+            ratio = (height - 1) / interval
         else:
             ratio = 1
 
@@ -62,19 +66,25 @@ class TerminalMonitor(Monitor):
         rows = max(abs(max_cell - min_cell), 1)
         width = len(self.values)
 
-        line = [[' '] * width for i in range(rows + 1)]
+        # create chart axis
         axis = []
 
         for y in range(rows + 1):
             label_value = float(maximum) - y * interval / rows
             axis.append(label_value)
         axis = utils.format_labels(axis)
-        axis = [x.rjust(7) + ' ┤' for x in axis]
+        axis_symbol = self.symbols['axis']
+        axis = [x.rjust(self.axis_width - len(axis_symbol)) + axis_symbol
+                for x in axis]
 
+        # utility function to determine which cell a value is best placed in
         def get_cell(value):
             return int(round(value * ratio) - min_cell)
 
-        for x in range(0, len(self.values) - 1):  # plot the line
+        # create chart line
+        line = [[' '] * width for i in range(rows + 1)]
+
+        for x in range(0, len(self.values) - 1):
             value = get_cell(self.values[x])
             next_value = get_cell(self.values[x + 1])
 
@@ -93,8 +103,10 @@ class TerminalMonitor(Monitor):
                 for y in range(start, end):
                     line[rows - y][x] = self.symbols['vertical']
 
+        # title and line have the chart color, while the axis is always white
         print(self.color(self.title))
-        print('\n'.join(axis[i] + ''.join(line[i]) for i in range(rows + 1)))
+        print('\n'.join(axis[i] +
+              self.color(''.join(line[i])) for i in range(rows + 1)))
 
 
 class TerminalApp(MonitorApp):
@@ -102,13 +114,13 @@ class TerminalApp(MonitorApp):
         self.term = blessings.Terminal()
         self.colors = [self.term.green, self.term.red, self.term.blue,
                        self.term.cyan, self.term.yellow]
-
-        chart_padding = 15
         n_charts = len(self.stat_funcs)
 
-        # each chart needs 2 lines (title + 1 blank line)
-        height = (self.term.height - n_charts * 2) // n_charts - 1
-        resolution = (height, self.term.width - chart_padding)
+        # every chart can take up 1 / n_charts of the terminal space
+        # use the height - 1 because the full height seems not to be usable
+        # in some terminals
+        height = (self.term.height - 1) // n_charts
+        resolution = (height, self.term.width)
 
         for i, (func, info) in enumerate(self.stat_funcs):
             monitor = TerminalMonitor(func, info['title'],
@@ -134,6 +146,8 @@ class TerminalApp(MonitorApp):
             sys.exit(0)
 
     def paint(self):
+        # every frame, paint all monitors and move the cursor
+        # back to the start
         print(self.term.move(0, 1))
         for monitor in self.monitors:
             monitor.paint()
