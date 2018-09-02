@@ -1,10 +1,43 @@
 from abc import ABC, abstractmethod
 import numpy as np
-from PySide2 import QtWidgets
 
 
-class Base(ABC, type(QtWidgets.QWidget)):
-    pass
+class Stat(ABC):
+    windows_classes = []
+    linux_classes = []
+
+    @classmethod
+    def _validate_stat(cls, check_cls):
+        assert hasattr(check_cls, 'name'), \
+            'Stats must have a static name attribute.'
+        assert hasattr(check_cls, 'tag'), \
+            'Stats must have a static tag attribute.'
+
+    @classmethod
+    def windows(cls, check_cls):
+        Stat._validate_stat(check_cls)
+        Stat.windows_classes.append(check_cls)
+        return check_cls
+
+    @classmethod
+    def linux(cls, check_cls):
+        Stat._validate_stat(check_cls)
+        Stat.linux_classes.append(check_cls)
+        return check_cls
+
+    @abstractmethod
+    def get_stat():
+        pass
+
+    @property
+    @abstractmethod
+    def minimum():
+        pass
+
+    @property
+    @abstractmethod
+    def maximum():
+        pass
 
 
 class Monitor(ABC):

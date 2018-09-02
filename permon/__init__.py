@@ -2,10 +2,10 @@
 __version__ = '1.0.0'
 
 from permon.frontend import native, terminal
+import permon.backend as backend
 
 
 def main():
-    import permon.backend as backend
     from argparse import ArgumentParser
 
     parser = ArgumentParser()
@@ -13,28 +13,16 @@ def main():
                         action='store_true')
     args = parser.parse_args()
 
-    stat_funcs = [
-        (backend.get_cpu_percent, {
-            'title': 'CPU Usage in %',
-            'minimum': 0,
-            'maximum': 100
-        }),
-        (backend.get_ram, {
-            'title': 'RAM Usage in MiB',
-            'minimum': 0,
-            'maximum': backend.TOTAL_RAM
-        }),
-        (backend.get_read, {
-            'title': 'Read Speed in MiB / s',
-            'minimum': 0,
-            'maximum': None
-        }),
-        (backend.get_write, {
-            'title': 'Write Speed in MiB / s',
-            'minimum': 0,
-            'maximum': None
-        })
-    ]
+    tags = ['cpu_usage', 'ram_usage', 'read_speed', 'write_speed']
+    stat_funcs = []
+    for stat_class in backend.get_available_stats():
+        if stat_class.tag in tags:
+            instance = stat_class()
+            stat_funcs.append((instance.get_stat, {
+                'title': stat_class.name,
+                'minimum': instance.minimum,
+                'maximum': instance.maximum
+            }))
 
     if args.terminal:
         app = terminal.TerminalApp(stat_funcs, colors=[],
