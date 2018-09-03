@@ -1,4 +1,7 @@
 # permon
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/c60ca938b8a1490389b7ff8e594c39b9)](https://app.codacy.com/app/bminixhofer/permon?utm_source=github.com&utm_medium=referral&utm_content=bminixhofer/permon&utm_campaign=Badge_Grade_Settings)
+
 A tool to view GPU, CPU, RAM and disk performance in a clear, uncluttered way.
 
 ## Getting started
