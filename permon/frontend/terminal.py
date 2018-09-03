@@ -115,10 +115,15 @@ class TerminalMonitor(Monitor):
 
 
 class TerminalApp(MonitorApp):
-    def initialize(self):
+    def __init__(self, stat_funcs, colors, buffer_size, fps):
+        super(TerminalApp, self).__init__(stat_funcs, colors, buffer_size, fps)
         self.term = blessings.Terminal()
         self.colors = [self.term.green, self.term.red, self.term.blue,
                        self.term.cyan, self.term.yellow]
+
+    def initialize(self):
+        assert self.term.is_a_tty, \
+            'Attempting to run in a non-tty environment.'
         n_charts = len(self.stat_funcs)
 
         # every chart can take up 1 / n_charts of the terminal space
