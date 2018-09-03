@@ -26,17 +26,20 @@ class Stat(ABC):
         return check_cls
 
     @abstractmethod
-    def get_stat():
+    def get_stat(self):
         pass
 
     @property
     @abstractmethod
-    def minimum():
+    def minimum(self):
         pass
 
     @property
     @abstractmethod
-    def maximum():
+    def maximum(self):
+        pass
+
+    def destruct(self):
         pass
 
 

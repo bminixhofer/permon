@@ -74,7 +74,12 @@ class TerminalMonitor(Monitor):
             axis.append(label_value)
         axis = utils.format_labels(axis)
         axis_symbol = self.symbols['axis']
-        axis = [x.rjust(self.axis_width - len(axis_symbol)) + axis_symbol
+
+        longest_label = max(len(x) for x in axis)
+        pad_width = self.axis_width - len(axis_symbol)
+
+        assert longest_label <= pad_width, 'Axis labels exceed axis width.'
+        axis = [x.rjust(pad_width) + axis_symbol
                 for x in axis]
 
         # utility function to determine which cell a value is best placed in
