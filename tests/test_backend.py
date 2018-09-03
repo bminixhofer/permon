@@ -8,7 +8,7 @@ stat_classes = backend.get_available_stats()
 
 def check_if_valid_number(x):
     assert not np.isnan(x)
-    assert type(x) is float or type(x) is int
+    assert isinstance(x, float) or isinstance(x, int)
 
 
 @pytest.mark.parametrize("cls", stat_classes)
