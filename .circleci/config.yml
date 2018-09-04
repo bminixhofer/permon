@@ -26,11 +26,16 @@ jobs:
           - v1-dependencies-
 
       - run:
+          name: Install pre dependencies
+          command: |
+            sudo apt update -yqq
+            sudo apt install -yqq sysstat
+
+      - run:
           name: Install dependencies and module
           command: |
             python3 -m venv venv
             . venv/bin/activate
-            sudo apt install sysstat
             pip install -r requirements.txt
             pip install -e .
 
