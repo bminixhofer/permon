@@ -26,11 +26,12 @@ jobs:
           - v1-dependencies-
 
       - run:
-          name: install dependencies
+          name: install dependencies and module
           command: |
             python3 -m venv venv
             . venv/bin/activate
             pip install -r requirements.txt
+            pip install -e .
 
       - save_cache:
           paths:
@@ -42,11 +43,13 @@ jobs:
           command: |
             . venv/bin/activate
             pytest . --cov=permon
+
       - run:
           name: lint
           command: |
             . venv/bin/activate
             flake8 .
+      
       - run:
           name: upload coverage
           command: |
