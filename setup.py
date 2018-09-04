@@ -18,7 +18,7 @@ REQUIRES_PYTHON = '>=3.6.0'
 VERSION = permon.__version__
 
 REQUIRED = [
-    'blessings', 'numpy', 'psutil', 'seaborn',
+    'blessings', 'numpy', 'psutil', 'PySide2'
 ]
 
 here = os.path.abspath(os.path.dirname(__file__))
