@@ -80,6 +80,9 @@ class TestTerminal(object):
 
     def test_init_app(self, capsys):
         class MockTerminal(blessings.Terminal):
+            def __init__(self):
+                super(MockTerminal, self).__init__(self, force_styling=None)
+
             @property
             def height(self):
                 return 20
