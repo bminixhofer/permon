@@ -25,11 +25,10 @@ jobs:
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
 
-      - run:
-          name: Install pre dependencies
-          command: |
-            sudo apt update -yqq
-            sudo apt install -yqq sysstat
+      # - run:
+      #     name: Install pre dependencies
+      #     command: |
+      #       sudo apt update -yqq
 
       - run:
           name: Install dependencies and module
