@@ -47,7 +47,7 @@ jobs:
           name: Run Tests
           command: |
             . venv/bin/activate
-            pytest . --cov=permon --cov-report=xml
+            pytest . --cov=permon --cov-report=xml --junitxml=test-results/pytest/results.xml
 
       - run:
           name: Lint
@@ -60,6 +60,5 @@ jobs:
           command: |
             bash <(curl -s https://codecov.io/bash)
 
-      # - store_artifacts:
-      #     path: test-reports
-      #     destination: test-reports
+      - store_test_results:
+          path: test-results
