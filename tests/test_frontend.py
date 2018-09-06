@@ -4,17 +4,16 @@ import signal
 import numpy as np
 import blessings
 import pytest
-from permon.frontend import terminal
+from permon.frontend import terminal, native
 np.random.seed(0)
 
 
-def abort_after_seconds(timeout, *args):
+def abort_after_seconds(timeout, *args, handler=lambda: None):
     def decorate(f):
         def new_f(*args):
-            signal.signal(signal.SIGALRM, lambda: None)
+            signal.signal(signal.SIGALRM, handler)
             signal.alarm(timeout)
             return f(*args)
-            signal.alarm(0)
 
         new_f.__name__ = f.__name__
         return new_f
@@ -78,7 +77,7 @@ class TestTerminal(object):
         assert (monitor.values[:-1] == minimum).all()
         assert monitor.values[-1] == stat_func()
 
-    def test_init_app(self, capsys):
+    def test_init_app(self):
         class MockTerminal(blessings.Terminal):
             def __init__(self):
                 super(MockTerminal, self).__init__(self, force_styling=None)
@@ -105,7 +104,33 @@ class TestTerminal(object):
                                    buffer_size=500, fps=10)
         app.term = MockTerminal()
 
-        init = abort_after_seconds(4)(app.initialize)
+        init = abort_after_seconds(1)(app.initialize)
         with pytest.raises(SystemExit) as exit_info:
             init()
         assert exit_info.value.code == 0
+
+
+class TestNative(object):
+    @pytest.mark.parametrize('stat_func', [
+        (lambda: 0, {
+            'title': 'Test Function',
+            'minimum': 0,
+            'maximum': 100
+        }),
+        (lambda: np.random.rand(), {
+            'title': 'Random Distribution Test Function',
+            'minimum': None,
+            'maximum': None
+        }),
+
+    ])
+    def test_init_app(self, stat_func):
+        stat_funcs = [stat_func]
+
+        app = native.NativeApp(stat_funcs, colors=[], buffer_size=500, fps=10)
+
+        def on_close(signum, frame):
+            app.qapp.exit()
+
+        init = abort_after_seconds(1, handler=on_close)(app.initialize)
+        init()

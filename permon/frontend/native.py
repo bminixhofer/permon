@@ -126,10 +126,14 @@ class NativeMonitor(Monitor):
 
 
 class NativeApp(MonitorApp):
+    # QApplication is a global singleton. It can only ever be instantiated once
+    qapp = None
+
     def __init__(self, stat_funcs, colors, buffer_size, fps):
         super(NativeApp, self).__init__(stat_funcs, colors, buffer_size, fps)
 
-        self.qapp = QtWidgets.QApplication(sys.argv)
+        if not self.qapp:
+            NativeApp.qapp = QtWidgets.QApplication(sys.argv)
         self.window = QtWidgets.QMainWindow()
 
         # make the background white (the default is some ugly gray)
