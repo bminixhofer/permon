@@ -47,7 +47,7 @@ jobs:
           name: Run Tests
           command: |
             . venv/bin/activate
-            pytest . --cov=permon --cov-report=xml --junitxml=test-results/pytest/results.xml
+            pytest . --cov=permon --cov-report=xml --junitxml=test-results/pytest/results.xml -s
 
       - run:
           name: Lint
