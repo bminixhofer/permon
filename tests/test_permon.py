@@ -1,7 +1,10 @@
+import sys
 import pytest
+import numpy as np
+import permon
+from permon.frontend import native, terminal
 import permon.backend as backend
 from permon.classes import Stat
-import numpy as np
 
 stat_classes = backend.get_available_stats()
 
@@ -39,3 +42,15 @@ def test_minimum_and_maximum_defined(cls):
             continue
 
         check_if_valid_number(x)
+
+
+@pytest.mark.parametrize('app, arguments', [
+    (terminal.TerminalApp, ['-t']),
+    (native.NativeApp, []),
+])
+def test_init(app, arguments, mocker):
+    mocker.patch.object(sys, 'argv',  ['permon'] + arguments)
+    patched_init = mocker.patch.object(app, 'initialize')
+
+    permon.main()
+    patched_init.assert_called_once()
