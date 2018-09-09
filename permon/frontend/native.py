@@ -3,8 +3,7 @@ from PySide2 import QtWidgets, QtCore
 from PySide2.QtCore import Qt
 from PySide2.QtCharts import QtCharts
 from PySide2.QtGui import QPainter, QPalette, QFont, QPen, QColor
-from permon.classes import Monitor, MonitorApp
-from permon.frontend import utils
+from permon.frontend import Monitor, MonitorApp, utils
 
 
 class NativeMonitor(Monitor):
@@ -129,8 +128,8 @@ class NativeApp(MonitorApp):
     # QApplication is a global singleton. It can only ever be instantiated once
     qapp = None
 
-    def __init__(self, stat_funcs, colors, buffer_size, fps):
-        super(NativeApp, self).__init__(stat_funcs, colors, buffer_size, fps)
+    def __init__(self, tags, colors, buffer_size, fps):
+        super(NativeApp, self).__init__(tags, colors, buffer_size, fps)
         self.colors = [QColor(x) for x in colors]
 
     def initialize(self):

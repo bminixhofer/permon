@@ -2,8 +2,7 @@ import numpy as np
 import time
 import blessings
 import sys
-from permon.classes import Monitor, MonitorApp
-from permon.frontend import utils
+from permon.frontend import Monitor, MonitorApp, utils
 
 
 class TerminalMonitor(Monitor):
@@ -115,8 +114,8 @@ class TerminalMonitor(Monitor):
 
 
 class TerminalApp(MonitorApp):
-    def __init__(self, stat_funcs, colors, buffer_size, fps):
-        super(TerminalApp, self).__init__(stat_funcs, colors, buffer_size, fps)
+    def __init__(self, tags, colors, buffer_size, fps):
+        super(TerminalApp, self).__init__(tags, colors, buffer_size, fps)
 
     def initialize(self):
         self.term = blessings.Terminal()

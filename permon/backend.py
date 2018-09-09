@@ -1,7 +1,48 @@
 import psutil
-from permon.classes import Stat
 import os
 import time
+from abc import ABC, abstractmethod
+
+
+class Stat(ABC):
+    windows_classes = []
+    linux_classes = []
+
+    @classmethod
+    def _validate_stat(cls, check_cls):
+        assert hasattr(check_cls, 'name'), \
+            'Stats must have a static name attribute.'
+        assert hasattr(check_cls, 'tag'), \
+            'Stats must have a static tag attribute.'
+
+    @classmethod
+    def windows(cls, check_cls):
+        Stat._validate_stat(check_cls)
+        Stat.windows_classes.append(check_cls)
+        return check_cls
+
+    @classmethod
+    def linux(cls, check_cls):
+        Stat._validate_stat(check_cls)
+        Stat.linux_classes.append(check_cls)
+        return check_cls
+
+    @abstractmethod
+    def get_stat(self):
+        pass
+
+    @property
+    @abstractmethod
+    def minimum(self):
+        pass
+
+    @property
+    @abstractmethod
+    def maximum(self):
+        pass
+
+    def destruct(self):
+        pass
 
 
 @Stat.windows
