@@ -131,9 +131,12 @@ class NativeApp(MonitorApp):
 
     def __init__(self, stat_funcs, colors, buffer_size, fps):
         super(NativeApp, self).__init__(stat_funcs, colors, buffer_size, fps)
+        self.colors = [QColor(x) for x in colors]
 
+    def initialize(self):
         if not self.qapp:
             NativeApp.qapp = QtWidgets.QApplication(sys.argv)
+
         self.window = QtWidgets.QMainWindow()
 
         # make the background white (the default is some ugly gray)
@@ -147,10 +150,7 @@ class NativeApp(MonitorApp):
         size = availableGeometry.height() * 3 / 4
         self.window.resize(size, size)
 
-    def initialize(self):
-        self.colors = ['#ed5565', '#ffce54', '#48cfad', '#sd9cec', '#ec87c0',
-                       '#fc6e51', '#a0d468', '#4fc1e9', '#ac92ec']
-        self.colors = [QColor(x) for x in self.colors]
+        # create the main widget and add monitors to it
         self._main = QtWidgets.QWidget()
         self.window.setCentralWidget(self._main)
         layout = QtWidgets.QVBoxLayout(self._main)

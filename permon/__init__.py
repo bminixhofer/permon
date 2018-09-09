@@ -25,11 +25,15 @@ def main():
                 'maximum': instance.maximum
             }))
 
+    # determines which colors are used in frontends that support custom colors
+    colors = ['#ed5565', '#ffce54', '#48cfad', '#sd9cec', '#ec87c0',
+              '#fc6e51', '#a0d468', '#4fc1e9', '#ac92ec']
+
     if args.terminal:
-        app = terminal.TerminalApp(stat_funcs, colors=[],
+        app = terminal.TerminalApp(stat_funcs, colors=colors,
                                    buffer_size=500, fps=10)
     else:
-        app = native.NativeApp(stat_funcs, colors=[],
+        app = native.NativeApp(stat_funcs, colors=colors,
                                buffer_size=500, fps=10)
     app.initialize()
 
