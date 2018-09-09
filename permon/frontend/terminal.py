@@ -6,16 +6,16 @@ from permon.frontend import Monitor, MonitorApp, utils
 
 
 class TerminalMonitor(Monitor):
-    def __init__(self, stat_func, title, buffer_size, fps, color, resolution,
-                 minimum=None, maximum=None, axis_width=10):
+    def __init__(self, stat_func, title, buffer_size, fps, color, app,
+                 resolution, minimum=None, maximum=None, axis_width=10):
         super(TerminalMonitor, self).__init__(stat_func, title, buffer_size,
-                                              fps, color, minimum=minimum,
+                                              fps, color, app, minimum=minimum,
                                               maximum=maximum)
 
         self.title = title
         self.resolution = resolution
         self.axis_width = axis_width
-        # fill unknown history with the minimum value
+        # fill unknown history with the minimum value (or 0 if it is unknown)
         self.values = np.full(resolution[1] - self.axis_width,
                               self.minimum or 0)
         self.symbols = {
@@ -124,7 +124,7 @@ class TerminalApp(MonitorApp):
 
         assert self.term.is_a_tty, \
             'Attempting to run in a non-tty environment.'
-        n_charts = len(self.stat_funcs)
+        n_charts = len(self.stats)
 
         # every chart can take up 1 / n_charts of the terminal space
         # use the height - 1 because the full height seems not to be usable
@@ -132,14 +132,15 @@ class TerminalApp(MonitorApp):
         height = (self.term.height - 1) // n_charts
         resolution = (height, self.term.width)
 
-        for i, (func, info) in enumerate(self.stat_funcs):
-            monitor = TerminalMonitor(func, info['title'],
+        for i, stat in enumerate(self.stats):
+            monitor = TerminalMonitor(stat.get_stat, stat.name,
                                       buffer_size=self.buffer_size,
                                       fps=self.fps,
                                       color=self.colors[i],
+                                      app=self,
                                       resolution=resolution,
-                                      minimum=info['minimum'],
-                                      maximum=info['maximum'])
+                                      minimum=stat.minimum,
+                                      maximum=stat.maximum)
             self.monitors.append(monitor)
 
         print(self.term.enter_fullscreen())

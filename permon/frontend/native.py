@@ -2,15 +2,15 @@ import sys
 from PySide2 import QtWidgets, QtCore
 from PySide2.QtCore import Qt
 from PySide2.QtCharts import QtCharts
-from PySide2.QtGui import QPainter, QPalette, QFont, QPen, QColor
+import PySide2.QtGui as QtGui
 from permon.frontend import Monitor, MonitorApp, utils
 
 
 class NativeMonitor(Monitor):
-    def __init__(self, stat_func, title, buffer_size, fps, color,
-                 minimum=None, maximum=None, thickness=3, fontsize=14):
+    def __init__(self, stat_func, title, buffer_size, fps, color, app,
+                 fontsize, thickness, minimum=None, maximum=None):
         super(NativeMonitor, self).__init__(stat_func, title, buffer_size,
-                                            fps, color, minimum=minimum,
+                                            fps, color, app, minimum=minimum,
                                             maximum=maximum)
         self.widget = QtWidgets.QWidget()
 
@@ -21,7 +21,7 @@ class NativeMonitor(Monitor):
         layout.setMargin(0)
 
         self.widget.series = QtCharts.QLineSeries()
-        pen = QPen(self.color, thickness)
+        pen = QtGui.QPen(self.color, thickness)
         self.widget.series.setPen(pen)
 
         self.widget.chart = QtCharts.QChart()
@@ -45,17 +45,11 @@ class NativeMonitor(Monitor):
         self.widget.chart.layout().setContentsMargins(0, 0, 0, 0)
 
         # create the title label and add it to the layout
-        titleFont = QFont()
-        titleFont.setPixelSize(fontsize)
-        titleFont.setBold(True)
-
-        titleLabel = QtWidgets.QLabel(self.title)
-        titleLabel.setFont(titleFont)
-        layout.addWidget(titleLabel)
+        layout.addWidget(self._create_header(fontsize))
 
         # create a view for the chart and add it to the layout
         self.widget.chartView = QtCharts.QChartView(self.widget.chart)
-        self.widget.chartView.setRenderHint(QPainter.Antialiasing)
+        self.widget.chartView.setRenderHint(QtGui.QPainter.Antialiasing)
         layout.addWidget(self.widget.chartView)
 
         self.buffer = [QtCore.QPointF(x, 0) for x in range(buffer_size)]
@@ -123,14 +117,28 @@ class NativeMonitor(Monitor):
             # we have to pad them with non-breaking spaces (U+00A0)
             axis.append(label.rjust(10, u'\u00A0'), value)
 
+    def _create_header(self, fontsize):
+        font = QtGui.QFont()
+        font.setPixelSize(fontsize)
+        font.setBold(True)
+
+        title_label = QtWidgets.QLabel(self.title)
+        title_label.setFont(font)
+
+        return title_label
+
 
 class NativeApp(MonitorApp):
     # QApplication is a global singleton. It can only ever be instantiated once
     qapp = None
 
-    def __init__(self, tags, colors, buffer_size, fps):
+    def __init__(self, tags, colors, buffer_size, fps, fontsize=14,
+                 line_thickness=3):
         super(NativeApp, self).__init__(tags, colors, buffer_size, fps)
-        self.colors = [QColor(x) for x in colors]
+        self.colors = [QtGui.QColor(x) for x in colors]
+
+        self.line_thickness = line_thickness
+        self.fontsize = fontsize
 
     def initialize(self):
         if not self.qapp:
@@ -140,7 +148,7 @@ class NativeApp(MonitorApp):
 
         # make the background white (the default is some ugly gray)
         palette = self.qapp.palette()
-        palette.setColor(QPalette.Window, Qt.white)
+        palette.setColor(QtGui.QPalette.Window, Qt.white)
         self.qapp.setPalette(palette)
 
         # resize the app to take up 3 / 4 of the vertical space
@@ -150,21 +158,80 @@ class NativeApp(MonitorApp):
         self.window.resize(size, size)
 
         # create the main widget and add monitors to it
-        self._main = QtWidgets.QWidget()
-        self.window.setCentralWidget(self._main)
-        layout = QtWidgets.QVBoxLayout(self._main)
 
-        for i, (func, info) in enumerate(self.stat_funcs):
-            monitor = NativeMonitor(func, info['title'],
-                                    buffer_size=self.buffer_size,
-                                    fps=self.fps,
-                                    color=self.colors[i],
-                                    minimum=info['minimum'],
-                                    maximum=info['maximum'])
-            self.monitors.append(monitor)
-            layout.addWidget(monitor.widget)
+        self._main = QtWidgets.QStackedWidget()
+        self._monitor_page = self._create_monitor_page()
+        self._settings_page = self._create_settings_page()
+
+        self._main.addWidget(self._monitor_page)
+        self._main.addWidget(self._settings_page)
+
+        self.window.setCentralWidget(self._main)
         self.window.show()
         self.qapp.exec_()
 
     def paint(self):
         pass
+
+    def _create_monitor_page(self):
+        page_widget = QtWidgets.QWidget()
+        layout = QtWidgets.QVBoxLayout(page_widget)
+
+        # add button for switching to settings page
+        settings_button = QtWidgets.QPushButton('Settings')
+
+        def set_settings_page():
+            self._main.setCurrentWidget(self._settings_page)
+        settings_button.clicked.connect(set_settings_page)
+
+        layout.addWidget(settings_button)
+
+        # add monitors
+        for i, stat in enumerate(self.stats):
+            monitor = NativeMonitor(stat.get_stat, stat.name,
+                                    buffer_size=self.buffer_size,
+                                    fps=self.fps,
+                                    color=self.colors[i],
+                                    app=self,
+                                    fontsize=self.fontsize,
+                                    thickness=self.line_thickness,
+                                    minimum=stat.minimum,
+                                    maximum=stat.maximum)
+            self.monitors.append(monitor)
+            layout.addWidget(monitor.widget)
+        return page_widget
+
+    def _create_settings_page(self):
+        page_widget = QtWidgets.QWidget()
+        layout = QtWidgets.QVBoxLayout(page_widget)
+
+        font = QtGui.QFont()
+        font.setPixelSize(self.fontsize)
+        font.setBold(True)
+
+        monitor_label = QtWidgets.QLabel('Displayed Monitors')
+        monitor_label.setFont(font)
+
+        layout.addWidget(monitor_label)
+
+        model = QtGui.QStandardItemModel()
+        font = QtGui.QFont()
+        font.setBold(True)
+        title = QtGui.QStandardItem('Core')
+        title.setFont(font)
+        model.appendRow(title)
+
+        for i in range(10):
+            item = QtGui.QStandardItem(f'Item {i}')
+            item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+            item.setData(Qt.Unchecked, Qt.CheckStateRole)
+
+            title.appendRow(item)
+
+        combo = QtWidgets.QTreeView()
+        combo.header().hide()
+        combo.setModel(model)
+
+        layout.addWidget(combo)
+
+        return page_widget
