@@ -1,8 +1,9 @@
 blessings==1.6.1
 numpy==1.14.0
 psutil==5.4.1
+PySide2==5.11.1
 flake8==3.5.0
 pytest==3.7.4
 pytest-cov==2.5.1
-PySide2==5.11.1
+pytest-mock==1.10.0
 coverage==4.5.1
