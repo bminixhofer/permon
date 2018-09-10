@@ -13,7 +13,10 @@ def main():
     args = parser.parse_args()
 
     # determines which tags are displayed
-    tags = ['cpu_usage', 'ram_usage', 'read_speed', 'write_speed']
+    tags = ['core.cpu_usage',
+            'core.ram_usage',
+            'core.read_speed',
+            'core.write_speed']
 
     # determines which colors are used in frontends that support custom colors
     colors = ['#ed5565', '#ffce54', '#48cfad', '#sd9cec', '#ec87c0',

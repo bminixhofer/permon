@@ -4,15 +4,17 @@ from PySide2.QtCore import Qt
 from PySide2.QtCharts import QtCharts
 import PySide2.QtGui as QtGui
 from permon.frontend import Monitor, MonitorApp, utils
+import permon.backend as backend
 
 
 class NativeMonitor(Monitor):
-    def __init__(self, stat_func, title, buffer_size, fps, color, app,
-                 fontsize, thickness, minimum=None, maximum=None):
+    def __init__(self, stat_func, title, full_tag, buffer_size, fps, color,
+                 app, fontsize, thickness, minimum=None, maximum=None):
         super(NativeMonitor, self).__init__(stat_func, title, buffer_size,
                                             fps, color, app, minimum=minimum,
                                             maximum=maximum)
         self.widget = QtWidgets.QWidget()
+        self.full_tag = full_tag
 
         # the widget consists of a title and the chart
         # we have to create a vertical layout in order to
@@ -21,7 +23,7 @@ class NativeMonitor(Monitor):
         layout.setMargin(0)
 
         self.widget.series = QtCharts.QLineSeries()
-        pen = QtGui.QPen(self.color, thickness)
+        pen = QtGui.QPen(QtGui.QColor(self.color), thickness)
         self.widget.series.setPen(pen)
 
         self.widget.chart = QtCharts.QChart()
@@ -135,7 +137,6 @@ class NativeApp(MonitorApp):
     def __init__(self, tags, colors, buffer_size, fps, fontsize=14,
                  line_thickness=3):
         super(NativeApp, self).__init__(tags, colors, buffer_size, fps)
-        self.colors = [QtGui.QColor(x) for x in colors]
 
         self.line_thickness = line_thickness
         self.fontsize = fontsize
@@ -145,6 +146,7 @@ class NativeApp(MonitorApp):
             NativeApp.qapp = QtWidgets.QApplication(sys.argv)
 
         self.window = QtWidgets.QMainWindow()
+        self._settings_tags = []
 
         # make the background white (the default is some ugly gray)
         palette = self.qapp.palette()
@@ -181,6 +183,7 @@ class NativeApp(MonitorApp):
         settings_button = QtWidgets.QPushButton('Settings')
 
         def set_settings_page():
+            self._settings_tags = self.tags.copy()
             self._main.setCurrentWidget(self._settings_page)
         settings_button.clicked.connect(set_settings_page)
 
@@ -189,9 +192,10 @@ class NativeApp(MonitorApp):
         # add monitors
         for i, stat in enumerate(self.stats):
             monitor = NativeMonitor(stat.get_stat, stat.name,
+                                    stat.get_full_tag(),
                                     buffer_size=self.buffer_size,
                                     fps=self.fps,
-                                    color=self.colors[i],
+                                    color=self.next_color(),
                                     app=self,
                                     fontsize=self.fontsize,
                                     thickness=self.line_thickness,
@@ -200,6 +204,40 @@ class NativeApp(MonitorApp):
             self.monitors.append(monitor)
             layout.addWidget(monitor.widget)
         return page_widget
+
+    def adjust_monitors(self):
+        displayed_monitor_tags = []
+        removed_monitors = []
+        for monitor in self.monitors:
+            if monitor.full_tag in self.tags:
+                displayed_monitor_tags.append(monitor.full_tag)
+            else:
+                removed_monitors.append(monitor)
+
+                layout = monitor.widget.layout()
+                for i in reversed(range(layout.count())):
+                    layout.itemAt(i).widget().setParent(None)
+                self._monitor_page.layout().removeWidget(monitor.widget)
+
+        for monitor in removed_monitors:
+            self.monitors.remove(monitor)
+
+        new_tags = list(set(self.tags) - set(displayed_monitor_tags))
+        for stat in backend.get_available_stats():
+            if stat.get_full_tag() in new_tags:
+                instance = stat()
+                monitor = NativeMonitor(instance.get_stat, instance.name,
+                                        instance.get_full_tag(),
+                                        buffer_size=self.buffer_size,
+                                        fps=self.fps,
+                                        color=self.next_color(),
+                                        app=self,
+                                        fontsize=self.fontsize,
+                                        thickness=self.line_thickness,
+                                        minimum=instance.minimum,
+                                        maximum=instance.maximum)
+                self.monitors.append(monitor)
+                self._monitor_page.layout().addWidget(monitor.widget)
 
     def _create_settings_page(self):
         page_widget = QtWidgets.QWidget()
@@ -217,21 +255,67 @@ class NativeApp(MonitorApp):
         model = QtGui.QStandardItemModel()
         font = QtGui.QFont()
         font.setBold(True)
-        title = QtGui.QStandardItem('Core')
-        title.setFont(font)
-        model.appendRow(title)
 
-        for i in range(10):
-            item = QtGui.QStandardItem(f'Item {i}')
+        stats = backend.get_available_stats()
+        stats = [x.get_full_tag().split('.')[:2] for x in stats]
+
+        category_map = dict()
+        for category in set(x[0] for x in stats):
+            item = QtGui.QStandardItem(category)
+            item.setFont(font)
+            model.appendRow(item)
+
+            category_map[category] = item
+
+        for category, base in stats:
+            item = QtGui.QStandardItem(base)
             item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-            item.setData(Qt.Unchecked, Qt.CheckStateRole)
 
-            title.appendRow(item)
+            full_tag = f'{category}.{base}'
+            check_state = Qt.Checked if full_tag in self.tags \
+                else Qt.Unchecked
+            item.setData(check_state, Qt.CheckStateRole)
+            item.setData(full_tag)
+            category_map[category].appendRow(item)
 
-        combo = QtWidgets.QTreeView()
-        combo.header().hide()
-        combo.setModel(model)
+        def check_monitor(item):
+            state = item.checkState()
+            is_selected = state == Qt.Checked
 
-        layout.addWidget(combo)
+            full_tag = item.data()
+            if is_selected:
+                self._settings_tags.append(full_tag)
+            else:
+                self._settings_tags.remove(full_tag)
+
+        model.itemChanged.connect(check_monitor)
+
+        tree = QtWidgets.QTreeView()
+        tree.header().hide()
+        tree.setModel(model)
+
+        layout.addWidget(tree)
+
+        continue_widget = QtWidgets.QWidget()
+        continue_layout = QtWidgets.QHBoxLayout(continue_widget)
+
+        cancel_button = QtWidgets.QPushButton('Cancel')
+        accept_button = QtWidgets.QPushButton('Accept')
+
+        def cancel():
+            self._main.setCurrentWidget(self._monitor_page)
+
+        def accept():
+            self.tags = self._settings_tags
+            self.adjust_monitors()
+            self._main.setCurrentWidget(self._monitor_page)
+
+        cancel_button.clicked.connect(cancel)
+        accept_button.clicked.connect(accept)
+
+        continue_layout.addWidget(cancel_button)
+        continue_layout.addWidget(accept_button)
+
+        layout.addWidget(continue_widget)
 
         return page_widget
