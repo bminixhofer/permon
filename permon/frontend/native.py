@@ -1,10 +1,97 @@
 import sys
 from PySide2 import QtWidgets, QtCore
-from PySide2.QtCore import Qt
+from PySide2.QtCore import Qt, Signal
 from PySide2.QtCharts import QtCharts
 import PySide2.QtGui as QtGui
 from permon.frontend import Monitor, MonitorApp, utils
 import permon.backend as backend
+
+
+class SettingsWidget(QtWidgets.QWidget):
+    accepted = Signal(list)
+    cancelled = Signal()
+
+    def __init__(self, parent, tags):
+        super(SettingsWidget, self).__init__(parent=parent)
+        self._settings_tags = tags.copy()
+
+        layout = QtWidgets.QVBoxLayout(self)
+
+        font = QtGui.QFont()
+        font.setPixelSize(14)
+        font.setBold(True)
+
+        monitor_label = QtWidgets.QLabel('Displayed Monitors')
+        monitor_label.setFont(font)
+
+        layout.addWidget(monitor_label)
+
+        model = QtGui.QStandardItemModel()
+        font = QtGui.QFont()
+        font.setBold(True)
+
+        stats = backend.get_available_stats()
+        stats = [x.get_full_tag().split('.')[:2] for x in stats]
+
+        category_map = dict()
+        for category in set(x[0] for x in stats):
+            item = QtGui.QStandardItem(category)
+            item.setFont(font)
+            model.appendRow(item)
+
+            category_map[category] = item
+
+        for category, base in stats:
+            item = QtGui.QStandardItem(base)
+            item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+
+            full_tag = f'{category}.{base}'
+            check_state = Qt.Checked if full_tag in self._settings_tags \
+                else Qt.Unchecked
+            item.setData(check_state, Qt.CheckStateRole)
+            item.setData(full_tag)
+            category_map[category].appendRow(item)
+
+        model.itemChanged.connect(self._check_monitor)
+
+        tree = QtWidgets.QTreeView()
+        tree.header().hide()
+        tree.setModel(model)
+
+        layout.addWidget(tree)
+
+        continue_widget = QtWidgets.QWidget()
+        continue_layout = QtWidgets.QHBoxLayout(continue_widget)
+
+        cancel_button = QtWidgets.QPushButton('Cancel')
+        accept_button = QtWidgets.QPushButton('Accept')
+
+        cancel_button.clicked.connect(self._cancel)
+        accept_button.clicked.connect(self._accept)
+
+        continue_layout.addWidget(cancel_button)
+        continue_layout.addWidget(accept_button)
+
+        layout.addWidget(continue_widget)
+
+    def open(self, tags):
+        self._settings_tags = tags.copy()
+
+    def _check_monitor(self, item):
+        state = item.checkState()
+        is_selected = state == Qt.Checked
+
+        full_tag = item.data()
+        if is_selected:
+            self._settings_tags.append(full_tag)
+        else:
+            self._settings_tags.remove(full_tag)
+
+    def _accept(self):
+        self.accepted.emit(self._settings_tags)
+
+    def _cancel(self):
+        self.cancelled.emit()
 
 
 class NativeMonitor(Monitor):
@@ -160,10 +247,20 @@ class NativeApp(MonitorApp):
         self.window.resize(size, size)
 
         # create the main widget and add monitors to it
-
         self._main = QtWidgets.QStackedWidget()
+        self._settings_page = SettingsWidget(self._main, self.tags)
+
+        def accept(tags):
+            self.tags = tags
+            self.adjust_monitors()
+            self._main.setCurrentWidget(self._monitor_page)
+
+        def cancel():
+            self._main.setCurrentWidget(self._monitor_page)
+
+        self._settings_page.accepted.connect(accept)
+        self._settings_page.cancelled.connect(cancel)
         self._monitor_page = self._create_monitor_page()
-        self._settings_page = self._create_settings_page()
 
         self._main.addWidget(self._monitor_page)
         self._main.addWidget(self._settings_page)
@@ -182,11 +279,11 @@ class NativeApp(MonitorApp):
         # add button for switching to settings page
         settings_button = QtWidgets.QPushButton('Settings')
 
-        def set_settings_page():
-            self._settings_tags = self.tags.copy()
+        def open_settings():
+            self._settings_page.open(self.tags)
             self._main.setCurrentWidget(self._settings_page)
-        settings_button.clicked.connect(set_settings_page)
 
+        settings_button.clicked.connect(open_settings)
         layout.addWidget(settings_button)
 
         # add monitors
@@ -238,84 +335,3 @@ class NativeApp(MonitorApp):
                                         maximum=instance.maximum)
                 self.monitors.append(monitor)
                 self._monitor_page.layout().addWidget(monitor.widget)
-
-    def _create_settings_page(self):
-        page_widget = QtWidgets.QWidget()
-        layout = QtWidgets.QVBoxLayout(page_widget)
-
-        font = QtGui.QFont()
-        font.setPixelSize(self.fontsize)
-        font.setBold(True)
-
-        monitor_label = QtWidgets.QLabel('Displayed Monitors')
-        monitor_label.setFont(font)
-
-        layout.addWidget(monitor_label)
-
-        model = QtGui.QStandardItemModel()
-        font = QtGui.QFont()
-        font.setBold(True)
-
-        stats = backend.get_available_stats()
-        stats = [x.get_full_tag().split('.')[:2] for x in stats]
-
-        category_map = dict()
-        for category in set(x[0] for x in stats):
-            item = QtGui.QStandardItem(category)
-            item.setFont(font)
-            model.appendRow(item)
-
-            category_map[category] = item
-
-        for category, base in stats:
-            item = QtGui.QStandardItem(base)
-            item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-
-            full_tag = f'{category}.{base}'
-            check_state = Qt.Checked if full_tag in self.tags \
-                else Qt.Unchecked
-            item.setData(check_state, Qt.CheckStateRole)
-            item.setData(full_tag)
-            category_map[category].appendRow(item)
-
-        def check_monitor(item):
-            state = item.checkState()
-            is_selected = state == Qt.Checked
-
-            full_tag = item.data()
-            if is_selected:
-                self._settings_tags.append(full_tag)
-            else:
-                self._settings_tags.remove(full_tag)
-
-        model.itemChanged.connect(check_monitor)
-
-        tree = QtWidgets.QTreeView()
-        tree.header().hide()
-        tree.setModel(model)
-
-        layout.addWidget(tree)
-
-        continue_widget = QtWidgets.QWidget()
-        continue_layout = QtWidgets.QHBoxLayout(continue_widget)
-
-        cancel_button = QtWidgets.QPushButton('Cancel')
-        accept_button = QtWidgets.QPushButton('Accept')
-
-        def cancel():
-            self._main.setCurrentWidget(self._monitor_page)
-
-        def accept():
-            self.tags = self._settings_tags
-            self.adjust_monitors()
-            self._main.setCurrentWidget(self._monitor_page)
-
-        cancel_button.clicked.connect(cancel)
-        accept_button.clicked.connect(accept)
-
-        continue_layout.addWidget(cancel_button)
-        continue_layout.addWidget(accept_button)
-
-        layout.addWidget(continue_widget)
-
-        return page_widget
