@@ -4,7 +4,7 @@ import numpy as np
 import permon
 from permon.frontend import native, terminal
 import permon.backend as backend
-from permon.classes import Stat
+from permon.backend import Stat
 
 stat_classes = backend.get_available_stats()
 
