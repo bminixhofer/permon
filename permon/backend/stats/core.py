@@ -1,7 +1,8 @@
 import time
+import math
+import re
 import psutil
 from permon.backend import Stat
-import math
 
 
 @Stat.windows
@@ -23,7 +24,6 @@ class CPUStat(Stat):
                               proc.info['cpu_percent']))
 
         top = sorted(processes, key=lambda x: x[1], reverse=True)[:5]
-        top = {name: value for name, value in top}
 
         self.top = top
 
@@ -59,28 +59,35 @@ class RAMStat(Stat):
         self._maximum = psutil.virtual_memory().total / 1024**2
         super(RAMStat, self).__init__()
 
-    def _fetch_top(self):
-        processes = []
+    def _fetch_top(self, actual_memory):
+        processes = {}
         for proc in psutil.process_iter(attrs=['name', 'memory_info']):
-            processes.append((proc.name().split()[0],
-                              proc.info['memory_info'].vms / 1024**2))
+            real_name = re.split(r'[\W\s]+', proc.name())[0]
 
-        top = sorted(processes, key=lambda x: x[1], reverse=True)[:5]
-        top = {name: value for name, value in top}
+            prev = processes[real_name] if real_name in processes else 0
+            current = proc.info['memory_info'].vms / 1024**2
 
-        self.top = top
+            processes[real_name] = prev + current
+
+        mem_sum = sum(processes.values())
+        for i, (key, value) in enumerate(processes.items()):
+            processes[key] = value / mem_sum * actual_memory
+
+        processes = sorted(processes.items(), key=lambda x: x[1], reverse=True)
+        processes = processes[:5]
+        top_sum = sum(x[1] for x in processes)
+
+        processes.insert(0, ['other', actual_memory - top_sum])
+
+        self.top = processes
 
     def get_stat(self):
+        actual_memory = psutil.virtual_memory().used / 1024**2
         if self._frames_without_top > self._fetch_top_frames:
-            self._fetch_top()
+            self._fetch_top(actual_memory)
             self._frames_without_top = 0
 
         self._frames_without_top += 1
-
-        actual_memory = psutil.virtual_memory().used / 1024**2
-        top_sum = sum(self.top.values())
-        for key, value in self.top.items():
-            self.top[key] = value / top_sum * actual_memory
 
         return actual_memory, self.top
 

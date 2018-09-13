@@ -190,7 +190,7 @@ class NativeMonitor(Monitor):
                 self.top_axis.remove(s)
 
         agg = 0
-        for i, x in enumerate(top.items()):
+        for i, x in enumerate(top):
             label = utils.format_bar_label(x[0])
 
             agg += x[1]
@@ -366,15 +366,12 @@ class NativeApp(MonitorApp):
         for stat in backend.get_available_stats():
             if stat.get_full_tag() in new_tags:
                 instance = stat()
-                monitor = NativeMonitor(instance.get_stat, instance.name,
-                                        instance.get_full_tag(),
+                monitor = NativeMonitor(instance,
                                         buffer_size=self.buffer_size,
                                         fps=self.fps,
                                         color=self.next_color(),
                                         app=self,
                                         fontsize=self.fontsize,
-                                        thickness=self.line_thickness,
-                                        minimum=instance.minimum,
-                                        maximum=instance.maximum)
+                                        thickness=self.line_thickness)
                 self.monitors.append(monitor)
                 self._monitor_page.layout().addWidget(monitor.widget)
