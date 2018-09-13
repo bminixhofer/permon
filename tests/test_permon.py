@@ -17,10 +17,12 @@ def check_if_valid_number(x):
 @pytest.mark.parametrize("cls", stat_classes)
 def test_valid_values(cls):
     instance = cls()
-    stat = instance.get_stat()
-    check_if_valid_number(stat)
+    if instance.has_top_info:
+        stat, _ = instance.get_stat()
+    else:
+        stat = instance.get_stat()
 
-    instance.destruct()
+    check_if_valid_number(stat)
 
 
 def test_stats_available():

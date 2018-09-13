@@ -5,19 +5,16 @@ import permon.backend as backend
 
 
 class Monitor(ABC):
-    def __init__(self, stat_func, title, buffer_size, fps, color, app,
-                 minimum=None, maximum=None):
-        if minimum and maximum:
-            assert np.abs(maximum - minimum) > 0, \
+    def __init__(self, stat, buffer_size, fps, color, app):
+        if stat.minimum and stat.maximum:
+            assert np.abs(stat.maximum - stat.minimum) > 0, \
                 'Graph range must be greater than zero.'
 
-        self.stat_func = stat_func
-        self.title = title
+        self.stat = stat
+        self.full_tag = stat.get_full_tag()
         self.buffer_size = buffer_size
         self.fps = fps
         self.color = color
-        self.minimum = minimum
-        self.maximum = maximum
         self.app = app
 
     def remove(self):

@@ -8,6 +8,10 @@ class Stat(ABC):
     windows_classes = []
     linux_classes = []
 
+    def __init__(self, n_top=5):
+        self.has_top_info = isinstance(self.get_stat(), tuple)
+        self.n_top = n_top
+
     @classmethod
     def get_full_tag(cls):
         full_path = inspect.getfile(cls)
@@ -45,9 +49,6 @@ class Stat(ABC):
     @property
     @abstractmethod
     def maximum(self):
-        pass
-
-    def destruct(self):
         pass
 
 

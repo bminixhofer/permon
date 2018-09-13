@@ -1,6 +1,7 @@
 import time
 import psutil
 from permon.backend import Stat
+import math
 
 
 @Stat.windows
@@ -9,8 +10,32 @@ class CPUStat(Stat):
     name = 'CPU Usage in %'
     tag = 'cpu_usage'
 
+    def __init__(self):
+        self._frames_without_top = math.inf
+        self._fetch_top_frames = 5
+
+        super(CPUStat, self).__init__()
+
+    def _fetch_top(self, cpu_percent):
+        processes = []
+        for proc in psutil.process_iter(attrs=['name', 'cpu_percent']):
+            processes.append((proc.name().split()[0],
+                              proc.info['cpu_percent']))
+
+        top = sorted(processes, key=lambda x: x[1], reverse=True)[:5]
+        top = {name: value for name, value in top}
+
+        self.top = top
+
     def get_stat(self):
-        return psutil.cpu_percent()
+        cpu_percent = sum(psutil.cpu_percent(percpu=True))
+        if self._frames_without_top > self._fetch_top_frames:
+            self._fetch_top(cpu_percent)
+            self._frames_without_top = 0
+
+        self._frames_without_top += 1
+
+        return cpu_percent, self.top
 
     @property
     def minimum(self):
@@ -18,7 +43,7 @@ class CPUStat(Stat):
 
     @property
     def maximum(self):
-        return 100
+        return 100 * psutil.cpu_count()
 
 
 @Stat.windows
@@ -28,10 +53,36 @@ class RAMStat(Stat):
     tag = 'ram_usage'
 
     def __init__(self):
+        self._frames_without_top = math.inf
+        self._fetch_top_frames = 5
+
         self._maximum = psutil.virtual_memory().total / 1024**2
+        super(RAMStat, self).__init__()
+
+    def _fetch_top(self):
+        processes = []
+        for proc in psutil.process_iter(attrs=['name', 'memory_info']):
+            processes.append((proc.name().split()[0],
+                              proc.info['memory_info'].vms / 1024**2))
+
+        top = sorted(processes, key=lambda x: x[1], reverse=True)[:5]
+        top = {name: value for name, value in top}
+
+        self.top = top
 
     def get_stat(self):
-        return psutil.virtual_memory().used / 1024**2
+        if self._frames_without_top > self._fetch_top_frames:
+            self._fetch_top()
+            self._frames_without_top = 0
+
+        self._frames_without_top += 1
+
+        actual_memory = psutil.virtual_memory().used / 1024**2
+        top_sum = sum(self.top.values())
+        for key, value in self.top.items():
+            self.top[key] = value / top_sum * actual_memory
+
+        return actual_memory, self.top
 
     @property
     def minimum(self):
@@ -82,6 +133,7 @@ class ReadStat(Stat):
     def __init__(self, fps=10):
         self.cache = []
         self.start_bytes = psutil.disk_io_counters().read_bytes
+        super(ReadStat, self).__init__()
 
     def get_stat(self):
         stat = psutil.disk_io_counters().read_bytes - self.start_bytes
@@ -109,6 +161,7 @@ class WriteStat(Stat):
     def __init__(self, fps=10):
         self.cache = []
         self.start_bytes = psutil.disk_io_counters().write_bytes
+        super(WriteStat, self).__init__()
 
     def get_stat(self):
         stat = psutil.disk_io_counters().write_bytes - self.start_bytes

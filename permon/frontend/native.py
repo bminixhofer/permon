@@ -5,6 +5,7 @@ from PySide2.QtCharts import QtCharts
 import PySide2.QtGui as QtGui
 from permon.frontend import Monitor, MonitorApp, utils
 import permon.backend as backend
+import math
 
 
 class SettingsWidget(QtWidgets.QWidget):
@@ -95,13 +96,51 @@ class SettingsWidget(QtWidgets.QWidget):
 
 
 class NativeMonitor(Monitor):
-    def __init__(self, stat_func, title, full_tag, buffer_size, fps, color,
-                 app, fontsize, thickness, minimum=None, maximum=None):
-        super(NativeMonitor, self).__init__(stat_func, title, buffer_size,
-                                            fps, color, app, minimum=minimum,
-                                            maximum=maximum)
+    def _create_right_axis(self):
+        top_axis = QtCharts.QCategoryAxis()
+        top_axis.setGridLineVisible(False)
+
+        font = QtGui.QFont()
+        font.setPixelSize(8)
+        top_axis.setLabelsFont(font)
+        top_axis.setLinePen(self.line_pen)
+
+        if not self.stat.has_top_info:
+            top_axis.setLineVisible(False)
+
+        self.widget.chart.addAxis(top_axis, Qt.AlignRight)
+        self.line_series.attachAxis(top_axis)
+
+        self.top_axis = top_axis
+
+    def _create_line_series(self):
+        # a QValueAxis has tick labels per default
+        # so we use a QCategoryAxis
+        axisX = QtCharts.QCategoryAxis()
+        axisX.setRange(0, self.buffer_size)
+
+        # create series
+        series = QtCharts.QLineSeries()
+        pen = QtGui.QPen(QtGui.QColor(self.color), self.thickness)
+        series.setPen(pen)
+
+        self.widget.chart.addSeries(series)
+        self.widget.chart.setAxisX(axisX, series)
+        self.widget.chart.setAxisY(self.widget.axisY, series)
+
+        self.buffer = [QtCore.QPointF(x, 0) for x in range(self.buffer_size)]
+        series.append(self.buffer)
+
+        self.line_pen = pen
+        self.line_series = series
+
+    def __init__(self, stat, buffer_size, fps, color,
+                 app, fontsize, thickness):
+        super(NativeMonitor, self).__init__(stat, buffer_size,
+                                            fps, color, app)
+        self.fontsize = fontsize
+        self.thickness = thickness
         self.widget = QtWidgets.QWidget()
-        self.full_tag = full_tag
 
         # the widget consists of a title and the chart
         # we have to create a vertical layout in order to
@@ -109,27 +148,19 @@ class NativeMonitor(Monitor):
         layout = QtWidgets.QVBoxLayout(self.widget)
         layout.setMargin(0)
 
-        self.widget.series = QtCharts.QLineSeries()
-        pen = QtGui.QPen(QtGui.QColor(self.color), thickness)
-        self.widget.series.setPen(pen)
-
         self.widget.chart = QtCharts.QChart()
-        self.widget.chart.addSeries(self.widget.series)
-
-        # a QValueAxis has tick labels per default
-        # so we use a QCategoryAxis
-        self.widget.axisX = QtCharts.QCategoryAxis()
-        self.widget.axisX.setRange(0, buffer_size)
 
         # use a QCategoryAxis again for more customizability
         self.widget.axisY = QtCharts.QCategoryAxis()
         self.widget.axisY.setLabelsPosition(
             QtCharts.QCategoryAxis.AxisLabelsPositionOnValue
-            )
-        self._set_yrange(self.minimum or 0, self.maximum or 0)
+        )
 
-        self.widget.chart.setAxisX(self.widget.axisX, self.widget.series)
-        self.widget.chart.setAxisY(self.widget.axisY, self.widget.series)
+        self._create_line_series()
+        self._create_right_axis()
+
+        self._set_yrange(self.stat.minimum or 0, self.stat.maximum or 0)
+
         self.widget.chart.legend().hide()
         self.widget.chart.layout().setContentsMargins(0, 0, 0, 0)
 
@@ -141,9 +172,6 @@ class NativeMonitor(Monitor):
         self.widget.chartView.setRenderHint(QtGui.QPainter.Antialiasing)
         layout.addWidget(self.widget.chartView)
 
-        self.buffer = [QtCore.QPointF(x, 0) for x in range(buffer_size)]
-        self.widget.series.append(self.buffer)
-
         # run an update every 1 / fps seconds
         timer = QtCore.QTimer(self.widget)
         timer.start(1000 / fps)
@@ -152,7 +180,24 @@ class NativeMonitor(Monitor):
     def update(self):
         # every frame, we remove the last point of the history and
         # append a new measurement to the end
-        new_point = QtCore.QPointF(self.buffer_size, self.stat_func())
+        if self.stat.has_top_info:
+            value, top = self.stat.get_stat()
+        else:
+            value = self.stat.get_stat()
+            top = {}
+
+        for s in self.top_axis.categoriesLabels():
+                self.top_axis.remove(s)
+
+        agg = 0
+        for i, x in enumerate(top.items()):
+            label = utils.format_bar_label(x[0])
+
+            agg += x[1]
+            self.top_axis.append(u'\u00A0' * 2 + label, agg)
+        self.top_axis.append(u'\u00A0' * 40, math.inf)
+
+        new_point = QtCore.QPointF(self.buffer_size, value)
         self.buffer.append(new_point)
         del self.buffer[0]
 
@@ -161,17 +206,17 @@ class NativeMonitor(Monitor):
         for i in range(self.buffer_size):
             self.buffer[i].setX(i)
 
-        self.widget.series.replace(self.buffer)
+        self.line_series.replace(self.buffer)
 
         # if minimum or maximum is unknown, we have to adjust the axis limits
-        if self.minimum is None or self.maximum is None:
+        if self.stat.minimum is None or self.stat.maximum is None:
             buffer_values = [point.y() for point in self.buffer]
 
             # if we dont know the min or max and they cant be determined by
             # the history, we have to set some defaults (e. g. -1 and 1)
             range_is_zero = max(buffer_values) == min(buffer_values)
-            minimum = self.minimum
-            maximum = self.maximum
+            minimum = self.stat.minimum
+            maximum = self.stat.maximum
             if minimum is None:
                 if range_is_zero:
                     minimum = -1
@@ -188,12 +233,13 @@ class NativeMonitor(Monitor):
     def paint(self):
         pass
 
-    def _set_yrange(self, minimum, maximum, n_labels=4):
+    def _set_yrange(self, minimum, maximum, n_labels=5):
         axis = self.widget.axisY
         if minimum == axis.min() and maximum == axis.max():
             return
 
         axis.setRange(minimum, maximum)
+        self.top_axis.setRange(minimum, maximum)
 
         for s in axis.categoriesLabels():
             axis.remove(s)
@@ -211,7 +257,7 @@ class NativeMonitor(Monitor):
         font.setPixelSize(fontsize)
         font.setBold(True)
 
-        title_label = QtWidgets.QLabel(self.title)
+        title_label = QtWidgets.QLabel(self.stat.name)
         title_label.setFont(font)
 
         return title_label
@@ -222,7 +268,7 @@ class NativeApp(MonitorApp):
     qapp = None
 
     def __init__(self, tags, colors, buffer_size, fps, fontsize=14,
-                 line_thickness=3):
+                 line_thickness=2):
         super(NativeApp, self).__init__(tags, colors, buffer_size, fps)
 
         self.line_thickness = line_thickness
@@ -288,16 +334,13 @@ class NativeApp(MonitorApp):
 
         # add monitors
         for i, stat in enumerate(self.stats):
-            monitor = NativeMonitor(stat.get_stat, stat.name,
-                                    stat.get_full_tag(),
+            monitor = NativeMonitor(stat,
                                     buffer_size=self.buffer_size,
                                     fps=self.fps,
                                     color=self.next_color(),
                                     app=self,
                                     fontsize=self.fontsize,
-                                    thickness=self.line_thickness,
-                                    minimum=stat.minimum,
-                                    maximum=stat.maximum)
+                                    thickness=self.line_thickness)
             self.monitors.append(monitor)
             layout.addWidget(monitor.widget)
         return page_widget

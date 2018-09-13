@@ -14,3 +14,11 @@ def format_labels(axis_values):
             return str(int(x / 100) * 100)
 
     return [format_value(x) for x in axis_values]
+
+
+def format_bar_label(label, max_len=15):
+    fill = '...'
+
+    if len(label) > max_len:
+        label = label[:max_len - len(fill)] + fill
+    return label
