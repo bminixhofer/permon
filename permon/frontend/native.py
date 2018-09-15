@@ -271,8 +271,13 @@ class NativeApp(MonitorApp):
                  line_thickness=2):
         super(NativeApp, self).__init__(tags, colors, buffer_size, fps)
 
-        self.line_thickness = line_thickness
-        self.fontsize = fontsize
+        self.monitor_params = {
+            'buffer_size': buffer_size,
+            'fps': fps,
+            'app': self,
+            'thickness': line_thickness,
+            'fontsize': fontsize
+        }
 
     def initialize(self):
         if not self.qapp:
@@ -334,13 +339,8 @@ class NativeApp(MonitorApp):
 
         # add monitors
         for i, stat in enumerate(self.stats):
-            monitor = NativeMonitor(stat,
-                                    buffer_size=self.buffer_size,
-                                    fps=self.fps,
-                                    color=self.next_color(),
-                                    app=self,
-                                    fontsize=self.fontsize,
-                                    thickness=self.line_thickness)
+            monitor = NativeMonitor(stat, color=self.next_color(),
+                                    **self.monitor_params)
             self.monitors.append(monitor)
             layout.addWidget(monitor.widget)
         return page_widget
@@ -366,12 +366,11 @@ class NativeApp(MonitorApp):
         for stat in backend.get_available_stats():
             if stat.get_full_tag() in new_tags:
                 instance = stat()
-                monitor = NativeMonitor(instance,
-                                        buffer_size=self.buffer_size,
-                                        fps=self.fps,
-                                        color=self.next_color(),
-                                        app=self,
-                                        fontsize=self.fontsize,
-                                        thickness=self.line_thickness)
+                monitor = NativeMonitor(instance, color=self.next_color(),
+                                        **self.monitor_params)
                 self.monitors.append(monitor)
                 self._monitor_page.layout().addWidget(monitor.widget)
+
+        # keep all charts equally large
+        for i in range(self._monitor_page.layout().count()):
+            self._monitor_page.layout().setStretch(i, 1)

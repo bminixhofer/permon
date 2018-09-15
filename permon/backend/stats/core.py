@@ -1,8 +1,86 @@
 import time
-import math
 import re
+import threading
+from collections import defaultdict
 import psutil
 from permon.backend import Stat
+
+
+class ProcessTracker():
+    instance = None
+    n_wrapper_instances = 0
+
+    class __ProcessTracker():
+        def __init__(self):
+            self._stop = False
+            self._stopped = False
+            self.processes = {}
+            self.n_top = defaultdict(lambda: {})
+
+            self._thread = threading.Thread(target=self._read_processes)
+            self._thread.start()
+
+        def _read_processes(self):
+            while not self._stop:
+                iterator = psutil.process_iter()
+                _processes = {}
+
+                for proc in iterator:
+                    name = re.split(r'[\W\s]+', proc.name())[0]
+                    if name not in _processes:
+                        _processes[name] = {
+                            'cpu': proc.cpu_percent(),
+                            'ram': proc.memory_info().vms
+                        }
+                    else:
+                        _processes[name]['cpu'] += proc.cpu_percent()
+                        _processes[name]['ram'] += proc.memory_info().vms
+
+                used_memory = psutil.virtual_memory().used / 1024**2
+                self.n_top['cpu'] = self.get_n_top('cpu')
+                self.n_top['ram'] = self.get_n_top('ram', adapt_to=used_memory)
+                self.processes = _processes
+                time.sleep(1)
+
+            self._stopped = True
+
+        def get_n_top(self, tag, n=5, adapt_to=None):
+            processes = self.processes.items()
+            top = sorted(processes, key=lambda proc: proc[1][tag],
+                         reverse=True)
+            top = [[key, value[tag]] for key, value in top]
+
+            if adapt_to is not None:
+                value_sum = max(sum(x[1] for x in top), 1e-6)
+                for i, (_, value) in enumerate(top):
+                    top[i][1] = value / value_sum * adapt_to
+                remainder = adapt_to - sum(x[1] for x in top[:n-1])
+                top.insert(0, ['other', remainder])
+            return top[:n]
+
+    def __init__(self):
+        if not self.instance:
+            ProcessTracker.instance = self.__ProcessTracker()
+        ProcessTracker.n_wrapper_instances += 1
+
+    def __del__(self):
+        ProcessTracker.n_wrapper_instances -= 1
+        if self.n_wrapper_instances == 0:
+            self.instance._stop = True
+            while not self.instance._stopped:
+                continue
+
+            ProcessTracker.instance = None
+
+    def delete_instance(self):
+        self.instance._stop = True
+        while not self._stopped:
+            continue
+
+        self.instance = None
+
+    def __getattr__(self, attr):
+        return getattr(self.instance, attr)
 
 
 @Stat.windows
@@ -12,30 +90,22 @@ class CPUStat(Stat):
     tag = 'cpu_usage'
 
     def __init__(self):
-        self._frames_without_top = math.inf
-        self._fetch_top_frames = 5
+        self.proc_tracker = ProcessTracker()
+        self.buffer = []
+        self.buffer_size = 10
 
         super(CPUStat, self).__init__()
 
-    def _fetch_top(self, cpu_percent):
-        processes = []
-        for proc in psutil.process_iter(attrs=['name', 'cpu_percent']):
-            processes.append((proc.name().split()[0],
-                              proc.info['cpu_percent']))
-
-        top = sorted(processes, key=lambda x: x[1], reverse=True)[:5]
-
-        self.top = top
-
     def get_stat(self):
         cpu_percent = sum(psutil.cpu_percent(percpu=True))
-        if self._frames_without_top > self._fetch_top_frames:
-            self._fetch_top(cpu_percent)
-            self._frames_without_top = 0
+        self.buffer.append(cpu_percent)
+        if len(self.buffer) > self.buffer_size:
+            del self.buffer[0]
 
-        self._frames_without_top += 1
+        mean_percent = sum(self.buffer) / len(self.buffer)
+        top = self.proc_tracker.n_top['cpu']
 
-        return cpu_percent, self.top
+        return mean_percent, top
 
     @property
     def minimum(self):
@@ -53,43 +123,16 @@ class RAMStat(Stat):
     tag = 'ram_usage'
 
     def __init__(self):
-        self._frames_without_top = math.inf
-        self._fetch_top_frames = 5
+        self.proc_tracker = ProcessTracker()
 
         self._maximum = psutil.virtual_memory().total / 1024**2
         super(RAMStat, self).__init__()
 
-    def _fetch_top(self, actual_memory):
-        processes = {}
-        for proc in psutil.process_iter(attrs=['name', 'memory_info']):
-            real_name = re.split(r'[\W\s]+', proc.name())[0]
-
-            prev = processes[real_name] if real_name in processes else 0
-            current = proc.info['memory_info'].vms / 1024**2
-
-            processes[real_name] = prev + current
-
-        mem_sum = sum(processes.values())
-        for i, (key, value) in enumerate(processes.items()):
-            processes[key] = value / mem_sum * actual_memory
-
-        processes = sorted(processes.items(), key=lambda x: x[1], reverse=True)
-        processes = processes[:5]
-        top_sum = sum(x[1] for x in processes)
-
-        processes.insert(0, ['other', actual_memory - top_sum])
-
-        self.top = processes
-
     def get_stat(self):
         actual_memory = psutil.virtual_memory().used / 1024**2
-        if self._frames_without_top > self._fetch_top_frames:
-            self._fetch_top(actual_memory)
-            self._frames_without_top = 0
+        top = self.proc_tracker.n_top['ram']
 
-        self._frames_without_top += 1
-
-        return actual_memory, self.top
+        return actual_memory, top
 
     @property
     def minimum(self):
