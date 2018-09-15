@@ -311,7 +311,9 @@ class NativeApp(MonitorApp):
 
         self._settings_page.accepted.connect(accept)
         self._settings_page.cancelled.connect(cancel)
+
         self._monitor_page = self._create_monitor_page()
+        self.adjust_monitors()
 
         self._main.addWidget(self._monitor_page)
         self._main.addWidget(self._settings_page)
@@ -337,12 +339,7 @@ class NativeApp(MonitorApp):
         settings_button.clicked.connect(open_settings)
         layout.addWidget(settings_button)
 
-        # add monitors
-        for i, stat in enumerate(self.stats):
-            monitor = NativeMonitor(stat, color=self.next_color(),
-                                    **self.monitor_params)
-            self.monitors.append(monitor)
-            layout.addWidget(monitor.widget)
+        self.monitors = []
         return page_widget
 
     def adjust_monitors(self):

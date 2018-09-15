@@ -6,18 +6,17 @@ from permon.frontend import Monitor, MonitorApp, utils
 
 
 class TerminalMonitor(Monitor):
-    def __init__(self, stat_func, title, buffer_size, fps, color, app,
-                 resolution, minimum=None, maximum=None, axis_width=10):
-        super(TerminalMonitor, self).__init__(stat_func, title, buffer_size,
-                                              fps, color, app, minimum=minimum,
-                                              maximum=maximum)
+    def __init__(self, stat, buffer_size, fps, color, app,
+                 resolution, axis_width=10):
+        super(TerminalMonitor, self).__init__(stat, buffer_size,
+                                              fps, color, app)
 
-        self.title = title
+        self.title = self.stat.name
         self.resolution = resolution
         self.axis_width = axis_width
         # fill unknown history with the minimum value (or 0 if it is unknown)
         self.values = np.full(resolution[1] - self.axis_width,
-                              self.minimum or 0)
+                              self.stat.minimum or 0)
         self.symbols = {
             'axis': ' ┤',
             'horizontal': '─',
@@ -30,11 +29,16 @@ class TerminalMonitor(Monitor):
 
     def update(self):
         self.values = np.roll(self.values, -1, axis=0)
-        self.values[-1] = self.stat_func()
+
+        if self.stat.has_top_info:
+            value, top = self.stat.get_stat()
+        else:
+            value = self.stat.get_stat()
+        self.values[-1] = value
 
     def paint(self):
-        minimum = self.minimum
-        maximum = self.maximum
+        minimum = self.stat.minimum
+        maximum = self.stat.maximum
 
         # if we dont know the min or max and they cant be determined by
         # the history, we have to set some defaults (e. g. -1 and 1)
@@ -52,7 +56,8 @@ class TerminalMonitor(Monitor):
 
         interval = float(abs(maximum - minimum))
         # we have to reserve 1 line for the chart title
-        height = self.resolution[0] - 1
+        # and 1 to make sure the height is not exceeded
+        height = self.resolution[0] - 2
 
         if interval > 0:
             ratio = (height - 1) / interval
@@ -133,14 +138,12 @@ class TerminalApp(MonitorApp):
         resolution = (height, self.term.width)
 
         for i, stat in enumerate(self.stats):
-            monitor = TerminalMonitor(stat.get_stat, stat.name,
+            monitor = TerminalMonitor(stat,
                                       buffer_size=self.buffer_size,
                                       fps=self.fps,
                                       color=self.colors[i],
                                       app=self,
-                                      resolution=resolution,
-                                      minimum=stat.minimum,
-                                      maximum=stat.maximum)
+                                      resolution=resolution)
             self.monitors.append(monitor)
 
         print(self.term.enter_fullscreen())
@@ -151,7 +154,7 @@ class TerminalApp(MonitorApp):
                 self.update()
                 self.paint()
                 time.sleep(1 / self.fps)
-        finally:
+        except KeyboardInterrupt:
             print('Stopping..')
             print(self.term.exit_fullscreen())
             sys.exit(0)
