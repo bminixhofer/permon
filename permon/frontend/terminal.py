@@ -3,22 +3,26 @@ import time
 import blessings
 import sys
 from permon.frontend import Monitor, MonitorApp, utils
+import math
 
 
 class TerminalMonitor(Monitor):
     def __init__(self, stat, buffer_size, fps, color, app,
-                 resolution, axis_width=10):
+                 resolution, axis_width=10, right_axis_width=20):
         super(TerminalMonitor, self).__init__(stat, buffer_size,
                                               fps, color, app)
 
         self.title = self.stat.name
         self.resolution = resolution
         self.axis_width = axis_width
+        self.r_axis_width = right_axis_width
         # fill unknown history with the minimum value (or 0 if it is unknown)
-        self.values = np.full(resolution[1] - self.axis_width,
+        axis_space = self.axis_width + self.r_axis_width
+        self.values = np.full(resolution[1] - axis_space,
                               self.stat.minimum or 0)
         self.symbols = {
             'axis': ' ┤',
+            'right_axis': '├',
             'horizontal': '─',
             'vertical': '│',
             'fall_then_flat': '╰',
@@ -31,10 +35,12 @@ class TerminalMonitor(Monitor):
         self.values = np.roll(self.values, -1, axis=0)
 
         if self.stat.has_top_info:
-            value, top = self.stat.get_stat()
+            value, contrib = self.stat.get_stat()
         else:
             value = self.stat.get_stat()
+            contrib = {}
         self.values[-1] = value
+        self.latest_contrib = contrib
 
     def paint(self):
         minimum = self.stat.minimum
@@ -70,6 +76,10 @@ class TerminalMonitor(Monitor):
         rows = max(abs(max_cell - min_cell), 1)
         width = len(self.values)
 
+        # utility function to determine which cell a value is best placed in
+        def get_cell(value):
+            return int(round(value * ratio) - min_cell)
+
         # create chart axis
         axis = []
 
@@ -82,13 +92,43 @@ class TerminalMonitor(Monitor):
         longest_label = max(len(x) for x in axis)
         pad_width = self.axis_width - len(axis_symbol)
 
-        assert longest_label <= pad_width, 'Axis labels exceed axis width.'
-        axis = [x.rjust(pad_width) + axis_symbol
-                for x in axis]
+        # create contributor axis
+        contrib_axis = []
 
-        # utility function to determine which cell a value is best placed in
-        def get_cell(value):
-            return int(round(value * ratio) - min_cell)
+        if self.latest_contrib:
+            contribs_row = [[name, value / self.stat.maximum * rows]
+                            for name, value in self.latest_contrib]
+            used_rows = sum(math.floor(value) for _, value in contribs_row)
+            row_diff = get_cell(self.values[-1]) + 1 - used_rows
+            for _ in range(row_diff):
+                max_dec_index = max(enumerate(contribs_row),
+                                    key=lambda x: x[1][1] % 1)[0]
+                contribs_row[max_dec_index][1] = \
+                    math.ceil(contribs_row[max_dec_index][1])
+
+            for name, value in contribs_row:
+                value = math.floor(value)
+
+                contrib_axis.extend([self.symbols['vertical']] * (value - 1))
+                contrib_axis.append(self.symbols['right_axis'])
+
+                mid_index = -int(value / 2) - 1
+                max_label_len = self.r_axis_width - \
+                    len(contrib_axis[mid_index]) - 1
+
+                contrib_axis[mid_index] += \
+                    ' ' + utils.format_bar_label(name, max_len=max_label_len)
+
+                if len(contrib_axis) >= get_cell(self.values[-1]) + 1:
+                    break
+
+        unused_rows = len(axis) - len(contrib_axis)
+        contrib_axis.extend([self.symbols['vertical']] * unused_rows)
+        contrib_axis = reversed(contrib_axis)
+        contrib_axis = [x.ljust(self.r_axis_width) for x in contrib_axis]
+
+        assert longest_label <= pad_width, 'Axis labels exceed axis width.'
+        axis = [x.rjust(pad_width) + axis_symbol for x in axis]
 
         # create chart line
         line = [[' '] * width for i in range(rows + 1)]
@@ -114,8 +154,11 @@ class TerminalMonitor(Monitor):
 
         # title and line have the chart color, while the axis is always white
         print(self.color(self.title))
-        print('\n'.join(axis[i] +
-              self.color(''.join(line[i])) for i in range(rows + 1)))
+        out_rows = [axis[i] +
+                    self.color(''.join(line[i])) +
+                    contrib_axis[i] if contrib_axis else ''
+                    for i in range(rows + 1)]
+        print('\n'.join(out_rows))
 
 
 class TerminalApp(MonitorApp):
