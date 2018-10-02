@@ -195,7 +195,7 @@ class ReadStat(Stat):
 
     @property
     def minimum(self):
-        return None
+        return 0
 
     @property
     def maximum(self):
@@ -223,7 +223,7 @@ class WriteStat(Stat):
 
     @property
     def minimum(self):
-        return None
+        return 0
 
     @property
     def maximum(self):
