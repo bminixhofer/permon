@@ -5,6 +5,7 @@ from PySide2.QtCharts import QtCharts
 import PySide2.QtGui as QtGui
 from permon.frontend import Monitor, MonitorApp, utils
 import permon.backend as backend
+from permon import config
 import math
 
 
@@ -303,6 +304,10 @@ class NativeApp(MonitorApp):
 
         def accept(tags):
             self.tags = tags
+            config.set_config({
+                'monitors': tags
+            })
+
             self.adjust_monitors()
             self._main.setCurrentWidget(self._monitor_page)
 
