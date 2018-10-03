@@ -53,8 +53,6 @@ def test_minimum_and_maximum_defined(cls):
 def test_init(app, arguments, mocker):
     mocker.patch.object(sys, 'argv',  ['permon'] + arguments)
     patched_init = mocker.patch.object(app, 'initialize')
-    patched_stats = mocker.patch.object(backend, 'get_available_stats')
 
     permon.main()
     patched_init.assert_called_once()
-    patched_stats.assert_called_once()

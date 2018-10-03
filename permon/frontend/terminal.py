@@ -1,8 +1,8 @@
 import numpy as np
 import time
 import blessings
-import sys
 from permon.frontend import Monitor, MonitorApp, utils
+import permon.backend as backend
 import math
 
 
@@ -165,6 +165,12 @@ class TerminalApp(MonitorApp):
     def __init__(self, tags, colors, buffer_size, fps):
         super(TerminalApp, self).__init__(tags, colors, buffer_size, fps)
 
+        self.stats = []
+        for stat in backend.get_available_stats():
+            if stat.get_full_tag() in tags:
+                instance = stat()
+                self.stats.append(instance)
+
     def initialize(self):
         self.term = blessings.Terminal()
         self.colors = [self.term.green, self.term.red, self.term.blue,
@@ -198,9 +204,9 @@ class TerminalApp(MonitorApp):
                 self.paint()
                 time.sleep(1 / self.fps)
         except KeyboardInterrupt:
-            print('Stopping..')
             print(self.term.exit_fullscreen())
-            sys.exit(0)
+            # explicitly delete monitors to stop threads run by stats
+            del self.monitors
 
     def paint(self):
         # every frame, paint all monitors and move the cursor

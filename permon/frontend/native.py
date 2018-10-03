@@ -327,6 +327,9 @@ class NativeApp(MonitorApp):
         self.window.show()
         self.qapp.exec_()
 
+        # when done executing (window is closed by user), delete the monitors
+        del self.monitors
+
     def paint(self):
         pass
 

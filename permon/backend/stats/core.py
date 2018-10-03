@@ -40,7 +40,13 @@ class ProcessTracker():
                 self.n_top['cpu'] = self.get_n_top('cpu')
                 self.n_top['ram'] = self.get_n_top('ram', adapt_to=used_memory)
                 self.processes = _processes
-                time.sleep(1)
+
+                # check if the thread should be stopped every 0.1 seconds
+                # minimal sacrifice in performance for more responsive quitting
+                for i in range(10):
+                    time.sleep(0.1)
+                    if self._stop:
+                        break
 
             self._stopped = True
 
