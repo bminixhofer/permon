@@ -2,6 +2,8 @@ import time
 import re
 import threading
 from collections import defaultdict
+import subprocess
+import warnings
 import psutil
 from permon.backend import Stat
 
@@ -149,35 +151,48 @@ class RAMStat(Stat):
         return self._maximum
 
 
-# @Stat.linux
-# class GPUStat(Stat):
-#     name = 'vRAM Usage in MiB'
-#     tag = 'vram_usage'
+@Stat.linux
+class GPUStat(Stat):
+    name = 'vRAM Usage in MiB'
+    tag = 'vram_usage'
 
-#     def __init__(self):
-#         self._maximum = self._get_used_and_total()[1]
+    @classmethod
+    def is_available(cls):
+        available = True
 
-#     def _get_used_and_total(self):
-#         vram_command = ['nvidia-smi', '--display=MEMORY', '-q']
-#         try:
-#             out = subprocess.check_output(vram_command)
-#             out = out.decode('utf-8').split('\n')[8:]
-#         except Exception as e:
-#             raise ImportError('nvidia-smi command not found.')
-#         total = int(out[1].split()[2])
-#         used = int(out[2].split()[2])
-#         return used, total
+        try:
+            subprocess.call(['nvidia-smi'])
+        except OSError:
+            warnings.warn('Could not display vRAM usage. '
+                          'nvidia-smi not in PATH.')
+            available = False
 
-#     def get_stat(self):
-#         return self._get_used_and_total()[0]
+        return available
 
-#     @property
-#     def minimum(self):
-#         return 0
+    def __init__(self):
+        super(GPUStat, self).__init__()
+        self._maximum = self._get_used_and_total()[1]
 
-#     @property
-#     def maximum(self):
-#         return self._maximum
+    def _get_used_and_total(self):
+        vram_command = ['nvidia-smi', '--display=MEMORY', '-q']
+
+        out = subprocess.check_output(vram_command)
+        out = out.decode('utf-8').split('\n')[8:]
+
+        total = int(out[1].split()[2])
+        used = int(out[2].split()[2])
+        return used, total
+
+    def get_stat(self):
+        return self._get_used_and_total()[0]
+
+    @property
+    def minimum(self):
+        return 0
+
+    @property
+    def maximum(self):
+        return self._maximum
 
 
 @Stat.windows
@@ -234,3 +249,30 @@ class WriteStat(Stat):
     @property
     def maximum(self):
         return None
+
+
+@Stat.windows
+@Stat.linux
+class CPUTempStat(Stat):
+    name = 'CPU Temperature in °C'
+    tag = 'cpu_temp'
+
+    def __init__(self, fps=10):
+        critical_temps = [x.critical for x in self.get_core_temps()]
+        self._maximum = sum(critical_temps) / len(critical_temps)
+        super(CPUTempStat, self).__init__()
+
+    def get_core_temps(self):
+        return psutil.sensors_temperatures()['coretemp']
+
+    def get_stat(self):
+        core_temps = [x.current for x in self.get_core_temps()]
+        return sum(core_temps) / len(core_temps)
+
+    @property
+    def minimum(self):
+        return None
+
+    @property
+    def maximum(self):
+        return self._maximum

@@ -2,6 +2,7 @@ import numpy as np
 import time
 import blessings
 from permon.frontend import Monitor, MonitorApp, utils
+from permon import exceptions
 import permon.backend as backend
 import math
 
@@ -166,10 +167,13 @@ class TerminalApp(MonitorApp):
         super(TerminalApp, self).__init__(tags, colors, buffer_size, fps)
 
         self.stats = []
-        for stat in backend.get_available_stats():
-            if stat.get_full_tag() in tags:
+        for stat in backend.get_all_stats():
+            if stat.get_full_tag() in tags and stat.is_available():
                 instance = stat()
                 self.stats.append(instance)
+
+        if len(self.stats) == 0:
+            raise exceptions.NoStatError()
 
     def initialize(self):
         self.term = blessings.Terminal()

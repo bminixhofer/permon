@@ -2,7 +2,7 @@
 __version__ = '1.0.0'
 
 from permon.frontend import native, terminal
-from permon import config
+from permon import config, backend, exceptions
 
 
 def main():
@@ -27,6 +27,11 @@ def main():
     args = parser.parse_args()
 
     monitors = args.monitors
+
+    all_stats = [x.get_full_tag() for x in backend.get_all_stats()]
+    for tag in monitors:
+        if tag not in all_stats:
+            raise exceptions.InvalidStatError(f'stat "{tag}" does not exist.')
 
     if args.store_config:
         config.set_config({

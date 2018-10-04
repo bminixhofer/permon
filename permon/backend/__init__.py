@@ -2,6 +2,7 @@ import os
 from abc import ABC, abstractmethod
 import importlib
 import inspect
+from permon import exceptions
 
 
 class Stat(ABC):
@@ -9,8 +10,15 @@ class Stat(ABC):
     linux_classes = []
 
     def __init__(self, n_top=5):
+        if not self.is_available():
+            raise exceptions.InvalidStatError(
+                'Unavailable stats can not be instantiated.')
         self.has_top_info = isinstance(self.get_stat(), tuple)
         self.n_top = n_top
+
+    @classmethod
+    def is_available(cls):
+        return True
 
     @classmethod
     def get_full_tag(cls):
@@ -20,10 +28,12 @@ class Stat(ABC):
 
     @classmethod
     def _validate_stat(cls, check_cls):
-        assert hasattr(check_cls, 'name'), \
-            'Stats must have a static name attribute.'
-        assert hasattr(check_cls, 'tag'), \
-            'Stats must have a static tag attribute.'
+        if not hasattr(check_cls, 'name'):
+            raise exceptions.InvalidStatError(
+                'Stats must have a static name attribute.')
+        if not hasattr(check_cls, 'tag'):
+            raise exceptions.InvalidStatError(
+                'Stats must have a static tag attribute.')
 
     @classmethod
     def windows(cls, check_cls):
@@ -61,10 +71,12 @@ def _import_all_stats():
             importlib.import_module(f'permon.backend.stats.{base}')
 
 
-def get_available_stats():
+def get_all_stats():
     _import_all_stats()
 
     if os.name == 'posix':
-        return Stat.linux_classes
+        stats = Stat.linux_classes
     elif os.name == 'nt':
-        return Stat.windows_classes
+        stats = Stat.windows_classes
+
+    return stats

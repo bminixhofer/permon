@@ -1,12 +1,14 @@
 import sys
 import pytest
 import numpy as np
+import warnings
 import permon
 from permon.frontend import native, terminal
 import permon.backend as backend
 from permon.backend import Stat
 
-stat_classes = backend.get_available_stats()
+warnings.filterwarnings("ignore")
+stat_classes = [x for x in backend.get_all_stats() if x.is_available()]
 
 
 def check_if_valid_number(x):
@@ -17,6 +19,7 @@ def check_if_valid_number(x):
 @pytest.mark.parametrize("cls", stat_classes)
 def test_valid_values(cls):
     instance = cls()
+
     if instance.has_top_info:
         stat, _ = instance.get_stat()
     else:
@@ -37,6 +40,7 @@ def test_inherit_from_base(cls):
 @pytest.mark.parametrize("cls", stat_classes)
 def test_minimum_and_maximum_defined(cls):
     instance = cls()
+
     minimum, maximum = instance.minimum, instance.maximum
 
     for x in [minimum, maximum]:

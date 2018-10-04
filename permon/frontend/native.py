@@ -5,7 +5,7 @@ from PySide2.QtCharts import QtCharts
 import PySide2.QtGui as QtGui
 from permon.frontend import Monitor, MonitorApp, utils
 import permon.backend as backend
-from permon import config
+from permon import config, exceptions
 import math
 
 
@@ -32,7 +32,7 @@ class SettingsWidget(QtWidgets.QWidget):
         font = QtGui.QFont()
         font.setBold(True)
 
-        stats = backend.get_available_stats()
+        stats = backend.get_all_stats()
         stats = [x.get_full_tag().split('.')[:2] for x in stats]
 
         category_map = dict()
@@ -303,7 +303,11 @@ class NativeApp(MonitorApp):
         self._settings_page = SettingsWidget(self._main, self.tags)
 
         def accept(tags):
+            if len(tags) == 0:
+                raise exceptions.NoStatError()
+
             self.tags = tags
+
             config.set_config({
                 'monitors': tags
             })
@@ -368,8 +372,8 @@ class NativeApp(MonitorApp):
             self.monitors.remove(monitor)
 
         new_tags = list(set(self.tags) - set(displayed_monitor_tags))
-        for stat in backend.get_available_stats():
-            if stat.get_full_tag() in new_tags:
+        for stat in backend.get_all_stats():
+            if stat.get_full_tag() in new_tags and stat.is_available():
                 instance = stat()
                 monitor = NativeMonitor(instance, color=self.next_color(),
                                         **self.monitor_params)
