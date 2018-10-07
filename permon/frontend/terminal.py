@@ -52,12 +52,12 @@ class TerminalMonitor(Monitor):
         range_is_zero = np.max(self.values) == np.min(self.values)
         if minimum is None:
             if range_is_zero:
-                minimum = -1
+                minimum = -self.values[0] - 1
             else:
                 minimum = min(self.values)
         if maximum is None:
             if range_is_zero:
-                maximum = 1
+                maximum = self.values[0] + 1
             else:
                 maximum = max(self.values)
 
@@ -97,7 +97,7 @@ class TerminalMonitor(Monitor):
         contrib_axis = []
 
         if self.latest_contrib:
-            contribs_row = [[name, value / self.stat.maximum * rows]
+            contribs_row = [[name, value / maximum * rows]
                             for name, value in self.latest_contrib]
             used_rows = sum(math.floor(value) for _, value in contribs_row)
             row_diff = get_cell(self.values[-1]) + 1 - used_rows
