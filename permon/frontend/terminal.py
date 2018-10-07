@@ -71,8 +71,9 @@ class TerminalMonitor(Monitor):
         else:
             ratio = 1
 
-        min_cell = int(np.floor(float(minimum) * ratio))
-        max_cell = int(np.ceil(float(maximum) * ratio))
+        # round to the 4th decimal to avoid small float errors from python
+        min_cell = int(np.floor(round(minimum * ratio, 4)))
+        max_cell = int(np.ceil(round(maximum * ratio, 4)))
 
         rows = max(abs(max_cell - min_cell), 1)
         width = len(self.values)
