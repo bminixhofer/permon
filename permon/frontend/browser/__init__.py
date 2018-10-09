@@ -1,3 +1,5 @@
+from urllib import parse
+import webbrowser
 import json
 import threading
 import time
@@ -40,9 +42,11 @@ class BrowserMonitor(Monitor):
 
 
 class BrowserApp(MonitorApp):
-    def __init__(self, tags, colors, buffer_size, fps):
+    def __init__(self, tags, colors, buffer_size, fps, port, ip):
         super(BrowserApp, self).__init__(tags, colors, buffer_size, fps)
 
+        self.port = port
+        self.ip = ip
         self.stats = []
         for stat in backend.get_all_stats():
             if stat.get_full_tag() in tags and stat.is_available():
@@ -78,15 +82,18 @@ class BrowserApp(MonitorApp):
             while not ws.closed:
                 stat_updates = {monitor.full_tag: monitor.value
                                 for monitor in self.monitors}
-                print(stat_updates)
                 ws.send(json.dumps(stat_updates))
                 gevent.sleep(1)
 
-        server = pywsgi.WSGIServer(('', 5000), self.app,
+        server = pywsgi.WSGIServer((self.ip, self.port), self.app,
                                    handler_class=WebSocketHandler)
         update_thread = threading.Thread(target=self.update_forever)
         update_thread.start()
 
+        url = parse.urlunparse(
+            ('http', f'{self.ip}:{self.port}', '/', '', '', '')
+        )
+        webbrowser.open(url)
         server.serve_forever()
 
     def update_forever(self):

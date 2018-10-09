@@ -11,13 +11,23 @@ def main():
     monitors = config.get_config()['monitors']
 
     parser = ArgumentParser()
+    subparsers = parser.add_subparsers(dest='frontend', help="""
+    which frontend to use. One of terminal, native or browser.
+    """)
+
+    subparsers.add_parser('terminal')
+    subparsers.add_parser('native')
+    browser_parser = subparsers.add_parser('browser')
+    browser_parser.add_argument('--port', type=int, default=1234, help="""
+    The port permon will listen on.
+    """)
+    browser_parser.add_argument('--ip', type=str, default='localhost', help="""
+    The IP address permon will listen on.
+    """)
+
     parser.add_argument('monitors', nargs='*', default=monitors, help=f"""
     which monitors to display.
     If none are given, take those from the config file ({', '.join(monitors)})
-    """)
-    parser.add_argument('-t', '--terminal', dest='terminal',
-                        action='store_true', help=f"""
-    use terminal frontend instead of native GUI
     """)
     parser.add_argument('-s', '--store_config', dest='store_config',
                         action='store_true', help=f"""
@@ -42,17 +52,16 @@ def main():
     colors = ['#ed5565', '#ffce54', '#48cfad', '#sd9cec', '#ec87c0',
               '#fc6e51', '#a0d468', '#4fc1e9', '#ac92ec']
 
-    use_browser = False
-
-    if use_browser:
+    if args.frontend == 'browser':
         app = browser.BrowserApp(monitors, colors=colors,
-                                 buffer_size=500, fps=10)
-    elif args.terminal:
-        app = terminal.TerminalApp(monitors, colors=colors,
-                                   buffer_size=500, fps=10)
-    else:
+                                 buffer_size=500, fps=1,
+                                 port=args.port, ip=args.ip)
+    elif args.frontend == 'native':
         app = native.NativeApp(monitors, colors=colors,
                                buffer_size=500, fps=10)
+    elif args.frontend == 'terminal':
+        app = terminal.TerminalApp(monitors, colors=colors,
+                                   buffer_size=500, fps=10)
     app.initialize()
 
 

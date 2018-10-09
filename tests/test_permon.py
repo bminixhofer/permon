@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 import warnings
 import permon
-from permon.frontend import native, terminal
+from permon.frontend import native, terminal, browser
 import permon.backend as backend
 from permon.backend import Stat
 
@@ -51,8 +51,9 @@ def test_minimum_and_maximum_defined(cls):
 
 
 @pytest.mark.parametrize('app, arguments', [
-    (terminal.TerminalApp, ['-t']),
-    (native.NativeApp, []),
+    (terminal.TerminalApp, ['terminal']),
+    (native.NativeApp, ['native']),
+    (browser.BrowserApp, ['browser']),
 ])
 def test_init(app, arguments, mocker):
     mocker.patch.object(sys, 'argv',  ['permon'] + arguments)
