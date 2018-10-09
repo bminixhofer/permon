@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 __version__ = '1.0.0'
 
-from permon.frontend import native, terminal
+from permon.frontend import native, terminal, browser
 from permon import config, backend, exceptions
 
 
@@ -42,7 +42,12 @@ def main():
     colors = ['#ed5565', '#ffce54', '#48cfad', '#sd9cec', '#ec87c0',
               '#fc6e51', '#a0d468', '#4fc1e9', '#ac92ec']
 
-    if args.terminal:
+    use_browser = False
+
+    if use_browser:
+        app = browser.BrowserApp(monitors, colors=colors,
+                                 buffer_size=500, fps=10)
+    elif args.terminal:
         app = terminal.TerminalApp(monitors, colors=colors,
                                    buffer_size=500, fps=10)
     else:
