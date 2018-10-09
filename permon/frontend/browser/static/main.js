@@ -11,9 +11,9 @@ function setupMonitor(stat) {
     function makePoint(x) {
         dataIndex++;
         return {
-            name: data_index,
+            name: dataIndex,
             value: [
-                data_index,
+                dataIndex,
                 x
             ]
         }
@@ -84,7 +84,7 @@ function setupMonitor(stat) {
             type: "line",
             showSymbol: false,
             hoverAnimation: false,
-            data: data,
+            data,
             animationEasingUpdate: "linear",
             animationDurationUpdate: 1000
         }]
@@ -97,7 +97,7 @@ function setupMonitor(stat) {
 
         chart.setOption({
             series: [{
-                data: data
+                data
             }]
         });
     }, 1000);
