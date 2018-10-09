@@ -45,7 +45,7 @@ class ProcessTracker():
 
                 # check if the thread should be stopped every 0.1 seconds
                 # minimal sacrifice in performance for more responsive quitting
-                for i in range(10):
+                for _ in range(10):
                     time.sleep(0.1)
                     if self._stop:
                         break
@@ -256,6 +256,14 @@ class WriteStat(Stat):
 class CPUTempStat(Stat):
     name = 'CPU Temperature in °C'
     tag = 'cpu_temp'
+
+    @classmethod
+    def is_available(cls):
+        if 'coretemp' in psutil.sensors_temperatures():
+            return True
+
+        warnings.warn('CPU temperature sensor could not be found.')
+        return False
 
     def __init__(self, fps=10):
         critical_temps = [x.critical for x in self.get_core_temps()]
