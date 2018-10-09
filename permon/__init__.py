@@ -25,15 +25,17 @@ def main():
     The IP address permon will listen on.
     """)
 
-    parser.add_argument('monitors', nargs='*', default=monitors, help=f"""
-    which monitors to display.
-    If none are given, take those from the config file ({', '.join(monitors)})
-    """)
-    parser.add_argument('-s', '--store_config', dest='store_config',
-                        action='store_true', help=f"""
-    store the monitors passed to the monitors argument in the configuration.
-    They will be shown per default on the next start of permon.
-    """)
+    monitor_str = ', '.join(monitors)
+    for subparser in subparsers.choices.values():
+        subparser.add_argument('monitors', nargs='*', default=monitors, help=f"""
+        which monitors to display.
+        If none are given, take those from the config file ({monitor_str})
+        """)
+        subparser.add_argument('-s', '--store_config', dest='store_config',
+                               action='store_true', help=f"""
+        store the monitors passed to the monitors argument in the config.
+        They will be shown per default on the next start of permon.
+        """)
     args = parser.parse_args()
 
     monitors = args.monitors
