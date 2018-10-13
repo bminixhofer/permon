@@ -1,5 +1,13 @@
 let currentData = {};
 
+let mousePos = {};
+window.addEventListener('mousemove', (event) => {
+    mousePos = {
+        x: event.clientX,
+        y: event.clientY
+    };
+});
+
 function setupMonitor(stat) {
     const bufferSize = 50;
     const tag = stat["tag"];
@@ -26,7 +34,8 @@ function setupMonitor(stat) {
     }
     data = data.concat(history.map(x => makePoint(x)));
 
-    let chart = echarts.init(document.getElementById(tag));
+    let chartContainer = document.getElementById(tag);
+    let chart = echarts.init(chartContainer);
     let options = {
         grid: {
             left: "5%",
@@ -36,9 +45,13 @@ function setupMonitor(stat) {
         },
         tooltip: {
             trigger: "axis",
-            axisPointer: {
-                animation: false
+            triggerOn: "none",
+            formatter: (data, ticket, callback) => {
+                return Math.round(data[0].value[1] * 100) / 100
             }
+        },
+        axisPointer: {
+            triggerOn: "mousemove"
         },
         xAxis: {
             type: "value",
@@ -92,6 +105,25 @@ function setupMonitor(stat) {
         }]
     };
     chart.setOption(options);
+
+    let tooltipRepeater;
+    let rect = chartContainer.getBoundingClientRect();
+
+    chartContainer.addEventListener("mouseover", (event) => {
+        tooltipRepeater = setInterval(() => {
+            chart.dispatchAction({
+                type: 'showTip',
+                x: (mousePos.x || event.clientX) - rect.x,
+                y: (mousePos.y || event.clientY) - rect.y
+            });
+        }, 100);
+    });
+    chartContainer.addEventListener("mouseout", () => {
+        chart.dispatchAction({
+            type: 'hideTip',
+        });
+        clearInterval(tooltipRepeater);
+    });
 
     setInterval(function () {
         data.shift();
