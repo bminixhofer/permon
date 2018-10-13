@@ -11,10 +11,12 @@
     <h1>permon</h1>
     <div class="charts">
         {% for stat in stats %}
-        <h2>{{ stat.name }}</h2>
+        <h3>{{ stat.name }}</h3>
         <div id="{{ stat.tag }}" class="chart-container">
         </div>
         {% endfor %}
     </div>
+    <a href="/settings"><button class="settings-button"></button></a>
 </body>
+
 </html>

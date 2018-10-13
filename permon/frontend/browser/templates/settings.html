@@ -1,0 +1,28 @@
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="static/style.css">
+</head>
+<body>
+    <h1>permon</h1>
+    <h2>Enabled Monitors</h2>
+    <form class="settings" method="POST" action="/settings">
+        <div class="enabled-monitors">
+        {% for category in categories %}
+            <h3>{{ category.name }} </h3>
+            {% for stat in category.stats %}
+                <div class="stat">
+                    <label for="{{category.name}}.{{stat.tag}}">
+                        <input type="checkbox" name="{{category.name}}.{{stat.tag}}" id="{{category.name}}.{{stat.tag}}" value="{{stat.name}}" {% if stat.checked %}checked{% endif %}/>
+                        {{stat.name}}
+                    </label>
+                </div>
+            {% endfor %}
+        {% endfor %}
+        </div>
+        <div class="continuation">
+            <a href="/"><input type="button" value="Cancel"/></a>
+            <input type="submit" value="Accept"/>
+        </div>
+    </form>
+</body>
+</html>

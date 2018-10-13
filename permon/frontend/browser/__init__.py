@@ -3,7 +3,7 @@ import webbrowser
 import json
 import threading
 import time
-from flask import Flask, render_template, Response
+from flask import Flask, render_template, Response, request, redirect
 from flask_sockets import Sockets
 import gevent
 from gevent import pywsgi
@@ -64,18 +64,71 @@ class BrowserApp(MonitorApp):
             self.monitors.append(BrowserMonitor(stat, buffer_size,
                                                 fps, self.next_color(),
                                                 self.app))
+        self.adjust_monitors()
+
+    def adjust_monitors(self):
+        displayed_monitor_tags = []
+        removed_monitors = []
+        for monitor in self.monitors:
+            if monitor.full_tag in self.tags:
+                displayed_monitor_tags.append(monitor.full_tag)
+            else:
+                removed_monitors.append(monitor)
+
+        for monitor in removed_monitors:
+            self.monitors.remove(monitor)
+
+        new_tags = list(set(self.tags) - set(displayed_monitor_tags))
+
+        for stat in backend.get_all_stats():
+            if stat.get_full_tag() in new_tags and stat.is_available():
+                instance = stat()
+                monitor = BrowserMonitor(instance, color=self.next_color(),
+                                         **self.monitor_params)
+                self.monitors.append(monitor)
+
+        self.setup_info = [monitor.get_json_info()
+                           for monitor in self.monitors]
+
+    def _get_stat_tree(self):
+        stats = backend.get_all_stats()
+        stats = [(x.get_full_tag().split('.')[0], x) for x in stats]
+        stat_tree = dict()
+        for root, stat in stats:
+            if root not in stat_tree:
+                stat_tree[root] = []
+
+            stat_tree[root].append({
+                'tag': stat.tag,
+                'name': stat.name,
+                'checked': stat.get_full_tag() in self.tags
+            })
+        stat_tree = [{
+            'name': root,
+            'stats': stats
+        } for root, stats in stat_tree.items()]
+        return stat_tree
 
     def initialize(self):
-        setup_info = [monitor.get_json_info() for monitor in self.monitors]
-
         @self.app.route('/')
-        def page():
-            print("rendering")
-            return render_template('index.html', stats=setup_info)
+        def index():
+            return render_template('index.html', stats=self.setup_info)
+
+        @self.app.route('/settings', methods=['POST'])
+        def set_settings():
+            self.tags = list(request.form.keys())
+            self.adjust_monitors()
+
+            return redirect('/')
+
+        @self.app.route('/settings')
+        def settings():
+            return render_template('settings.html',
+                                   categories=self._get_stat_tree())
 
         @self.app.route('/statInfo')
         def stat_info():
-            return Response(json.dumps(setup_info), mimetype='text/json')
+            return Response(json.dumps(self.setup_info), mimetype='text/json')
 
         @self.sockets.route('/statUpdates')
         def socket(ws):
@@ -93,7 +146,9 @@ class BrowserApp(MonitorApp):
         url = parse.urlunparse(
             ('http', f'{self.ip}:{self.port}', '/', '', '', '')
         )
-        webbrowser.open(url)
+
+        # DEBUG: added settings
+        webbrowser.open(url + '/settings')
         server.serve_forever()
 
     def update_forever(self):
