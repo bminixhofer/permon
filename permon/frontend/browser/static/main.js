@@ -6,6 +6,7 @@ function setupMonitor(stat) {
     const maximum = stat["maximum"];
     const minimum = stat["minimum"];
     const color = stat["color"];
+    const history = stat["history"];
 
     let dataIndex = 0;
     function makePoint(x) {
@@ -20,9 +21,10 @@ function setupMonitor(stat) {
     }
 
     let data = [];
-    for(let i = 0; i < bufferSize; i++) {
+    for(let i = 0; i < bufferSize - history.length; i++) {
         data.push(makePoint(0));
     }
+    data = data.concat(history.map(x => makePoint(x)));
 
     let chart = echarts.init(document.getElementById(tag));
     let options = {
@@ -103,7 +105,7 @@ function setupMonitor(stat) {
     }, 1000);
 }
 
-let request = new Request(`http://${window.location.host}/statInfo`);
+let request = new Request(`${window.location.protocol}//${window.location.host}/statInfo`);
 fetch(request).then(response => response.json()).then(stats => {
     stats.forEach(stat => {
         setupMonitor(stat);
@@ -112,5 +114,10 @@ fetch(request).then(response => response.json()).then(stats => {
 
 let socket = new WebSocket(`ws://${window.location.host}/statUpdates`);
 socket.onmessage = function (event) {
-    currentData = JSON.parse(event.data);
+    eventData = JSON.parse(event.data);
+
+    if(Object.keys(currentData).length > 0 && (JSON.stringify(Object.keys(eventData)) !== JSON.stringify(Object.keys(currentData)))) {
+        window.location.reload();
+    }
+    currentData = eventData;
 }

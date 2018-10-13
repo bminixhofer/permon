@@ -42,7 +42,7 @@ def main():
 
     if args.frontend == 'browser':
         app = browser.BrowserApp(stats, colors=colors,
-                                 buffer_size=500, fps=1,
+                                 buffer_size=50, fps=1,
                                  port=args.port, ip=args.ip)
     elif args.frontend == 'native':
         app = native.NativeApp(stats, colors=colors,

@@ -15,7 +15,7 @@ from permon import backend
 class BrowserMonitor(Monitor):
     def __init__(self, *args, **kwargs):
         super(BrowserMonitor, self).__init__(*args, **kwargs)
-        self.value = None
+        self.values = []
         self.top = {}
 
     def update(self):
@@ -26,6 +26,10 @@ class BrowserMonitor(Monitor):
             top = {}
 
         self.value = value
+        self.values.append(self.value)
+        if len(self.values) > self.buffer_size:
+            del self.values[0]
+
         self.top = top
 
     def get_json_info(self):
@@ -34,7 +38,8 @@ class BrowserMonitor(Monitor):
             'minimum': self.stat.minimum,
             'maximum': self.stat.maximum,
             'tag': self.stat.tag,
-            'name': self.stat.name
+            'name': self.stat.name,
+            'history': self.values
         }
 
     def paint(self):
