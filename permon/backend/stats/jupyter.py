@@ -12,7 +12,7 @@ from permon.backend import Stat
 @Stat.windows
 @Stat.linux
 class JupyterRAMUsage(Stat):
-    name = 'RAM Usage of objects in a Python Jupyter Notebook'
+    name = 'RAM Usage of objects in a Python Jupyter Notebook [MB]'
     base_tag = 'ram_usage'
 
     @classmethod
@@ -102,7 +102,7 @@ _permon_running = False
             reader = csv.reader(f)
             for row in reader:
                 ram_usage.append(
-                    (row[0], float(row[1]) / 1024**2)
+                    (row[0], float(row[1]) / 1000**2)
                 )
         ram_usage = sorted(ram_usage, key=lambda x: x[1], reverse=True)
 

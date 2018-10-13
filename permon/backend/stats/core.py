@@ -38,7 +38,7 @@ class ProcessTracker():
                         _processes[name]['cpu'] += proc.cpu_percent()
                         _processes[name]['ram'] += proc.memory_info().vms
 
-                used_memory = psutil.virtual_memory().used / 1024**2
+                used_memory = psutil.virtual_memory().used / 1000**2
                 self.n_top['cpu'] = self.get_n_top('cpu')
                 self.n_top['ram'] = self.get_n_top('ram', adapt_to=used_memory)
                 self.processes = _processes
@@ -94,7 +94,7 @@ class ProcessTracker():
 @Stat.windows
 @Stat.linux
 class CPUStat(Stat):
-    name = 'CPU Usage in %'
+    name = 'CPU Usage [%]'
     base_tag = 'cpu_usage'
 
     def __init__(self):
@@ -127,17 +127,17 @@ class CPUStat(Stat):
 @Stat.windows
 @Stat.linux
 class RAMStat(Stat):
-    name = 'RAM Usage in MiB'
+    name = 'RAM Usage [MB]'
     base_tag = 'ram_usage'
 
     def __init__(self):
         self.proc_tracker = ProcessTracker()
 
-        self._maximum = psutil.virtual_memory().total / 1024**2
+        self._maximum = psutil.virtual_memory().total / 1000**2
         super(RAMStat, self).__init__()
 
     def get_stat(self):
-        actual_memory = psutil.virtual_memory().used / 1024**2
+        actual_memory = psutil.virtual_memory().used / 1000**2
         top = self.proc_tracker.n_top['ram']
 
         return actual_memory, top
@@ -153,7 +153,7 @@ class RAMStat(Stat):
 
 @Stat.linux
 class GPUStat(Stat):
-    name = 'vRAM Usage in MiB'
+    name = 'vRAM Usage [MB]'
     base_tag = 'vram_usage'
 
     @classmethod
@@ -198,7 +198,7 @@ class GPUStat(Stat):
 @Stat.windows
 @Stat.linux
 class ReadStat(Stat):
-    name = 'Disk Read Speed in MiB / s'
+    name = 'Disk Read Speed [MB / s]'
     base_tag = 'read_speed'
 
     def __init__(self, fps=10):
@@ -212,7 +212,7 @@ class ReadStat(Stat):
         self.cache.append((stat, current_time))
         self.cache = [(x, t) for x, t in self.cache if current_time - t <= 1]
 
-        return float(self.cache[-1][0] - self.cache[0][0]) / 1024**2
+        return float(self.cache[-1][0] - self.cache[0][0]) / 1000**2
 
     @property
     def minimum(self):
@@ -226,7 +226,7 @@ class ReadStat(Stat):
 @Stat.windows
 @Stat.linux
 class WriteStat(Stat):
-    name = 'Disk Write Speed in MiB / s'
+    name = 'Disk Write Speed [MB / s]'
     base_tag = 'write_speed'
 
     def __init__(self, fps=10):
@@ -240,7 +240,7 @@ class WriteStat(Stat):
         self.cache.append((stat, current_time))
         self.cache = [(x, t) for x, t in self.cache if current_time - t <= 1]
 
-        return float(self.cache[-1][0] - self.cache[0][0]) / 1024**2
+        return float(self.cache[-1][0] - self.cache[0][0]) / 1000**2
 
     @property
     def minimum(self):
@@ -254,7 +254,7 @@ class WriteStat(Stat):
 @Stat.windows
 @Stat.linux
 class CPUTempStat(Stat):
-    name = 'CPU Temperature in °C'
+    name = 'CPU Temperature [°C]'
     base_tag = 'cpu_temp'
 
     @classmethod
