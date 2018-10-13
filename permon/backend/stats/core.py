@@ -95,7 +95,7 @@ class ProcessTracker():
 @Stat.linux
 class CPUStat(Stat):
     name = 'CPU Usage in %'
-    tag = 'cpu_usage'
+    base_tag = 'cpu_usage'
 
     def __init__(self):
         self.proc_tracker = ProcessTracker()
@@ -128,7 +128,7 @@ class CPUStat(Stat):
 @Stat.linux
 class RAMStat(Stat):
     name = 'RAM Usage in MiB'
-    tag = 'ram_usage'
+    base_tag = 'ram_usage'
 
     def __init__(self):
         self.proc_tracker = ProcessTracker()
@@ -154,7 +154,7 @@ class RAMStat(Stat):
 @Stat.linux
 class GPUStat(Stat):
     name = 'vRAM Usage in MiB'
-    tag = 'vram_usage'
+    base_tag = 'vram_usage'
 
     @classmethod
     def is_available(cls):
@@ -199,7 +199,7 @@ class GPUStat(Stat):
 @Stat.linux
 class ReadStat(Stat):
     name = 'Disk Read Speed in MiB / s'
-    tag = 'read_speed'
+    base_tag = 'read_speed'
 
     def __init__(self, fps=10):
         self.cache = []
@@ -227,7 +227,7 @@ class ReadStat(Stat):
 @Stat.linux
 class WriteStat(Stat):
     name = 'Disk Write Speed in MiB / s'
-    tag = 'write_speed'
+    base_tag = 'write_speed'
 
     def __init__(self, fps=10):
         self.cache = []
@@ -255,7 +255,7 @@ class WriteStat(Stat):
 @Stat.linux
 class CPUTempStat(Stat):
     name = 'CPU Temperature in °C'
-    tag = 'cpu_temp'
+    base_tag = 'cpu_temp'
 
     @classmethod
     def is_available(cls):

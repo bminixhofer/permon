@@ -13,7 +13,7 @@ from permon.backend import Stat
 @Stat.linux
 class JupyterRAMUsage(Stat):
     name = 'RAM Usage of objects in a Python Jupyter Notebook'
-    tag = 'ram_usage'
+    base_tag = 'ram_usage'
 
     @classmethod
     def _read_latest_connection_file(cls):

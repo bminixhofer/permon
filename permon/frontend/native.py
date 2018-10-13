@@ -13,9 +13,9 @@ class SettingsWidget(QtWidgets.QWidget):
     accepted = Signal(list)
     cancelled = Signal()
 
-    def __init__(self, parent, tags):
+    def __init__(self, parent, stats):
         super(SettingsWidget, self).__init__(parent=parent)
-        self._settings_tags = tags.copy()
+        self.set_stats = stats.copy()
 
         layout = QtWidgets.QVBoxLayout(self)
 
@@ -32,27 +32,25 @@ class SettingsWidget(QtWidgets.QWidget):
         font = QtGui.QFont()
         font.setBold(True)
 
-        stats = backend.get_all_stats()
-        stats = [x.get_full_tag().split('.')[:2] for x in stats]
+        all_stats = backend.get_all_stats()
 
         category_map = dict()
-        for category in set(x[0] for x in stats):
-            item = QtGui.QStandardItem(category)
+        for root_tag in set(x.root_tag for x in all_stats):
+            item = QtGui.QStandardItem(root_tag)
             item.setFont(font)
             model.appendRow(item)
 
-            category_map[category] = item
+            category_map[root_tag] = item
 
-        for category, base in stats:
-            item = QtGui.QStandardItem(base)
+        for stat in all_stats:
+            item = QtGui.QStandardItem(stat.base_tag)
             item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
 
-            full_tag = f'{category}.{base}'
-            check_state = Qt.Checked if full_tag in self._settings_tags \
+            check_state = Qt.Checked if stat in self.set_stats \
                 else Qt.Unchecked
             item.setData(check_state, Qt.CheckStateRole)
-            item.setData(full_tag)
-            category_map[category].appendRow(item)
+            item.setData(stat.tag)
+            category_map[stat.root_tag].appendRow(item)
 
         model.itemChanged.connect(self._check_monitor)
 
@@ -76,21 +74,21 @@ class SettingsWidget(QtWidgets.QWidget):
 
         layout.addWidget(continue_widget)
 
-    def open(self, tags):
-        self._settings_tags = tags.copy()
+    def open(self, stats):
+        self.set_stats = stats.copy()
 
     def _check_monitor(self, item):
         state = item.checkState()
         is_selected = state == Qt.Checked
 
-        full_tag = item.data()
+        stat = backend.get_stats_from_tags(item.data())
         if is_selected:
-            self._settings_tags.append(full_tag)
+            self.set_stats.append(stat)
         else:
-            self._settings_tags.remove(full_tag)
+            self.set_stats.remove(stat)
 
     def _accept(self):
-        self.accepted.emit(self._settings_tags)
+        self.accepted.emit(self.set_stats)
 
     def _cancel(self):
         self.cancelled.emit()
@@ -268,9 +266,9 @@ class NativeApp(MonitorApp):
     # QApplication is a global singleton. It can only ever be instantiated once
     qapp = None
 
-    def __init__(self, tags, colors, buffer_size, fps, fontsize=14,
+    def __init__(self, stats, colors, buffer_size, fps, fontsize=14,
                  line_thickness=2):
-        super(NativeApp, self).__init__(tags, colors, buffer_size, fps)
+        super(NativeApp, self).__init__(stats, colors, buffer_size, fps)
 
         self.monitor_params = {
             'buffer_size': buffer_size,
@@ -300,26 +298,26 @@ class NativeApp(MonitorApp):
 
         # create the main widget and add monitors to it
         self._main = QtWidgets.QStackedWidget()
-        self._settings_page = SettingsWidget(self._main, self.tags)
+        self._settings_page = SettingsWidget(self._main, self.stats)
 
-        def accept(tags):
-            if len(tags) == 0:
+        def accept_settings(stats):
+            if len(stats) == 0:
                 raise exceptions.NoStatError()
 
-            self.tags = tags
+            self.stats = stats
 
             config.set_config({
-                'monitors': tags
+                'stats': [stat.tag for stat in stats]
             })
 
             self.adjust_monitors()
             self._main.setCurrentWidget(self._monitor_page)
 
-        def cancel():
+        def cancel_settings():
             self._main.setCurrentWidget(self._monitor_page)
 
-        self._settings_page.accepted.connect(accept)
-        self._settings_page.cancelled.connect(cancel)
+        self._settings_page.accepted.connect(accept_settings)
+        self._settings_page.cancelled.connect(cancel_settings)
 
         self._monitor_page = self._create_monitor_page()
         self.adjust_monitors()
@@ -345,7 +343,7 @@ class NativeApp(MonitorApp):
         settings_button = QtWidgets.QPushButton('Settings')
 
         def open_settings():
-            self._settings_page.open(self.tags)
+            self._settings_page.open(self.stats)
             self._main.setCurrentWidget(self._settings_page)
 
         settings_button.clicked.connect(open_settings)
@@ -355,11 +353,11 @@ class NativeApp(MonitorApp):
         return page_widget
 
     def adjust_monitors(self):
-        displayed_monitor_tags = []
+        displayed_stats = []
         removed_monitors = []
         for monitor in self.monitors:
-            if monitor.full_tag in self.tags:
-                displayed_monitor_tags.append(monitor.full_tag)
+            if monitor.stat in self.stats:
+                displayed_stats.append(monitor.stat)
             else:
                 removed_monitors.append(monitor)
 
@@ -371,14 +369,12 @@ class NativeApp(MonitorApp):
         for monitor in removed_monitors:
             self.monitors.remove(monitor)
 
-        new_tags = list(set(self.tags) - set(displayed_monitor_tags))
-        for stat in backend.get_all_stats():
-            if stat.get_full_tag() in new_tags and stat.is_available():
-                instance = stat()
-                monitor = NativeMonitor(instance, color=self.next_color(),
-                                        **self.monitor_params)
-                self.monitors.append(monitor)
-                self._monitor_page.layout().addWidget(monitor.widget)
+        new_stats = list(set(self.stats) - set(displayed_stats))
+        for stat in new_stats:
+            monitor = NativeMonitor(stat, color=self.next_color(),
+                                    **self.monitor_params)
+            self.monitors.append(monitor)
+            self._monitor_page.layout().addWidget(monitor.widget)
 
         # keep all charts equally large
         for i in range(self._monitor_page.layout().count()):

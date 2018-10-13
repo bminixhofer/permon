@@ -8,8 +8,13 @@ from permon import exceptions
 class Stat(ABC):
     windows_classes = []
     linux_classes = []
+    _initialized = False
 
     def __init__(self, n_top=5):
+        if not self._initialized:
+            raise exceptions.InvalidStatError(
+                'The stat class is not initialized.')
+
         if not self.is_available():
             raise exceptions.InvalidStatError(
                 'Unavailable stats can not be instantiated.')
@@ -21,17 +26,24 @@ class Stat(ABC):
         return True
 
     @classmethod
-    def get_full_tag(cls):
-        full_path = inspect.getfile(cls)
-        base = os.path.splitext(os.path.basename(full_path))[0]
-        return f'{base}.{cls.tag}'
+    def _init_tags(cls):
+        if not cls._initialized:
+            full_path = inspect.getfile(cls)
+            filename = os.path.splitext(os.path.basename(full_path))[0]
+
+            # define tag and root_tag
+            # base_tag has already been defined by the stat creator
+            cls.root_tag = filename
+            cls.tag = f'{cls.root_tag}.{cls.base_tag}'
+
+            cls._initialized = True
 
     @classmethod
     def _validate_stat(cls, check_cls):
         if not hasattr(check_cls, 'name'):
             raise exceptions.InvalidStatError(
                 'Stats must have a static name attribute.')
-        if not hasattr(check_cls, 'tag'):
+        if not hasattr(check_cls, 'base_tag'):
             raise exceptions.InvalidStatError(
                 'Stats must have a static tag attribute.')
 
@@ -78,5 +90,32 @@ def get_all_stats():
         stats = Stat.linux_classes
     elif os.name == 'nt':
         stats = Stat.windows_classes
+    for stat in stats:
+        stat._init_tags()
 
     return stats
+
+
+def get_stats_from_tags(tags):
+    if not isinstance(tags, list):
+        tags = [tags]
+
+    verify_tags(tags)
+
+    stats = []
+    for stat in get_all_stats():
+        if stat.tag in tags and stat.is_available():
+            stats.append(stat)
+
+    return stats if len(stats) > 1 else stats[0]
+
+
+def verify_tags(tags):
+    if not isinstance(tags, list):
+        tags = [tags]
+
+    all_tags = [stat.tag for stat in get_all_stats()]
+
+    for tag in tags:
+        if tag not in all_tags:
+            raise exceptions.InvalidStatError(f'stat "{tag}" does not exist.')

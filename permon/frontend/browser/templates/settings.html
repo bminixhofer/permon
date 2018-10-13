@@ -11,8 +11,8 @@
             <h3>{{ category.name }} </h3>
             {% for stat in category.stats %}
                 <div class="stat">
-                    <label for="{{category.name}}.{{stat.tag}}">
-                        <input type="checkbox" name="{{category.name}}.{{stat.tag}}" id="{{category.name}}.{{stat.tag}}" value="{{stat.name}}" {% if stat.checked %}checked{% endif %}/>
+                    <label for="{{stat.tag}}">
+                        <input type="checkbox" name="{{stat.tag}}" id="{{stat.tag}}" value="{{stat.name}}" {% if stat.checked %}checked{% endif %}/>
                         {{stat.name}}
                     </label>
                 </div>

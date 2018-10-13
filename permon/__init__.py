@@ -2,13 +2,13 @@
 __version__ = '1.0.0'
 
 from permon.frontend import native, terminal, browser
-from permon import config, backend, exceptions
+from permon import config, backend
 
 
 def main():
     from argparse import ArgumentParser
 
-    monitors = config.get_config()['monitors']
+    stat_tags = config.get_config()['stats']
 
     parser = ArgumentParser()
     subparsers = parser.add_subparsers(dest='frontend', help="""
@@ -25,44 +25,30 @@ def main():
     The IP address permon will listen on.
     """)
 
-    monitor_str = ', '.join(monitors)
+    stat_str = ', '.join(stat_tags)
     for subparser in subparsers.choices.values():
-        subparser.add_argument('monitors', nargs='*', default=monitors, help=f"""
-        which monitors to display.
-        If none are given, take those from the config file ({monitor_str})
-        """)
-        subparser.add_argument('-s', '--store_config', dest='store_config',
-                               action='store_true', help=f"""
-        store the monitors passed to the monitors argument in the config.
-        They will be shown per default on the next start of permon.
+        subparser.add_argument('stats', nargs='*', default=stat_tags, help=f"""
+        which stats to display.
+        If none are given, take those from the config file ({stat_str})
         """)
     args = parser.parse_args()
+    stat_tags = args.stats
 
-    monitors = args.monitors
-
-    all_stats = [x.get_full_tag() for x in backend.get_all_stats()]
-    for tag in monitors:
-        if tag not in all_stats:
-            raise exceptions.InvalidStatError(f'stat "{tag}" does not exist.')
-
-    if args.store_config:
-        config.set_config({
-            'monitors': monitors
-        })
+    stats = backend.get_stats_from_tags(stat_tags)
 
     # determines which colors are used in frontends that support custom colors
     colors = ['#ed5565', '#ffce54', '#48cfad', '#sd9cec', '#ec87c0',
               '#fc6e51', '#a0d468', '#4fc1e9', '#ac92ec']
 
     if args.frontend == 'browser':
-        app = browser.BrowserApp(monitors, colors=colors,
+        app = browser.BrowserApp(stats, colors=colors,
                                  buffer_size=500, fps=1,
                                  port=args.port, ip=args.ip)
     elif args.frontend == 'native':
-        app = native.NativeApp(monitors, colors=colors,
+        app = native.NativeApp(stats, colors=colors,
                                buffer_size=500, fps=10)
     elif args.frontend == 'terminal':
-        app = terminal.TerminalApp(monitors, colors=colors,
+        app = terminal.TerminalApp(stats, colors=colors,
                                    buffer_size=500, fps=10)
     app.initialize()
 

@@ -6,10 +6,10 @@ config_dir = user_config_dir('permon', 'bminixhofer')
 config_path = os.path.join(config_dir, 'config.json')
 
 default_config = {
-    'monitors': ['core.cpu_usage',
-                 'core.ram_usage',
-                 'core.read_speed',
-                 'core.write_speed']
+    'stats': ['core.cpu_usage',
+              'core.ram_usage',
+              'core.read_speed',
+              'core.write_speed']
 }
 
 

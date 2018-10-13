@@ -1,16 +1,18 @@
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 import numpy as np
+from permon import exceptions
 
 
 class Monitor(ABC):
     def __init__(self, stat, buffer_size, fps, color, app):
-        if stat.minimum and stat.maximum:
+        # the only place a stat is ever instantiated
+        self.stat = stat()
+
+        if self.stat.minimum and self.stat.maximum:
             assert np.abs(stat.maximum - stat.minimum) > 0, \
                 'Graph range must be greater than zero.'
 
-        self.stat = stat
-        self.full_tag = stat.get_full_tag()
         self.buffer_size = buffer_size
         self.fps = fps
         self.color = color
@@ -29,13 +31,16 @@ class Monitor(ABC):
 
 
 class MonitorApp(ABC):
-    def __init__(self, tags, colors, buffer_size, fps):
-        self.tags = tags
+    def __init__(self, stats, colors, buffer_size, fps):
+        self.stats = stats
         self.colors = colors
         self._color_index = 0
         self.buffer_size = buffer_size
         self.fps = fps
         self.monitors = []
+
+        if len(self.stats) == 0:
+            raise exceptions.NoStatError()
 
     def next_color(self):
         color_counts = OrderedDict([(color, 0) for color in self.colors])

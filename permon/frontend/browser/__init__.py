@@ -9,7 +9,7 @@ import gevent
 from gevent import pywsgi
 from geventwebsocket.handler import WebSocketHandler
 from permon.frontend import MonitorApp, Monitor
-from permon import exceptions, backend
+from permon import backend
 
 
 class BrowserMonitor(Monitor):
@@ -33,7 +33,7 @@ class BrowserMonitor(Monitor):
             'color': self.color,
             'minimum': self.stat.minimum,
             'maximum': self.stat.maximum,
-            'tag': self.full_tag,
+            'tag': self.stat.tag,
             'name': self.stat.name
         }
 
@@ -42,71 +42,56 @@ class BrowserMonitor(Monitor):
 
 
 class BrowserApp(MonitorApp):
-    def __init__(self, tags, colors, buffer_size, fps, port, ip):
-        super(BrowserApp, self).__init__(tags, colors, buffer_size, fps)
+    def __init__(self, stats, colors, buffer_size, fps, port, ip):
+        super(BrowserApp, self).__init__(stats, colors, buffer_size, fps)
 
         self.port = port
         self.ip = ip
-        self.stats = []
-        for stat in backend.get_all_stats():
-            if stat.get_full_tag() in tags and stat.is_available():
-                instance = stat()
-                self.stats.append(instance)
-
         self.app = Flask(__name__)
         self.sockets = Sockets(self.app)
 
-        if len(self.stats) == 0:
-            raise exceptions.NoStatError()
-
-        self.monitors = []
-        for stat in self.stats:
-            self.monitors.append(BrowserMonitor(stat, buffer_size,
-                                                fps, self.next_color(),
-                                                self.app))
         self.adjust_monitors()
 
     def adjust_monitors(self):
-        displayed_monitor_tags = []
+        displayed_stats = []
         removed_monitors = []
         for monitor in self.monitors:
-            if monitor.full_tag in self.tags:
-                displayed_monitor_tags.append(monitor.full_tag)
+            if monitor.stat in self.stats:
+                displayed_stats.append(monitor.stat)
             else:
                 removed_monitors.append(monitor)
 
         for monitor in removed_monitors:
             self.monitors.remove(monitor)
 
-        new_tags = list(set(self.tags) - set(displayed_monitor_tags))
-
-        for stat in backend.get_all_stats():
-            if stat.get_full_tag() in new_tags and stat.is_available():
-                instance = stat()
-                monitor = BrowserMonitor(instance, color=self.next_color(),
-                                         **self.monitor_params)
-                self.monitors.append(monitor)
+        new_stats = list(set(self.stats) - set(displayed_stats))
+        for stat in new_stats:
+            monitor = BrowserMonitor(stat, color=self.next_color(),
+                                     buffer_size=self.buffer_size,
+                                     fps=self.fps,
+                                     app=self)
+            self.monitors.append(monitor)
 
         self.setup_info = [monitor.get_json_info()
                            for monitor in self.monitors]
 
     def _get_stat_tree(self):
         stats = backend.get_all_stats()
-        stats = [(x.get_full_tag().split('.')[0], x) for x in stats]
-        stat_tree = dict()
-        for root, stat in stats:
-            if root not in stat_tree:
-                stat_tree[root] = []
 
-            stat_tree[root].append({
+        stat_tree = dict()
+        for stat in stats:
+            if stat.root_tag not in stat_tree:
+                stat_tree[stat.root_tag] = []
+
+            stat_tree[stat.root_tag].append({
                 'tag': stat.tag,
                 'name': stat.name,
-                'checked': stat.get_full_tag() in self.tags
+                'checked': stat in self.stats
             })
         stat_tree = [{
-            'name': root,
+            'name': root_tag,
             'stats': stats
-        } for root, stats in stat_tree.items()]
+        } for root_tag, stats in stat_tree.items()]
         return stat_tree
 
     def initialize(self):
@@ -116,7 +101,7 @@ class BrowserApp(MonitorApp):
 
         @self.app.route('/settings', methods=['POST'])
         def set_settings():
-            self.tags = list(request.form.keys())
+            self.stats = backend.get_stats_from_tags(list(request.form.keys()))
             self.adjust_monitors()
 
             return redirect('/')
@@ -133,7 +118,7 @@ class BrowserApp(MonitorApp):
         @self.sockets.route('/statUpdates')
         def socket(ws):
             while not ws.closed:
-                stat_updates = {monitor.full_tag: monitor.value
+                stat_updates = {monitor.stat.tag: monitor.value
                                 for monitor in self.monitors}
                 ws.send(json.dumps(stat_updates))
                 gevent.sleep(1)
@@ -147,8 +132,7 @@ class BrowserApp(MonitorApp):
             ('http', f'{self.ip}:{self.port}', '/', '', '', '')
         )
 
-        # DEBUG: added settings
-        webbrowser.open(url + '/settings')
+        webbrowser.open(url)
         server.serve_forever()
 
     def update_forever(self):
