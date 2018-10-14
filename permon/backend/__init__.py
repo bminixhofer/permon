@@ -97,7 +97,9 @@ def get_all_stats():
 
 
 def get_stats_from_tags(tags):
+    is_one = False
     if not isinstance(tags, list):
+        is_one = True
         tags = [tags]
 
     verify_tags(tags)
@@ -107,7 +109,7 @@ def get_stats_from_tags(tags):
         if stat.tag in tags and stat.is_available():
             stats.append(stat)
 
-    return stats if len(stats) > 1 else stats[0]
+    return stats[0] if is_one else stats
 
 
 def verify_tags(tags):
