@@ -111,7 +111,7 @@ class CPUStat(Stat):
             del self.buffer[0]
 
         mean_percent = sum(self.buffer) / len(self.buffer)
-        top = self.proc_tracker.n_top['cpu']
+        top = self.proc_tracker.get_n_top('cpu', adapt_to=mean_percent)
 
         return mean_percent, top
 
