@@ -104,7 +104,7 @@ class NativeMonitor(Monitor):
         top_axis.setLabelsFont(font)
         top_axis.setLinePen(self.line_pen)
 
-        if not self.stat.has_top_info:
+        if not self.stat.has_contributor_breakdown:
             top_axis.setLineVisible(False)
 
         self.widget.chart.addAxis(top_axis, Qt.AlignRight)
@@ -179,17 +179,17 @@ class NativeMonitor(Monitor):
     def update(self):
         # every frame, we remove the last point of the history and
         # append a new measurement to the end
-        if self.stat.has_top_info:
-            value, top = self.stat.get_stat()
+        if self.stat.has_contributor_breakdown:
+            value, contributors = self.stat.get_stat()
         else:
             value = self.stat.get_stat()
-            top = {}
+            contributors = {}
 
         for s in self.top_axis.categoriesLabels():
                 self.top_axis.remove(s)
 
         agg = 0
-        for i, x in enumerate(top):
+        for i, x in enumerate(contributors):
             label = utils.format_bar_label(x[0])
 
             agg += x[1]

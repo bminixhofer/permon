@@ -33,7 +33,7 @@ class TerminalMonitor(Monitor):
     def update(self):
         self.values = np.roll(self.values, -1, axis=0)
 
-        if self.stat.has_top_info:
+        if self.stat.has_contributor_breakdown:
             value, contrib = self.stat.get_stat()
         else:
             value = self.stat.get_stat()

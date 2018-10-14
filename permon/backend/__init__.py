@@ -10,7 +10,7 @@ class Stat(ABC):
     linux_classes = []
     _initialized = False
 
-    def __init__(self, n_top=5):
+    def __init__(self, n_contributors=5):
         if not self._initialized:
             raise exceptions.InvalidStatError(
                 'The stat class is not initialized.')
@@ -18,8 +18,8 @@ class Stat(ABC):
         if not self.is_available():
             raise exceptions.InvalidStatError(
                 'Unavailable stats can not be instantiated.')
-        self.has_top_info = isinstance(self.get_stat(), tuple)
-        self.n_top = n_top
+        self.has_contributor_breakdown = isinstance(self.get_stat(), tuple)
+        self.n_contributors = n_contributors
 
     @classmethod
     def is_available(cls):

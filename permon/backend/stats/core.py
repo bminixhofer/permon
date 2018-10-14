@@ -17,7 +17,7 @@ class ProcessTracker():
             self._stop = False
             self._stopped = False
             self.processes = {}
-            self.n_top = defaultdict(lambda: {})
+            self.contributors = defaultdict(lambda: {})
 
             self._thread = threading.Thread(target=self._read_processes)
             self._thread.start()
@@ -39,8 +39,9 @@ class ProcessTracker():
                         _processes[name]['ram'] += proc.memory_info().vms
 
                 used_memory = psutil.virtual_memory().used / 1000**2
-                self.n_top['cpu'] = self.get_n_top('cpu')
-                self.n_top['ram'] = self.get_n_top('ram', adapt_to=used_memory)
+                self.contributors['cpu'] = self.get_contributors('cpu')
+                self.contributors['ram'] = self.get_contributors(
+                    'ram', adapt_to=used_memory)
                 self.processes = _processes
 
                 # check if the thread should be stopped every 0.1 seconds
@@ -52,19 +53,19 @@ class ProcessTracker():
 
             self._stopped = True
 
-        def get_n_top(self, tag, n=5, adapt_to=None):
+        def get_contributors(self, tag, n=5, adapt_to=None):
             processes = self.processes.items()
-            top = sorted(processes, key=lambda proc: proc[1][tag],
-                         reverse=True)
-            top = [[key, value[tag]] for key, value in top]
+            contributors = sorted(processes, key=lambda proc: proc[1][tag],
+                                  reverse=True)
+            contributors = [[key, value[tag]] for key, value in contributors]
 
             if adapt_to is not None:
-                value_sum = max(sum(x[1] for x in top), 1e-6)
-                for i, (_, value) in enumerate(top):
-                    top[i][1] = value / value_sum * adapt_to
-                remainder = adapt_to - sum(x[1] for x in top[:n-1])
-                top.insert(0, ['other', remainder])
-            return top[:n]
+                value_sum = max(sum(x[1] for x in contributors), 1e-6)
+                for i, (_, value) in enumerate(contributors):
+                    contributors[i][1] = value / value_sum * adapt_to
+                remainder = adapt_to - sum(x[1] for x in contributors[:n-1])
+                contributors.insert(0, ['other', remainder])
+            return contributors[:n]
 
     def __init__(self):
         if not self.instance:
@@ -111,9 +112,10 @@ class CPUStat(Stat):
             del self.buffer[0]
 
         mean_percent = sum(self.buffer) / len(self.buffer)
-        top = self.proc_tracker.get_n_top('cpu', adapt_to=mean_percent)
+        contributors = self.proc_tracker.get_contributors(
+            'cpu', adapt_to=mean_percent)
 
-        return mean_percent, top
+        return mean_percent, contributors
 
     @property
     def minimum(self):
@@ -138,9 +140,9 @@ class RAMStat(Stat):
 
     def get_stat(self):
         actual_memory = psutil.virtual_memory().used / 1000**2
-        top = self.proc_tracker.n_top['ram']
+        contributors = self.proc_tracker.contributors['ram']
 
-        return actual_memory, top
+        return actual_memory, contributors
 
     @property
     def minimum(self):

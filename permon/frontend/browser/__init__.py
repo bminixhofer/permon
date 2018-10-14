@@ -20,7 +20,7 @@ class BrowserMonitor(Monitor):
         self.contributors = {}
 
     def update(self):
-        if self.stat.has_top_info:
+        if self.stat.has_contributor_breakdown:
             value, contributors = self.stat.get_stat()
         else:
             value = self.stat.get_stat()

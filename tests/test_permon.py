@@ -20,7 +20,7 @@ def check_if_valid_number(x):
 def test_valid_values(cls):
     instance = cls()
 
-    if instance.has_top_info:
+    if instance.has_contributor_breakdown:
         stat, _ = instance.get_stat()
     else:
         stat = instance.get_stat()
