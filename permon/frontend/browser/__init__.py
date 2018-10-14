@@ -53,10 +53,6 @@ class BrowserApp(MonitorApp):
 
         self.port = port
         self.ip = ip
-        self.app = Flask(__name__)
-        self.sockets = Sockets(self.app)
-
-        self.adjust_monitors()
 
     def adjust_monitors(self):
         displayed_stats = []
@@ -71,6 +67,7 @@ class BrowserApp(MonitorApp):
             self.monitors.remove(monitor)
 
         new_stats = list(set(self.stats) - set(displayed_stats))
+        new_stats = sorted(new_stats, key=lambda stat: stat.tag)
         for stat in new_stats:
             monitor = BrowserMonitor(stat, color=self.next_color(),
                                      buffer_size=self.buffer_size,
@@ -101,6 +98,11 @@ class BrowserApp(MonitorApp):
         return stat_tree
 
     def initialize(self):
+        self.app = Flask(__name__)
+        self.sockets = Sockets(self.app)
+
+        self.adjust_monitors()
+
         @self.app.route('/')
         def index():
             return render_template('index.html', stats=self.setup_info)

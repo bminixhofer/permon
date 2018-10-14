@@ -370,6 +370,7 @@ class NativeApp(MonitorApp):
             self.monitors.remove(monitor)
 
         new_stats = list(set(self.stats) - set(displayed_stats))
+        new_stats = sorted(new_stats, key=lambda stat: stat.tag)
         for stat in new_stats:
             monitor = NativeMonitor(stat, color=self.next_color(),
                                     **self.monitor_params)

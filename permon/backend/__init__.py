@@ -93,6 +93,7 @@ def get_all_stats():
     for stat in stats:
         stat._init_tags()
 
+    stats = sorted(stats, key=lambda stat: stat.tag)
     return stats
 
 

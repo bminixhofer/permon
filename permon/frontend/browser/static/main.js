@@ -11,6 +11,8 @@ window.addEventListener("mousemove", (event) => {
 function setupMonitor(stat) {
     const bufferSize = 50;
     const categoryResolution = 100;
+    const adaptiveMinPercentage = 0.8;
+    const adaptiveMaxPercentage = 1.2;
     const tag = stat["tag"];
     const maximum = stat["maximum"];
     const minimum = stat["minimum"];
@@ -68,6 +70,18 @@ function setupMonitor(stat) {
         max: categoryResolution,
     };
 
+    let axisMin, axisMax;
+    if(minimum == null) {
+        axisMin = (value) => adaptiveMinPercentage * value.min;
+    } else {
+        axisMin = minimum;
+    }
+
+    if(maximum == null) {
+        axisMax = (value) => adaptiveMaxPercentage * value.max;
+    } else {
+        axisMax = maximum;
+    }
     let options = {
         grid: {
             left: "5%",
@@ -88,7 +102,9 @@ function setupMonitor(stat) {
         xAxis: {
             type: "value",
             show: false,
-            min: "dataMin",
+            min: function (value) {
+                return value.min + 1;
+            },
             max: "dataMax"
         },
         yAxis: [
@@ -98,8 +114,8 @@ function setupMonitor(stat) {
                 splitLine: {
                     show: false
                 },
-                min: Math.round(minimum) || null,
-                max: Math.round(maximum) || null
+                min: axisMin,
+                max: axisMax
             },
             rightAxis
         ],
@@ -156,8 +172,18 @@ function setupMonitor(stat) {
             let position = 0;
             let labelPosition = 0;
             let update;
+            let contributorMax;
+            if(maximum == null) {
+                contributorMax = data.reduce((a, b) => {
+                    return Math.max(b.value[1], a);
+                }, -Infinity);
+                contributorMax = contributorMax * adaptiveMaxPercentage;
+            } else {
+                contributorMax = maximum;
+            }
+
             contributors.forEach(([key, value]) => {
-                update = Math.round(value / maximum * categoryResolution);
+                update = Math.round(value / contributorMax * categoryResolution);
                 position += update;
                 labelPosition = position - Math.floor(update / 2);
 
