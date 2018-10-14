@@ -16,6 +16,7 @@ class BrowserMonitor(Monitor):
     def __init__(self, *args, **kwargs):
         super(BrowserMonitor, self).__init__(*args, **kwargs)
         self.values = []
+        self.value = 0
         self.top = {}
 
     def update(self):
