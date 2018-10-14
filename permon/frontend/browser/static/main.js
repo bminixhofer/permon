@@ -1,7 +1,7 @@
 let currentData = {};
 
 let mousePos = {};
-window.addEventListener('mousemove', (event) => {
+window.addEventListener("mousemove", (event) => {
     mousePos = {
         x: event.clientX,
         y: event.clientY
@@ -10,6 +10,7 @@ window.addEventListener('mousemove', (event) => {
 
 function setupMonitor(stat) {
     const bufferSize = 50;
+    const categoryResolution = 100;
     const tag = stat["tag"];
     const maximum = stat["maximum"];
     const minimum = stat["minimum"];
@@ -36,6 +37,37 @@ function setupMonitor(stat) {
 
     let chartContainer = document.getElementById(tag);
     let chart = echarts.init(chartContainer);
+    let contributorData = Array(categoryResolution).fill("");
+    let tickPositions = [];
+    let labelPositions = [];
+    let rightAxis = {
+        type: "category",
+        boundaryGap: true,
+        axisLabel: {
+            interval: function(y) {
+                return labelPositions.includes(y);
+            },
+            textStyle: {
+                color: "#000",
+            }
+        },
+        axisTick: {
+            alignWithLabel: true,
+            interval: function(y) {
+                return tickPositions.includes(y);
+            }
+        },
+        splitLine: {
+            show: false
+        },
+        axisPointer: {
+            show: false
+        },
+        data: [],
+        min: 0,
+        max: categoryResolution,
+    };
+
     let options = {
         grid: {
             left: "5%",
@@ -69,29 +101,7 @@ function setupMonitor(stat) {
                 min: Math.round(minimum) || null,
                 max: Math.round(maximum) || null
             },
-            // {
-            //     type: "category",
-            //     boundaryGap: true,
-            //     axisLabel: {
-            //         interval: function(y) {
-            //             return y % 10 == 0;
-            //         },
-            //         textStyle: {
-            //             color: "#000",
-            //         }
-            //     },
-            //     axisTick: {
-            //         interval: function(y) {
-            //             return y % 20 == 0;
-            //         }
-            //     },
-            //     splitLine: {
-            //         show: false
-            //     },
-            //     data: ["permon", "chromium", "Xorg"],
-            //     min: 0,
-            //     max: 100,
-            // }
+            rightAxis
         ],
         color: [color],
         series: [{
@@ -102,7 +112,7 @@ function setupMonitor(stat) {
             data,
             animationEasingUpdate: "linear",
             animationDurationUpdate: 1000
-        }]
+        }],
     };
     chart.setOption(options);
 
@@ -125,14 +135,43 @@ function setupMonitor(stat) {
         clearInterval(tooltipRepeater);
     });
 
+    let value, contributors;
     setInterval(function () {
         data.shift();
-        data.push(makePoint(currentData[tag] || 0));
+        if(!currentData[tag]) {
+            value = 0;
+            contributors = null;
+        } else if(currentData[tag].constructor === Array) {
+            [value, contributors] = currentData[tag];
+        } else {
+            value = currentData[tag];
+            contributors = null;
+        }
 
+        data.push(makePoint(value));
+
+        if(contributors) {
+            tickPositions = [];
+            labelPositions = [];
+            let position = 0;
+            let labelPosition = 0;
+            let update;
+            contributors.forEach(([key, value]) => {
+                update = Math.round(value / maximum * categoryResolution);
+                position += update;
+                labelPosition = position - Math.floor(update / 2);
+
+                contributorData[labelPosition] = key;
+                tickPositions.push(position);
+                labelPositions.push(labelPosition);
+            });
+            rightAxis.data = contributorData;
+        }
         chart.setOption({
             series: [{
                 data
-            }]
+            }],
+            yAxis: [{}, rightAxis]
         });
     }, 1000);
 }

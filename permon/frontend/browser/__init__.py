@@ -17,21 +17,21 @@ class BrowserMonitor(Monitor):
         super(BrowserMonitor, self).__init__(*args, **kwargs)
         self.values = []
         self.value = 0
-        self.top = {}
+        self.contributors = {}
 
     def update(self):
         if self.stat.has_top_info:
-            value, top = self.stat.get_stat()
+            value, contributors = self.stat.get_stat()
         else:
             value = self.stat.get_stat()
-            top = {}
+            contributors = {}
 
         self.value = value
+        self.contributors = contributors
+
         self.values.append(self.value)
         if len(self.values) > self.buffer_size:
             del self.values[0]
-
-        self.top = top
 
     def get_json_info(self):
         return {
@@ -124,8 +124,14 @@ class BrowserApp(MonitorApp):
         @self.sockets.route('/statUpdates')
         def socket(ws):
             while not ws.closed:
-                stat_updates = {monitor.stat.tag: monitor.value
-                                for monitor in self.monitors}
+                stat_updates = dict()
+                for monitor in self.monitors:
+                    if monitor.contributors:
+                        stat_updates[monitor.stat.tag] = [monitor.value,
+                                                          monitor.contributors]
+                    else:
+                        stat_updates[monitor.stat.tag] = monitor.value
+
                 ws.send(json.dumps(stat_updates))
                 gevent.sleep(1)
 
