@@ -12,7 +12,24 @@ class ProcessTracker():
     instance = None
     n_wrapper_instances = 0
 
-    class __ProcessTracker():
+    def __init__(self):
+        if not self.instance:
+            ProcessTracker.instance = self._ProcessTracker()
+        ProcessTracker.n_wrapper_instances += 1
+
+    def __del__(self):
+        ProcessTracker.n_wrapper_instances -= 1
+        if self.n_wrapper_instances == 0:
+            self.instance._stop = True
+            while not self.instance._stopped:
+                continue
+
+            ProcessTracker.instance = None
+
+    def __getattr__(self, attr):
+        return getattr(self.instance, attr)
+
+    class _ProcessTracker():
         def __init__(self):
             self._stop = False
             self._stopped = False
@@ -67,29 +84,12 @@ class ProcessTracker():
                 contributors.insert(0, ['other', remainder])
             return contributors[:n]
 
-    def __init__(self):
-        if not self.instance:
-            ProcessTracker.instance = self.__ProcessTracker()
-        ProcessTracker.n_wrapper_instances += 1
-
-    def __del__(self):
-        ProcessTracker.n_wrapper_instances -= 1
-        if self.n_wrapper_instances == 0:
-            self.instance._stop = True
-            while not self.instance._stopped:
-                continue
-
-            ProcessTracker.instance = None
-
     def delete_instance(self):
         self.instance._stop = True
         while not self._stopped:
             continue
 
         self.instance = None
-
-    def __getattr__(self, attr):
-        return getattr(self.instance, attr)
 
 
 @Stat.windows

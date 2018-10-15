@@ -55,30 +55,6 @@ class BrowserApp(MonitorApp):
         self.port = port
         self.ip = ip
 
-    def adjust_monitors(self):
-        displayed_stats = []
-        removed_monitors = []
-        for monitor in self.monitors:
-            if monitor.stat in self.stats:
-                displayed_stats.append(monitor.stat)
-            else:
-                removed_monitors.append(monitor)
-
-        for monitor in removed_monitors:
-            self.monitors.remove(monitor)
-
-        new_stats = list(set(self.stats) - set(displayed_stats))
-        new_stats = sorted(new_stats, key=lambda stat: stat.tag)
-        for stat in new_stats:
-            monitor = BrowserMonitor(stat, color=self.next_color(),
-                                     buffer_size=self.buffer_size,
-                                     fps=self.fps,
-                                     app=self)
-            self.monitors.append(monitor)
-
-        self.setup_info = [monitor.get_json_info()
-                           for monitor in self.monitors]
-
     def _get_stat_tree(self):
         stats = backend.get_all_stats()
 
@@ -156,6 +132,30 @@ class BrowserApp(MonitorApp):
 
         webbrowser.open(url)
         server.serve_forever()
+
+    def adjust_monitors(self):
+        displayed_stats = []
+        removed_monitors = []
+        for monitor in self.monitors:
+            if monitor.stat in self.stats:
+                displayed_stats.append(monitor.stat)
+            else:
+                removed_monitors.append(monitor)
+
+        for monitor in removed_monitors:
+            self.monitors.remove(monitor)
+
+        new_stats = list(set(self.stats) - set(displayed_stats))
+        new_stats = sorted(new_stats, key=lambda stat: stat.tag)
+        for stat in new_stats:
+            monitor = BrowserMonitor(stat, color=self.next_color(),
+                                     buffer_size=self.buffer_size,
+                                     fps=self.fps,
+                                     app=self)
+            self.monitors.append(monitor)
+
+        self.setup_info = [monitor.get_json_info()
+                           for monitor in self.monitors]
 
     def update_forever(self):
         while True:

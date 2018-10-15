@@ -1,4 +1,5 @@
 import sys
+import math
 from PySide2 import QtWidgets, QtCore
 from PySide2.QtCore import Qt, Signal
 from PySide2.QtCharts import QtCharts
@@ -6,7 +7,6 @@ import PySide2.QtGui as QtGui
 from permon.frontend import Monitor, MonitorApp, utils
 import permon.backend as backend
 from permon import config, exceptions
-import math
 
 
 class SettingsWidget(QtWidgets.QWidget):
@@ -74,9 +74,6 @@ class SettingsWidget(QtWidgets.QWidget):
 
         layout.addWidget(continue_widget)
 
-    def open(self, stats):
-        self.set_stats = stats.copy()
-
     def _check_monitor(self, item):
         state = item.checkState()
         is_selected = state == Qt.Checked
@@ -93,46 +90,11 @@ class SettingsWidget(QtWidgets.QWidget):
     def _cancel(self):
         self.cancelled.emit()
 
+    def open(self, stats):
+        self.set_stats = stats.copy()
+
 
 class NativeMonitor(Monitor):
-    def _create_right_axis(self):
-        top_axis = QtCharts.QCategoryAxis()
-        top_axis.setGridLineVisible(False)
-
-        font = QtGui.QFont()
-        font.setPixelSize(8)
-        top_axis.setLabelsFont(font)
-        top_axis.setLinePen(self.line_pen)
-
-        if not self.stat.has_contributor_breakdown:
-            top_axis.setLineVisible(False)
-
-        self.widget.chart.addAxis(top_axis, Qt.AlignRight)
-        self.line_series.attachAxis(top_axis)
-
-        self.top_axis = top_axis
-
-    def _create_line_series(self):
-        # a QValueAxis has tick labels per default
-        # so we use a QCategoryAxis
-        axisX = QtCharts.QCategoryAxis()
-        axisX.setRange(0, self.buffer_size)
-
-        # create series
-        series = QtCharts.QLineSeries()
-        pen = QtGui.QPen(QtGui.QColor(self.color), self.thickness)
-        series.setPen(pen)
-
-        self.widget.chart.addSeries(series)
-        self.widget.chart.setAxisX(axisX, series)
-        self.widget.chart.setAxisY(self.widget.axisY, series)
-
-        self.buffer = [QtCore.QPointF(x, 0) for x in range(self.buffer_size)]
-        series.append(self.buffer)
-
-        self.line_pen = pen
-        self.line_series = series
-
     def __init__(self, stat, buffer_size, fps, color,
                  app, fontsize, thickness):
         super(NativeMonitor, self).__init__(stat, buffer_size,
@@ -175,6 +137,73 @@ class NativeMonitor(Monitor):
         timer = QtCore.QTimer(self.widget)
         timer.start(1000 / fps)
         timer.timeout.connect(self.update)
+
+    def _create_right_axis(self):
+        top_axis = QtCharts.QCategoryAxis()
+        top_axis.setGridLineVisible(False)
+
+        font = QtGui.QFont()
+        font.setPixelSize(8)
+        top_axis.setLabelsFont(font)
+        top_axis.setLinePen(self.line_pen)
+
+        if not self.stat.has_contributor_breakdown:
+            top_axis.setLineVisible(False)
+
+        self.widget.chart.addAxis(top_axis, Qt.AlignRight)
+        self.line_series.attachAxis(top_axis)
+
+        self.top_axis = top_axis
+
+    def _create_line_series(self):
+        # a QValueAxis has tick labels per default
+        # so we use a QCategoryAxis
+        axisX = QtCharts.QCategoryAxis()
+        axisX.setRange(0, self.buffer_size)
+
+        # create series
+        series = QtCharts.QLineSeries()
+        pen = QtGui.QPen(QtGui.QColor(self.color), self.thickness)
+        series.setPen(pen)
+
+        self.widget.chart.addSeries(series)
+        self.widget.chart.setAxisX(axisX, series)
+        self.widget.chart.setAxisY(self.widget.axisY, series)
+
+        self.buffer = [QtCore.QPointF(x, 0) for x in range(self.buffer_size)]
+        series.append(self.buffer)
+
+        self.line_pen = pen
+        self.line_series = series
+
+    def _set_yrange(self, minimum, maximum, n_labels=5):
+        axis = self.widget.axisY
+        if minimum == axis.min() and maximum == axis.max():
+            return
+
+        axis.setRange(minimum, maximum)
+        self.top_axis.setRange(minimum, maximum)
+
+        for s in axis.categoriesLabels():
+            axis.remove(s)
+
+        axis_values = [minimum + ((maximum - minimum) / (n_labels - 1)) * i
+                       for i in range(n_labels)]
+        axis_labels = utils.format_labels(axis_values)
+        for value, label in zip(axis_values, axis_labels):
+            # qt strips spaces from labels, to make them have the same size
+            # we have to pad them with non-breaking spaces (U+00A0)
+            axis.append(label.rjust(10, u'\u00A0'), value)
+
+    def _create_header(self, fontsize):
+        font = QtGui.QFont()
+        font.setPixelSize(fontsize)
+        font.setBold(True)
+
+        title_label = QtWidgets.QLabel(self.stat.name)
+        title_label.setFont(font)
+
+        return title_label
 
     def update(self):
         # every frame, we remove the last point of the history and
@@ -232,35 +261,6 @@ class NativeMonitor(Monitor):
     def paint(self):
         pass
 
-    def _set_yrange(self, minimum, maximum, n_labels=5):
-        axis = self.widget.axisY
-        if minimum == axis.min() and maximum == axis.max():
-            return
-
-        axis.setRange(minimum, maximum)
-        self.top_axis.setRange(minimum, maximum)
-
-        for s in axis.categoriesLabels():
-            axis.remove(s)
-
-        axis_values = [minimum + ((maximum - minimum) / (n_labels - 1)) * i
-                       for i in range(n_labels)]
-        axis_labels = utils.format_labels(axis_values)
-        for value, label in zip(axis_values, axis_labels):
-            # qt strips spaces from labels, to make them have the same size
-            # we have to pad them with non-breaking spaces (U+00A0)
-            axis.append(label.rjust(10, u'\u00A0'), value)
-
-    def _create_header(self, fontsize):
-        font = QtGui.QFont()
-        font.setPixelSize(fontsize)
-        font.setBold(True)
-
-        title_label = QtWidgets.QLabel(self.stat.name)
-        title_label.setFont(font)
-
-        return title_label
-
 
 class NativeApp(MonitorApp):
     # QApplication is a global singleton. It can only ever be instantiated once
@@ -277,6 +277,23 @@ class NativeApp(MonitorApp):
             'thickness': line_thickness,
             'fontsize': fontsize
         }
+
+    def _create_monitor_page(self):
+        page_widget = QtWidgets.QWidget()
+        layout = QtWidgets.QVBoxLayout(page_widget)
+
+        # add button for switching to settings page
+        settings_button = QtWidgets.QPushButton('Settings')
+
+        def open_settings():
+            self._settings_page.open(self.stats)
+            self._main.setCurrentWidget(self._settings_page)
+
+        settings_button.clicked.connect(open_settings)
+        layout.addWidget(settings_button)
+
+        self.monitors = []
+        return page_widget
 
     def initialize(self):
         if not self.qapp:
@@ -334,23 +351,6 @@ class NativeApp(MonitorApp):
 
     def paint(self):
         pass
-
-    def _create_monitor_page(self):
-        page_widget = QtWidgets.QWidget()
-        layout = QtWidgets.QVBoxLayout(page_widget)
-
-        # add button for switching to settings page
-        settings_button = QtWidgets.QPushButton('Settings')
-
-        def open_settings():
-            self._settings_page.open(self.stats)
-            self._main.setCurrentWidget(self._settings_page)
-
-        settings_button.clicked.connect(open_settings)
-        layout.addWidget(settings_button)
-
-        self.monitors = []
-        return page_widget
 
     def adjust_monitors(self):
         displayed_stats = []

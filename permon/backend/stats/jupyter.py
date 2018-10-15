@@ -96,6 +96,10 @@ _permon_running = False
         self.client.execute(self.setup_code)
         super(JupyterRAMUsage, self).__init__()
 
+    def __del__(self):
+        self.client.execute(self.teardown_code)
+        self.client.stop_channels()
+
     def get_stat(self):
         ram_usage = []
         with open(self.usage_file, 'r') as f:
@@ -107,10 +111,6 @@ _permon_running = False
         ram_usage = sorted(ram_usage, key=lambda x: x[1], reverse=True)
 
         return sum(x[1] for x in ram_usage), ram_usage[:5]
-
-    def __del__(self):
-        self.client.execute(self.teardown_code)
-        self.client.stop_channels()
 
     @property
     def minimum(self):

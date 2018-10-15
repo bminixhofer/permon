@@ -10,21 +10,6 @@ class Stat(ABC):
     linux_classes = []
     _initialized = False
 
-    def __init__(self, n_contributors=5):
-        if not self._initialized:
-            raise exceptions.InvalidStatError(
-                'The stat class is not initialized.')
-
-        if not self.is_available():
-            raise exceptions.InvalidStatError(
-                'Unavailable stats can not be instantiated.')
-        self.has_contributor_breakdown = isinstance(self.get_stat(), tuple)
-        self.n_contributors = n_contributors
-
-    @classmethod
-    def is_available(cls):
-        return True
-
     @classmethod
     def _init_tags(cls):
         if not cls._initialized:
@@ -48,6 +33,10 @@ class Stat(ABC):
                 'Stats must have a static tag attribute.')
 
     @classmethod
+    def is_available(cls):
+        return True
+
+    @classmethod
     def windows(cls, check_cls):
         Stat._validate_stat(check_cls)
         Stat.windows_classes.append(check_cls)
@@ -58,6 +47,17 @@ class Stat(ABC):
         Stat._validate_stat(check_cls)
         Stat.linux_classes.append(check_cls)
         return check_cls
+
+    def __init__(self, n_contributors=5):
+        if not self._initialized:
+            raise exceptions.InvalidStatError(
+                'The stat class is not initialized.')
+
+        if not self.is_available():
+            raise exceptions.InvalidStatError(
+                'Unavailable stats can not be instantiated.')
+        self.has_contributor_breakdown = isinstance(self.get_stat(), tuple)
+        self.n_contributors = n_contributors
 
     @abstractmethod
     def get_stat(self):

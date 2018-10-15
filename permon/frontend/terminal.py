@@ -1,8 +1,8 @@
-import numpy as np
+import math
 import time
 import blessings
+import numpy as np
 from permon.frontend import Monitor, MonitorApp, utils
-import math
 
 
 class TerminalMonitor(Monitor):
