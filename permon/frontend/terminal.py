@@ -18,7 +18,7 @@ class TerminalMonitor(Monitor):
         # fill unknown history with the minimum value (or 0 if it is unknown)
         axis_space = self.axis_width + self.r_axis_width
         self.values = np.full(resolution[1] - axis_space,
-                              self.stat.minimum or 0)
+                              self.stat.minimum or 0, dtype=np.float32)
         self.symbols = {
             'axis': ' ┤',
             'right_axis': '├',
