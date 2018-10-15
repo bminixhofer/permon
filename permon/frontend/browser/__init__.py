@@ -108,13 +108,6 @@ class BrowserApp(MonitorApp):
         def index():
             return render_template('index.html', stats=self.setup_info)
 
-        @self.app.route('/settings', methods=['POST'])
-        def set_settings():
-            self.stats = backend.get_stats_from_tags(list(request.form.keys()))
-            self.adjust_monitors()
-
-            return redirect('/')
-
         @self.app.route('/settings')
         def settings():
             return render_template('settings.html',
@@ -144,6 +137,13 @@ class BrowserApp(MonitorApp):
                     print(f'{origin} disconnected.')
 
                 gevent.sleep(1)
+
+        @self.app.route('/settings', methods=['POST'])
+        def set_settings():
+            self.stats = backend.get_stats_from_tags(list(request.form.keys()))
+            self.adjust_monitors()
+
+            return redirect('/')
 
         server = pywsgi.WSGIServer((self.ip, self.port), self.app,
                                    handler_class=WebSocketHandler)
