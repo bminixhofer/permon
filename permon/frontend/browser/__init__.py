@@ -7,6 +7,7 @@ from flask import Flask, render_template, Response, request, redirect
 from flask_sockets import Sockets
 import gevent
 from gevent import pywsgi
+import geventwebsocket
 from geventwebsocket.handler import WebSocketHandler
 from permon.frontend import MonitorApp, Monitor
 from permon import backend
@@ -125,6 +126,8 @@ class BrowserApp(MonitorApp):
 
         @self.sockets.route('/statUpdates')
         def socket(ws):
+            origin = ws.origin
+            print(f'{origin} connected.')
             while not ws.closed:
                 stat_updates = dict()
                 for monitor in self.monitors:
@@ -134,7 +137,12 @@ class BrowserApp(MonitorApp):
                     else:
                         stat_updates[monitor.stat.tag] = monitor.value
 
-                ws.send(json.dumps(stat_updates))
+                try:
+                    ws.send(json.dumps(stat_updates))
+                except geventwebsocket.exceptions.WebSocketError:
+                    ws.close()
+                    print(f'{origin} disconnected.')
+
                 gevent.sleep(1)
 
         server = pywsgi.WSGIServer((self.ip, self.port), self.app,
