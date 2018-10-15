@@ -1,0 +1,31 @@
+{
+  "name": "permon-browser",
+  "version": "1.0.0",
+  "description": "The browser frontend for permon.",
+  "main": "__init__.py",
+  "dependencies": {},
+  "devDependencies": {
+    "eslint": "^5.7.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.14.0"
+  },
+  "scripts": {
+    "test": "eslint . --ignore-pattern static/echarts.common.min.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bminixhofer/permon.git"
+  },
+  "keywords": [
+    "monitoring",
+    "performance",
+    "monitor-performance",
+    "data-science"
+  ],
+  "author": "bminixhofer",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bminixhofer/permon/issues"
+  },
+  "homepage": "https://github.com/bminixhofer/permon#readme"
+}

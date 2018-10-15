@@ -1,220 +1,218 @@
+/* global echarts */
+
 let currentData = {};
 
 let mousePos = {};
-window.addEventListener("mousemove", (event) => {
-    mousePos = {
-        x: event.clientX,
-        y: event.clientY
-    };
+window.addEventListener('mousemove', (event) => {
+  mousePos = {
+    x: event.clientX,
+    y: event.clientY,
+  };
 });
 
 function setupMonitor(stat) {
-    const bufferSize = 50;
-    const categoryResolution = 100;
-    const adaptiveMinPercentage = 0.8;
-    const adaptiveMaxPercentage = 1.2;
-    const tag = stat["tag"];
-    const maximum = stat["maximum"];
-    const minimum = stat["minimum"];
-    const color = stat["color"];
-    const history = stat["history"];
+  const bufferSize = 50;
+  const categoryResolution = 100;
+  const adaptiveMinPercentage = 0.8;
+  const adaptiveMaxPercentage = 1.2;
+  const {
+    tag, maximum, minimum, color, history,
+  } = stat;
 
-    let dataIndex = 0;
-    function makePoint(x) {
-        dataIndex++;
-        return {
-            name: dataIndex,
-            value: [
-                dataIndex,
-                x
-            ]
-        }
-    }
+  let dataIndex = 0;
+  function makePoint(x) {
+    dataIndex += 1;
+    return {
+      name: dataIndex,
+      value: [
+        dataIndex,
+        x,
+      ],
+    };
+  }
 
-    let data = [];
-    for(let i = 0; i < bufferSize - history.length; i++) {
-        data.push(makePoint(0));
-    }
-    data = data.concat(history.map(x => makePoint(x)));
+  let data = [];
+  for (let i = 0; i < bufferSize - history.length; i += 1) {
+    data.push(makePoint(0));
+  }
+  data = data.concat(history.map(x => makePoint(x)));
 
-    let chartContainer = document.getElementById(tag);
-    let chart = echarts.init(chartContainer);
-    let contributorData = Array(categoryResolution).fill("");
-    let tickPositions = [];
-    let labelPositions = [];
-    let rightAxis = {
-        type: "category",
-        boundaryGap: true,
-        axisLabel: {
-            interval: function(y) {
-                return labelPositions.includes(y);
-            },
-            textStyle: {
-                color: "#000",
-            }
-        },
-        axisTick: {
-            alignWithLabel: true,
-            interval: function(y) {
-                return tickPositions.includes(y);
-            }
-        },
+  const chartContainer = document.getElementById(tag);
+  const chart = echarts.init(chartContainer);
+  const contributorData = Array(categoryResolution).fill('');
+  let tickPositions = [];
+  let labelPositions = [];
+  const rightAxis = {
+    type: 'category',
+    boundaryGap: true,
+    axisLabel: {
+      interval(y) {
+        return labelPositions.includes(y);
+      },
+      textStyle: {
+        color: '#000',
+      },
+    },
+    axisTick: {
+      alignWithLabel: true,
+      interval(y) {
+        return tickPositions.includes(y);
+      },
+    },
+    splitLine: {
+      show: false,
+    },
+    axisPointer: {
+      show: false,
+    },
+    data: [],
+    min: 0,
+    max: categoryResolution,
+  };
+
+  let axisMin;
+  let axisMax;
+  if (minimum == null) {
+    axisMin = value => adaptiveMinPercentage * value.min;
+  } else {
+    axisMin = minimum;
+  }
+
+  if (maximum == null) {
+    axisMax = value => adaptiveMaxPercentage * value.max;
+  } else {
+    axisMax = maximum;
+  }
+  const options = {
+    grid: {
+      left: '5%',
+      top: 10,
+      right: '5%',
+      bottom: 10,
+    },
+    tooltip: {
+      trigger: 'axis',
+      triggerOn: 'none',
+      formatter: tooltip => Math.round(tooltip[0].value[1] * 100) / 100,
+    },
+    axisPointer: {
+      triggerOn: 'mousemove',
+    },
+    xAxis: {
+      type: 'value',
+      show: false,
+      min: value => value.min + 1,
+      max: 'dataMax',
+    },
+    yAxis: [
+      {
+        type: 'value',
+        boundaryGap: [0, '100%'],
         splitLine: {
-            show: false
+          show: false,
         },
-        axisPointer: {
-            show: false
-        },
-        data: [],
-        min: 0,
-        max: categoryResolution,
-    };
+        min: axisMin,
+        max: axisMax,
+      },
+      rightAxis,
+    ],
+    color: [color],
+    series: [{
+      name: tag,
+      type: 'line',
+      showSymbol: false,
+      hoverAnimation: false,
+      data,
+      animationEasingUpdate: 'linear',
+      animationDurationUpdate: 1000,
+    }],
+  };
+  chart.setOption(options);
 
-    let axisMin, axisMax;
-    if(minimum == null) {
-        axisMin = (value) => adaptiveMinPercentage * value.min;
+  let tooltipRepeater;
+  const rect = chartContainer.getBoundingClientRect();
+
+  chartContainer.addEventListener('mouseover', (event) => {
+    tooltipRepeater = setInterval(() => {
+      chart.dispatchAction({
+        type: 'showTip',
+        x: (mousePos.x || event.clientX) - rect.x,
+        y: (mousePos.y || event.clientY) - rect.y,
+      });
+    }, 100);
+  });
+  chartContainer.addEventListener('mouseout', () => {
+    chart.dispatchAction({
+      type: 'hideTip',
+    });
+    clearInterval(tooltipRepeater);
+  });
+
+  let value;
+  let contributors;
+  setInterval(() => {
+    data.shift();
+    if (!currentData[tag]) {
+      value = 0;
+      contributors = null;
+    } else if (currentData[tag].constructor === Array) {
+      [value, contributors] = currentData[tag];
     } else {
-        axisMin = minimum;
+      value = currentData[tag];
+      contributors = null;
     }
 
-    if(maximum == null) {
-        axisMax = (value) => adaptiveMaxPercentage * value.max;
-    } else {
-        axisMax = maximum;
+    data.push(makePoint(value));
+
+    if (contributors) {
+      tickPositions = [];
+      labelPositions = [];
+      let position = 0;
+      let labelPosition = 0;
+      let update;
+      let contributorMax;
+      if (maximum == null) {
+        contributorMax = data.reduce((a, b) => Math.max(b.value[1], a), -Infinity);
+        contributorMax *= adaptiveMaxPercentage;
+      } else {
+        contributorMax = maximum;
+      }
+
+      contributors.forEach(([key, contributorValue]) => {
+        update = Math.round(contributorValue / contributorMax * categoryResolution);
+        position += update;
+        labelPosition = position - Math.floor(update / 2);
+
+        contributorData[labelPosition] = key;
+        tickPositions.push(position);
+        labelPositions.push(labelPosition);
+      });
+      rightAxis.data = contributorData;
     }
-    let options = {
-        grid: {
-            left: "5%",
-            top: 10,
-            right: "5%",
-            bottom: 10
-        },
-        tooltip: {
-            trigger: "axis",
-            triggerOn: "none",
-            formatter: (data, ticket, callback) => {
-                return Math.round(data[0].value[1] * 100) / 100
-            }
-        },
-        axisPointer: {
-            triggerOn: "mousemove"
-        },
-        xAxis: {
-            type: "value",
-            show: false,
-            min: function (value) {
-                return value.min + 1;
-            },
-            max: "dataMax"
-        },
-        yAxis: [
-            {
-                type: "value",
-                boundaryGap: [0, "100%"],
-                splitLine: {
-                    show: false
-                },
-                min: axisMin,
-                max: axisMax
-            },
-            rightAxis
-        ],
-        color: [color],
-        series: [{
-            name: tag,
-            type: "line",
-            showSymbol: false,
-            hoverAnimation: false,
-            data,
-            animationEasingUpdate: "linear",
-            animationDurationUpdate: 1000
-        }],
-    };
-    chart.setOption(options);
-
-    let tooltipRepeater;
-    let rect = chartContainer.getBoundingClientRect();
-
-    chartContainer.addEventListener("mouseover", (event) => {
-        tooltipRepeater = setInterval(() => {
-            chart.dispatchAction({
-                type: 'showTip',
-                x: (mousePos.x || event.clientX) - rect.x,
-                y: (mousePos.y || event.clientY) - rect.y
-            });
-        }, 100);
+    chart.setOption({
+      series: [{
+        data,
+      }],
+      yAxis: [{}, rightAxis],
     });
-    chartContainer.addEventListener("mouseout", () => {
-        chart.dispatchAction({
-            type: 'hideTip',
-        });
-        clearInterval(tooltipRepeater);
-    });
-
-    let value, contributors;
-    setInterval(function () {
-        data.shift();
-        if(!currentData[tag]) {
-            value = 0;
-            contributors = null;
-        } else if(currentData[tag].constructor === Array) {
-            [value, contributors] = currentData[tag];
-        } else {
-            value = currentData[tag];
-            contributors = null;
-        }
-
-        data.push(makePoint(value));
-
-        if(contributors) {
-            tickPositions = [];
-            labelPositions = [];
-            let position = 0;
-            let labelPosition = 0;
-            let update;
-            let contributorMax;
-            if(maximum == null) {
-                contributorMax = data.reduce((a, b) => {
-                    return Math.max(b.value[1], a);
-                }, -Infinity);
-                contributorMax = contributorMax * adaptiveMaxPercentage;
-            } else {
-                contributorMax = maximum;
-            }
-
-            contributors.forEach(([key, value]) => {
-                update = Math.round(value / contributorMax * categoryResolution);
-                position += update;
-                labelPosition = position - Math.floor(update / 2);
-
-                contributorData[labelPosition] = key;
-                tickPositions.push(position);
-                labelPositions.push(labelPosition);
-            });
-            rightAxis.data = contributorData;
-        }
-        chart.setOption({
-            series: [{
-                data
-            }],
-            yAxis: [{}, rightAxis]
-        });
-    }, 1000);
+  }, 1000);
 }
 
-let request = new Request(`${window.location.protocol}//${window.location.host}/statInfo`);
-fetch(request).then(response => response.json()).then(stats => {
-    stats.forEach(stat => {
-        setupMonitor(stat);
-    });
+const request = new Request(`${window.location.protocol}//${window.location.host}/statInfo`);
+fetch(request).then(response => response.json()).then((stats) => {
+  stats.forEach((stat) => {
+    setupMonitor(stat);
+  });
 });
 
-let socket = new WebSocket(`ws://${window.location.host}/statUpdates`);
-socket.onmessage = function (event) {
-    eventData = JSON.parse(event.data);
+const socket = new WebSocket(`ws://${window.location.host}/statUpdates`);
+socket.onmessage = function onSocketMessage(event) {
+  const eventData = JSON.parse(event.data);
+  const currentKeys = Object.keys(currentData);
 
-    if(Object.keys(currentData).length > 0 && (JSON.stringify(Object.keys(eventData)) !== JSON.stringify(Object.keys(currentData)))) {
-        window.location.reload();
-    }
-    currentData = eventData;
-}
+  const dataKeysChanged = JSON.stringify(Object.keys(eventData)) !== JSON.stringify(currentKeys);
+  if (currentKeys.length > 0 && dataKeysChanged) {
+    window.location.reload();
+  }
+  currentData = eventData;
+};
