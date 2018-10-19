@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 __version__ = '1.0.0'
 
+import logging
 from permon.frontend import native, terminal, browser
 from permon import config, backend
 
@@ -39,6 +40,10 @@ def main():
     # determines which colors are used in frontends that support custom colors
     colors = ['#ed5565', '#ffce54', '#48cfad', '#sd9cec', '#ec87c0',
               '#fc6e51', '#a0d468', '#4fc1e9', '#ac92ec']
+
+    logging.basicConfig(format='%(asctime)s %(message)s',
+                        datefmt='%d-%m-%Y %I:%M:%S %p',
+                        level=logging.INFO)
 
     if args.frontend == 'browser':
         app = browser.BrowserApp(stats, colors=colors,

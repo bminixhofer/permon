@@ -1,4 +1,5 @@
 import sys
+import logging
 import math
 from PySide2 import QtWidgets, QtCore
 from PySide2.QtCore import Qt, Signal
@@ -35,7 +36,7 @@ class SettingsWidget(QtWidgets.QWidget):
         all_stats = backend.get_all_stats()
 
         category_map = dict()
-        for root_tag in set(x.root_tag for x in all_stats):
+        for root_tag in sorted(set(x.root_tag for x in all_stats)):
             item = QtGui.QStandardItem(root_tag)
             item.setFont(font)
             model.appendRow(item)
@@ -323,8 +324,10 @@ class NativeApp(MonitorApp):
 
             self.stats = stats
 
+            stat_tags = [stat.tag for stat in stats]
+            logging.info('Setting tags: ' + str(stat_tags))
             config.set_config({
-                'stats': [stat.tag for stat in stats]
+                'stats': stat_tags
             })
 
             self.adjust_monitors()
@@ -346,6 +349,7 @@ class NativeApp(MonitorApp):
         self.window.show()
         self.qapp.exec_()
 
+        logging.info('Application closing')
         # when done executing (window is closed by user), delete the monitors
         del self.monitors
 
@@ -355,9 +359,10 @@ class NativeApp(MonitorApp):
     def adjust_monitors(self):
         displayed_stats = []
         removed_monitors = []
+
         for monitor in self.monitors:
-            if monitor.stat in self.stats:
-                displayed_stats.append(monitor.stat)
+            if type(monitor.stat) in self.stats:
+                displayed_stats.append(type(monitor.stat))
             else:
                 removed_monitors.append(monitor)
 
@@ -380,3 +385,14 @@ class NativeApp(MonitorApp):
         # keep all charts equally large
         for i in range(self._monitor_page.layout().count()):
             self._monitor_page.layout().setStretch(i, 1)
+
+        if logging.getLogger().isEnabledFor(logging.INFO):
+            displayed = [stat.tag for stat in displayed_stats] or 'No Monitors'
+            new = [stat.tag for stat in new_stats] or 'No Monitors'
+            removed = [monitor.stat.tag for monitor in removed_monitors] or \
+                'No Monitors'
+
+            logging.info('Adjusted monitors')
+            logging.info(f'{displayed} were already displayed')
+            logging.info(f'{new} were added')
+            logging.info(f'{removed} were removed')

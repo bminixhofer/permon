@@ -3,6 +3,7 @@ import webbrowser
 import json
 import threading
 import time
+import logging
 from flask import Flask, render_template, Response, request, redirect
 from flask_sockets import Sockets
 import gevent
@@ -96,7 +97,7 @@ class BrowserApp(MonitorApp):
         @self.sockets.route('/statUpdates')
         def socket(ws):
             origin = ws.origin
-            print(f'{origin} connected.')
+            logging.info(f'{origin} connected')
             while not ws.closed:
                 stat_updates = dict()
                 for monitor in self.monitors:
@@ -109,8 +110,8 @@ class BrowserApp(MonitorApp):
                 try:
                     ws.send(json.dumps(stat_updates))
                 except geventwebsocket.exceptions.WebSocketError:
+                    logging.info(f'{origin} disconnected')
                     ws.close()
-                    print(f'{origin} disconnected.')
 
                 gevent.sleep(1)
 
