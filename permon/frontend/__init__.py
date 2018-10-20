@@ -32,6 +32,8 @@ class Monitor(ABC):
 
 class MonitorApp(ABC):
     def __init__(self, stats, colors, buffer_size, fps):
+        assert len(colors) > 0, 'App must have at least one color.'
+
         self.stats = stats
         self.colors = colors
         self._color_index = 0
