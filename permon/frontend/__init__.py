@@ -7,10 +7,10 @@ from permon import exceptions
 class Monitor(ABC):
     def __init__(self, stat, buffer_size, fps, color, app):
         # the only place a stat is ever instantiated
-        self.stat = stat()
+        self.stat = stat(fps=fps)
 
-        if self.stat.minimum and self.stat.maximum:
-            assert np.abs(stat.maximum - stat.minimum) > 0, \
+        if self.stat.minimum is not None and self.stat.maximum is not None:
+            assert np.abs(self.stat.maximum - self.stat.minimum) > 0, \
                 'Graph range must be greater than zero.'
 
         self.buffer_size = buffer_size

@@ -98,12 +98,12 @@ class CPUStat(Stat):
     name = 'CPU Usage [%]'
     base_tag = 'cpu_usage'
 
-    def __init__(self):
+    def __init__(self, fps):
         self.proc_tracker = ProcessTracker()
         self.buffer = []
         self.buffer_size = 10
 
-        super(CPUStat, self).__init__()
+        super(CPUStat, self).__init__(fps=fps)
 
     def get_stat(self):
         cpu_percent = sum(psutil.cpu_percent(percpu=True))
@@ -132,11 +132,11 @@ class RAMStat(Stat):
     name = 'RAM Usage [MB]'
     base_tag = 'ram_usage'
 
-    def __init__(self):
+    def __init__(self, fps):
         self.proc_tracker = ProcessTracker()
 
         self._maximum = psutil.virtual_memory().total / 1000**2
-        super(RAMStat, self).__init__()
+        super(RAMStat, self).__init__(fps=fps)
 
     def get_stat(self):
         actual_memory = psutil.virtual_memory().used / 1000**2
@@ -171,8 +171,8 @@ class GPUStat(Stat):
 
         return available
 
-    def __init__(self):
-        super(GPUStat, self).__init__()
+    def __init__(self, fps):
+        super(GPUStat, self).__init__(fps=fps)
         self._maximum = self._get_used_and_total()[1]
 
     def _get_used_and_total(self):
@@ -203,10 +203,10 @@ class ReadStat(Stat):
     name = 'Disk Read Speed [MB / s]'
     base_tag = 'read_speed'
 
-    def __init__(self, fps=10):
+    def __init__(self, fps):
         self.cache = []
         self.start_bytes = psutil.disk_io_counters().read_bytes
-        super(ReadStat, self).__init__()
+        super(ReadStat, self).__init__(fps=fps)
 
     def get_stat(self):
         stat = psutil.disk_io_counters().read_bytes - self.start_bytes
@@ -231,10 +231,10 @@ class WriteStat(Stat):
     name = 'Disk Write Speed [MB / s]'
     base_tag = 'write_speed'
 
-    def __init__(self, fps=10):
+    def __init__(self, fps):
         self.cache = []
         self.start_bytes = psutil.disk_io_counters().write_bytes
-        super(WriteStat, self).__init__()
+        super(WriteStat, self).__init__(fps=fps)
 
     def get_stat(self):
         stat = psutil.disk_io_counters().write_bytes - self.start_bytes
@@ -267,10 +267,10 @@ class CPUTempStat(Stat):
         warnings.warn('CPU temperature sensor could not be found.')
         return False
 
-    def __init__(self, fps=10):
+    def __init__(self, fps):
         critical_temps = [x.critical for x in self.get_core_temps()]
         self._maximum = sum(critical_temps) / len(critical_temps)
-        super(CPUTempStat, self).__init__()
+        super(CPUTempStat, self).__init__(fps=fps)
 
     def get_core_temps(self):
         return psutil.sensors_temperatures()['coretemp']

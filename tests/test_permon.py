@@ -7,6 +7,7 @@ from permon.frontend import native, terminal, browser
 import permon.backend as backend
 from permon.backend import Stat
 
+FPS = 10
 warnings.filterwarnings("ignore")
 stat_classes = [x for x in backend.get_all_stats() if x.is_available()]
 
@@ -18,7 +19,7 @@ def check_if_valid_number(x):
 
 @pytest.mark.parametrize("cls", stat_classes)
 def test_valid_values(cls):
-    instance = cls()
+    instance = cls(fps=FPS)
 
     if instance.has_contributor_breakdown:
         stat, _ = instance.get_stat()
@@ -39,7 +40,7 @@ def test_inherit_from_base(cls):
 
 @pytest.mark.parametrize("cls", stat_classes)
 def test_minimum_and_maximum_defined(cls):
-    instance = cls()
+    instance = cls(fps=FPS)
 
     minimum, maximum = instance.minimum, instance.maximum
 

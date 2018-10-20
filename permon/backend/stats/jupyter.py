@@ -46,7 +46,7 @@ class JupyterRAMUsage(Stat):
 
         return True
 
-    def __init__(self):
+    def __init__(self, fps):
         self.config = self._read_latest_connection_file()
         data_dir = appdirs.user_data_dir('permon', 'bminixhofer')
         os.makedirs(data_dir, exist_ok=True)
@@ -94,7 +94,7 @@ _permon_running = False
         self.client.load_connection_info(self.config)
         self.client.start_channels()
         self.client.execute(self.setup_code)
-        super(JupyterRAMUsage, self).__init__()
+        super(JupyterRAMUsage, self).__init__(fps=fps)
 
     def __del__(self):
         self.client.execute(self.teardown_code)
