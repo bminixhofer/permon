@@ -122,8 +122,13 @@ class BrowserApp(MonitorApp):
 
             return redirect('/')
 
+        if logging.getLogger().isEnabledFor(logging.INFO):
+            logging_level = 'default'
+        else:
+            logging_level = None
         server = pywsgi.WSGIServer((self.ip, self.port), self.app,
-                                   handler_class=WebSocketHandler)
+                                   handler_class=WebSocketHandler,
+                                   log=logging_level)
         update_thread = threading.Thread(target=self.update_forever)
         update_thread.start()
 

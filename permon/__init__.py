@@ -20,10 +20,10 @@ def main():
     subparsers.add_parser('native')
     browser_parser = subparsers.add_parser('browser')
     browser_parser.add_argument('--port', type=int, default=1234, help="""
-    The port permon will listen on.
+    the port permon will listen on.
     """)
     browser_parser.add_argument('--ip', type=str, default='localhost', help="""
-    The IP address permon will listen on.
+    the IP address permon will listen on.
     """)
 
     stat_str = ', '.join(stat_tags)
@@ -32,6 +32,13 @@ def main():
         which stats to display.
         If none are given, take those from the config file ({stat_str})
         """)
+        if subparser.prog != 'permon terminal':
+            # verbose logging is not possible for permon terminal
+            # because it needs standard out to display stats
+            subparser.add_argument('--verbose', action='store_true', default=False, help=f"""
+            whether to display verbose logging.
+            """)
+
     args = parser.parse_args()
     stat_tags = args.stats
 
@@ -41,9 +48,10 @@ def main():
     colors = ['#ed5565', '#ffce54', '#48cfad', '#sd9cec', '#ec87c0',
               '#fc6e51', '#a0d468', '#4fc1e9', '#ac92ec']
 
+    logging_level = logging.INFO if args.verbose else logging.WARNING
     logging.basicConfig(format='%(asctime)s %(message)s',
                         datefmt='%d-%m-%Y %I:%M:%S %p',
-                        level=logging.INFO)
+                        level=logging_level)
 
     if args.frontend == 'browser':
         app = browser.BrowserApp(stats, colors=colors,
