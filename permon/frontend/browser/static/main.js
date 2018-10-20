@@ -132,6 +132,8 @@ function setupMonitor(stat) {
   let tooltipRepeater;
   const rect = chartContainer.getBoundingClientRect();
 
+  window.addEventListener('resize', () => chart.resize());
+
   chartContainer.addEventListener('mouseover', (event) => {
     tooltipRepeater = setInterval(() => {
       chart.dispatchAction({

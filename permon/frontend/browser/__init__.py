@@ -138,8 +138,8 @@ class BrowserApp(MonitorApp):
         displayed_stats = []
         removed_monitors = []
         for monitor in self.monitors:
-            if monitor.stat in self.stats:
-                displayed_stats.append(monitor.stat)
+            if type(monitor.stat) in self.stats:
+                displayed_stats.append(type(monitor.stat))
             else:
                 removed_monitors.append(monitor)
 
@@ -157,6 +157,17 @@ class BrowserApp(MonitorApp):
 
         self.setup_info = [monitor.get_json_info()
                            for monitor in self.monitors]
+
+        if logging.getLogger().isEnabledFor(logging.INFO):
+            displayed = [stat.tag for stat in displayed_stats] or 'No Monitors'
+            new = [stat.tag for stat in new_stats] or 'No Monitors'
+            removed = [monitor.stat.tag for monitor in removed_monitors] or \
+                'No Monitors'
+
+            logging.info('Adjusted monitors')
+            logging.info(f'{displayed} were already displayed')
+            logging.info(f'{new} were added')
+            logging.info(f'{removed} were removed')
 
     def update_forever(self):
         while True:
