@@ -16,7 +16,7 @@
         <div class="status-badge"></div>
         <a href="/settings"><button class="settings-button"></button></a>
     </div>
-    <div class="charts">
+    <div data-fps="{{ fps }}" data-buffersize="{{ buffer_size }}"class="charts">
         {% for stat in stats %}
         <h2>{{ stat.name }}</h2>
         <div id="{{ stat.tag }}" class="chart-container">

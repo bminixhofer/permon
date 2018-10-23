@@ -1,5 +1,11 @@
 /* global echarts */
 
+const charts = document.querySelector('.charts');
+const { fps, buffersize } = charts.dataset;
+// treat the client as not connected if no update has been received for 3 seconds
+// or for 3 frames if that is more than 3 seconds
+const updateTimeout = Math.max(3000, 1000 / fps * 3);
+
 let currentData = {};
 let lastUpdateDate = Date.now();
 const chartUpdateFunctions = [];
@@ -25,7 +31,6 @@ function setStatus(connected) {
 setStatus(true);
 
 function setupMonitor(stat) {
-  const bufferSize = 50;
   const categoryResolution = 100;
   const adaptiveMinPercentage = 0.8;
   const adaptiveMaxPercentage = 1.2;
@@ -46,7 +51,7 @@ function setupMonitor(stat) {
   }
 
   let data = [];
-  for (let i = 0; i < bufferSize - history.length; i += 1) {
+  for (let i = 0; i < buffersize - history.length; i += 1) {
     data.push(makePoint(0));
   }
   data = data.concat(history.map(x => makePoint(x)));
@@ -138,7 +143,7 @@ function setupMonitor(stat) {
       hoverAnimation: false,
       data,
       animationEasingUpdate: 'linear',
-      animationDurationUpdate: 1000,
+      animationDurationUpdate: 1000 / fps,
     }],
   };
   chart.setOption(options);
@@ -221,12 +226,12 @@ fetch(request).then(response => response.json()).then((stats) => {
     setupMonitor(stat);
   });
   setInterval(() => {
-    const isConnected = Date.now() - lastUpdateDate < 5000;
+    const isConnected = Date.now() - lastUpdateDate < updateTimeout;
     setStatus(isConnected);
     if (isConnected) {
       chartUpdateFunctions.forEach(func => func());
     }
-  }, 1000);
+  }, 1000 / fps);
 });
 
 const socket = new WebSocket(`ws://${window.location.host}/statUpdates`);

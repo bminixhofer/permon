@@ -88,7 +88,10 @@ class BrowserApp(MonitorApp):
 
         @self.app.route('/')
         def index():
-            return flask.render_template('index.html', stats=self.setup_info)
+            return flask.render_template('index.html',
+                                         fps=self.fps,
+                                         buffer_size=self.buffer_size,
+                                         stats=self.setup_info)
 
         @self.app.route('/settings')
         def settings():
