@@ -20,32 +20,28 @@ class SettingsWidget(QtWidgets.QWidget):
 
         layout = QtWidgets.QVBoxLayout(self)
 
-        font = QtGui.QFont()
-        font.setPixelSize(14)
-        font.setBold(True)
+        title_label = QtWidgets.QLabel('permon '
+                                       '<font color="#FBB829">Settings</font>')
+        title_label.setFont(NativeApp.fonts['h1'])
 
-        monitor_label = QtWidgets.QLabel('Displayed Monitors')
-        monitor_label.setFont(font)
-
-        layout.addWidget(monitor_label)
+        monitor_label = QtWidgets.QLabel('Enabled Monitors')
+        monitor_label.setFont(NativeApp.fonts['h2'])
 
         model = QtGui.QStandardItemModel()
-        font = QtGui.QFont()
-        font.setBold(True)
-
         all_stats = backend.get_all_stats()
 
         category_map = dict()
         for root_tag in sorted(set(x.root_tag for x in all_stats)):
             item = QtGui.QStandardItem(root_tag)
-            item.setFont(font)
+            item.setFont(NativeApp.fonts['text_font'])
             model.appendRow(item)
 
             category_map[root_tag] = item
 
         for stat in all_stats:
-            item = QtGui.QStandardItem(stat.base_tag)
+            item = QtGui.QStandardItem(stat.name)
             item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+            item.setFont(NativeApp.fonts['text_font'])
 
             check_state = Qt.Checked if stat in self.set_stats \
                 else Qt.Unchecked
@@ -55,24 +51,56 @@ class SettingsWidget(QtWidgets.QWidget):
 
         model.itemChanged.connect(self._check_monitor)
 
+        tree_style = """
+        QTreeView {
+            border: none;
+            selection-background-color: transparent;
+            selection-color: black;
+        }
+        QTreeView::item {
+            margin: 3px;
+        }
+        QTreeView::indicator:checked {
+            border-radius: 3px;
+            background-color: #FBB829;
+        }
+        """
         tree = QtWidgets.QTreeView()
+        tree.setFocusPolicy(Qt.NoFocus)
+        tree.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        tree.setStyleSheet(tree_style)
         tree.header().hide()
         tree.setModel(model)
-
-        layout.addWidget(tree)
 
         continue_widget = QtWidgets.QWidget()
         continue_layout = QtWidgets.QHBoxLayout(continue_widget)
 
-        cancel_button = QtWidgets.QPushButton('Cancel')
-        accept_button = QtWidgets.QPushButton('Accept')
+        button_style = """
+        QPushButton {
+            background-color: #FBB829;
+            border-radius: 3px;
+            color: #f5f5f5;
+            padding: 0.6em 1em;
+        }
+        """
 
+        cancel_button = QtWidgets.QPushButton('Cancel')
         cancel_button.clicked.connect(self._cancel)
+        cancel_button.setFont(NativeApp.fonts['h2'])
+        cancel_button.setStyleSheet(button_style)
+
+        accept_button = QtWidgets.QPushButton('Accept')
         accept_button.clicked.connect(self._accept)
+        accept_button.setFont(NativeApp.fonts['h2'])
+        accept_button.setStyleSheet(button_style)
 
         continue_layout.addWidget(cancel_button)
+        continue_layout.addStretch()
         continue_layout.addWidget(accept_button)
 
+        layout.addWidget(title_label)
+        layout.addWidget(monitor_label)
+        layout.addWidget(tree)
         layout.addWidget(continue_widget)
 
     def _check_monitor(self, item):
@@ -196,7 +224,7 @@ class NativeMonitor(Monitor):
 
     def _create_header(self):
         title_label = QtWidgets.QLabel(self.stat.name)
-        title_label.setFont(NativeApp.fonts['chart_title'])
+        title_label.setFont(NativeApp.fonts['h2'])
 
         return title_label
 
@@ -288,7 +316,7 @@ class NativeApp(MonitorApp):
         title_widget = QtWidgets.QWidget()
         title_layout = QtWidgets.QHBoxLayout(title_widget)
 
-        """button for switching to settings page"""
+        # button for switching to settings page
         icon = QtGui.QIcon(self.get_asset_path('settings.svg'))
         settings_size = QtCore.QSize(40, 40)
         settings_button = QtWidgets.QPushButton()
@@ -300,18 +328,15 @@ class NativeApp(MonitorApp):
         def open_settings():
             self._settings_page.open(self.stats)
             self._main.setCurrentWidget(self._settings_page)
-
         settings_button.clicked.connect(open_settings)
-        """"""
 
-        """title label"""
+        # text on top of the page
         title_label = QtWidgets.QLabel('permon '
                                        '<font color="#FBB829">Stats</font>')
-        title_label.setFont(NativeApp.fonts['app_title'])
+        title_label.setFont(NativeApp.fonts['h1'])
         title_layout.addWidget(title_label)
         title_layout.addWidget(settings_button)
         title_layout.setContentsMargins(0, 0, 0, 0)
-        """"""
 
         layout.addWidget(title_widget)
         return page_widget
@@ -345,7 +370,7 @@ class NativeApp(MonitorApp):
         NativeApp.qapp = QtWidgets.QApplication(sys.argv)
 
         # load fonts
-        font_path = cls.get_asset_path('Raleway-Light.ttf')
+        font_path = cls.get_asset_path('Raleway-Regular.ttf')
         font_db = QtGui.QFontDatabase()
         font_id = font_db.addApplicationFont(font_path)
         if font_id == -1:
@@ -355,16 +380,20 @@ class NativeApp(MonitorApp):
 
         title_font = QtGui.QFont('Raleway')
         title_font.setPixelSize(32)
-        NativeApp.fonts['app_title'] = title_font
+        NativeApp.fonts['h1'] = title_font
 
         chart_title_font = QtGui.QFont('Raleway')
         chart_title_font.setPixelSize(20)
-        NativeApp.fonts['chart_title'] = chart_title_font
+        NativeApp.fonts['h2'] = chart_title_font
 
         axis_label_font = QtGui.QFont('Raleway')
         # this size will be rescaled by NativeMonitor.adjust_fonts
         axis_label_font.setPixelSize(10)
         NativeApp.fonts['axis_label'] = axis_label_font
+
+        text_font = QtGui.QFont('Raleway')
+        text_font.setPixelSize(16)
+        NativeApp.fonts['text_font'] = text_font
 
     def initialize(self):
         if not self.qapp:
