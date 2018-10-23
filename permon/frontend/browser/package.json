@@ -10,7 +10,7 @@
     "eslint-plugin-import": "^2.14.0"
   },
   "scripts": {
-    "test": "eslint . --ignore-pattern static/echarts.common.min.js"
+    "test": "eslint . --ignore-pattern static/echarts.min.js"
   },
   "repository": {
     "type": "git",
