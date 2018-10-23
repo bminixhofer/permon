@@ -1,6 +1,8 @@
 /* global echarts */
 
 let currentData = {};
+let lastUpdateDate = Date.now();
+const chartUpdateFunctions = [];
 
 let mousePos = {};
 window.addEventListener('mousemove', (event) => {
@@ -9,6 +11,18 @@ window.addEventListener('mousemove', (event) => {
     y: event.clientY,
   };
 });
+
+const statusBadge = document.querySelector('.status-badge');
+function setStatus(connected) {
+  if (connected) {
+    statusBadge.textContent = 'Connected';
+    statusBadge.classList.add('connected');
+  } else {
+    statusBadge.textContent = 'Not Connected';
+    statusBadge.classList.remove('connected');
+  }
+}
+setStatus(true);
 
 function setupMonitor(stat) {
   const bufferSize = 50;
@@ -152,7 +166,7 @@ function setupMonitor(stat) {
 
   let value;
   let contributors;
-  setInterval(() => {
+  function updateChart() {
     data.shift();
     if (!currentData[tag]) {
       value = 0;
@@ -197,7 +211,8 @@ function setupMonitor(stat) {
       }],
       yAxis: [{}, rightAxis],
     });
-  }, 1000);
+  }
+  chartUpdateFunctions.push(updateChart);
 }
 
 const request = new Request(`${window.location.protocol}//${window.location.host}/statInfo`);
@@ -205,10 +220,18 @@ fetch(request).then(response => response.json()).then((stats) => {
   stats.forEach((stat) => {
     setupMonitor(stat);
   });
+  setInterval(() => {
+    const isConnected = Date.now() - lastUpdateDate < 5000;
+    setStatus(isConnected);
+    if (isConnected) {
+      chartUpdateFunctions.forEach(func => func());
+    }
+  }, 1000);
 });
 
 const socket = new WebSocket(`ws://${window.location.host}/statUpdates`);
 socket.onmessage = function onSocketMessage(event) {
+  lastUpdateDate = Date.now();
   const eventData = JSON.parse(event.data);
   const currentKeys = Object.keys(currentData);
 
