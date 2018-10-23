@@ -1,3 +1,4 @@
+import os
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 import numpy as np
@@ -31,6 +32,12 @@ class Monitor(ABC):
 
 
 class MonitorApp(ABC):
+    @classmethod
+    def get_asset_path(cls, *relative_path):
+        directory_path = os.path.dirname(__file__)
+        absolute_path = os.path.join(directory_path, 'assets', *relative_path)
+        return absolute_path
+
     def __init__(self, stats, colors, buffer_size, fps):
         assert len(colors) > 0, 'App must have at least one color.'
 

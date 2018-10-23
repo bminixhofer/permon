@@ -1,8 +1,15 @@
-@import url('https://fonts.googleapis.com/css?family=Lato');
+@import url('https://fonts.googleapis.com/css?family=Raleway');
 
 body {
     margin: 0;
     padding: 0.5em;
+    background-color: #f5f5f5;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    height: 4rem;
 }
 
 .settings-button {
@@ -12,17 +19,13 @@ body {
     cursor: pointer;
     background: none;
     border: none;
-    background-image: url('images/settings.svg');
+    background-image: url('assets/settings.svg');
     background-repeat: no-repeat;
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    margin: 0.5em;
 }
 
 .settings {
     display: flex;
-    height: calc(100% - 4em);
+    height: calc(100% - 4rem - 4rem - 1rem);
     justify-content: space-between;
     flex-direction: column;
     padding: 0.5em 2em;
@@ -44,7 +47,11 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: space-around;
-    height: calc(100vh - 1rem);
+    height: calc(100vh - 4rem - 1rem);
+}
+
+.text-emphasized {
+    color: #FBB829;
 }
 
 h1 {
@@ -52,7 +59,6 @@ h1 {
     margin: 0;
     right: 0.3em;
     top: 0;
-    position: absolute;
 }
 
 h2 {
@@ -66,9 +72,9 @@ h3 {
 }
 
 h1, h2, h3, label {
-    font-weight: 200;
-    font-family: 'Lato';
-    color: #333333;
+    font-weight: 100;
+    font-family: Raleway;
+    color: black;
 }
 
 .stat {
@@ -88,7 +94,7 @@ input[type="checkbox"] {
     vertical-align: bottom;
     -webkit-appearance: none;
     background-color: #fafafa;
-	border: 1px solid #cacece;
+    border: 1px solid #cacece;
     border-radius: 3px;
     height: 20px;
     width: 20px;
@@ -100,13 +106,9 @@ input[type="checkbox"] {
 	position: relative;
 }
 
-input[type="checkbox"]:checked:after {
-	content: '\2714';
-	font-size: 16px;
-	position: absolute;
-	top: 0px;
-	left: 3px;
-	color: #99a1a7;
+input[type="checkbox"]:checked {
+    background-color: #FBB829;
+    border: None;
 }
 
 .continuation {
@@ -115,11 +117,13 @@ input[type="checkbox"]:checked:after {
 }
 
 input[type="button"], input[type="submit"] {
+    color: #f5f5f5;
     cursor: pointer;
-    font-family: Lato;
-    background: none;
-    border: 1px solid #333;
+    font-family: Raleway;
+    background: None;
+    border: None;
     border-radius: 3px;
-    font-size: 1.2em;
-    padding: 0.4em 0.8em;
+    background-color: #FBB829;
+    font-size: 1.5em;
+    padding: 0.6em 1em;
 }

@@ -8,15 +8,17 @@
 </head>
 
 <body>
-    <h1>permon</h1>
+    <div class="header">
+        <h1>permon <span class="text-emphasized">Stats</span></h1>
+        <a href="/settings"><button class="settings-button"></button></a>
+    </div>
     <div class="charts">
         {% for stat in stats %}
-        <h3>{{ stat.name }}</h3>
+        <h2>{{ stat.name }}</h2>
         <div id="{{ stat.tag }}" class="chart-container">
         </div>
         {% endfor %}
     </div>
-    <a href="/settings"><button class="settings-button"></button></a>
 </body>
 
 </html>

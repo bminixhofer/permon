@@ -4,7 +4,8 @@ import json
 import threading
 import time
 import logging
-from flask import Flask, render_template, Response, request, redirect
+import flask
+from flask import Flask, Response, request, redirect
 from flask_sockets import Sockets
 import gevent
 from gevent import pywsgi
@@ -81,14 +82,18 @@ class BrowserApp(MonitorApp):
 
         self.adjust_monitors()
 
+        @self.app.route('/assets/<path:path>')
+        def assets(path):
+            return flask.send_from_directory(self.get_asset_path(), path)
+
         @self.app.route('/')
         def index():
-            return render_template('index.html', stats=self.setup_info)
+            return flask.render_template('index.html', stats=self.setup_info)
 
         @self.app.route('/settings')
         def settings():
-            return render_template('settings.html',
-                                   categories=self._get_stat_tree())
+            return flask.render_template('settings.html',
+                                         categories=self._get_stat_tree())
 
         @self.app.route('/statInfo')
         def stat_info():
