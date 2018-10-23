@@ -97,11 +97,10 @@ class SettingsWidget(QtWidgets.QWidget):
 
 class NativeMonitor(Monitor):
     def __init__(self, stat, buffer_size, fps, color,
-                 app, thickness, fontsize):
+                 app, thickness):
         super(NativeMonitor, self).__init__(stat, buffer_size,
                                             fps, color, app)
         self.thickness = thickness
-        self.fontsize = fontsize
         self.widget = QtWidgets.QWidget()
 
         # the widget consists of a title and the chart
@@ -196,18 +195,14 @@ class NativeMonitor(Monitor):
             axis.append(label, value)
 
     def _create_header(self):
-        font = QtGui.QFont()
-        font.setPixelSize(14)
-        font.setBold(True)
-
         title_label = QtWidgets.QLabel(self.stat.name)
-        title_label.setFont(font)
+        title_label.setFont(NativeApp.fonts['chart_title'])
 
         return title_label
 
     def adjust_fonts(self, app_height, app_width, n_monitors):
-        font = QtGui.QFont()
-        real_fontsize = self.fontsize / n_monitors * app_height / 1000
+        font = QtGui.QFont(NativeApp.fonts['axis_label'])
+        real_fontsize = font.pixelSize() / n_monitors * app_height / 250
         real_fontsize = min(real_fontsize, 16)
         font.setPixelSize(real_fontsize)
 
@@ -274,39 +269,106 @@ class NativeMonitor(Monitor):
 class NativeApp(MonitorApp):
     # QApplication is a global singleton. It can only ever be instantiated once
     qapp = None
+    fonts = None
 
-    def __init__(self, stats, colors, buffer_size, fps, fontsize=50,
-                 line_thickness=2):
+    def __init__(self, stats, colors, buffer_size, fps, line_thickness=2):
         super(NativeApp, self).__init__(stats, colors, buffer_size, fps)
 
         self.monitor_params = {
             'buffer_size': buffer_size,
             'fps': fps,
             'app': self,
-            'thickness': line_thickness,
-            'fontsize': fontsize
+            'thickness': line_thickness
         }
 
     def _create_monitor_page(self):
         page_widget = QtWidgets.QWidget()
         layout = QtWidgets.QVBoxLayout(page_widget)
 
-        # add button for switching to settings page
-        settings_button = QtWidgets.QPushButton('Settings')
+        title_widget = QtWidgets.QWidget()
+        title_layout = QtWidgets.QHBoxLayout(title_widget)
+
+        """button for switching to settings page"""
+        icon = QtGui.QIcon(self.get_asset_path('settings.svg'))
+        settings_size = QtCore.QSize(40, 40)
+        settings_button = QtWidgets.QPushButton()
+        settings_button.setFlat(True)
+        settings_button.setIcon(icon)
+        settings_button.setMaximumSize(settings_size)
+        settings_button.setIconSize(settings_size)
 
         def open_settings():
             self._settings_page.open(self.stats)
             self._main.setCurrentWidget(self._settings_page)
 
         settings_button.clicked.connect(open_settings)
-        layout.addWidget(settings_button)
+        """"""
 
-        self.monitors = []
+        """title label"""
+        title_label = QtWidgets.QLabel('permon '
+                                       '<font color="#FBB829">Stats</font>')
+        title_label.setFont(NativeApp.fonts['app_title'])
+        title_layout.addWidget(title_label)
+        title_layout.addWidget(settings_button)
+        title_layout.setContentsMargins(0, 0, 0, 0)
+        """"""
+
+        layout.addWidget(title_widget)
         return page_widget
+
+    def _create_settings_page(self):
+        page_widget = SettingsWidget(self._main, self.stats)
+
+        def accept_settings(stats):
+            if len(stats) == 0:
+                raise exceptions.NoStatError()
+
+            self.stats = stats
+
+            stat_tags = [stat.tag for stat in stats]
+            logging.info('Setting tags: ' + str(stat_tags))
+            config.set_config({
+                'stats': stat_tags
+            })
+
+            self.adjust_monitors()
+            self._main.setCurrentWidget(self._monitor_page)
+
+        def cancel_settings():
+            self._main.setCurrentWidget(self._monitor_page)
+
+        page_widget.accepted.connect(accept_settings)
+        page_widget.cancelled.connect(cancel_settings)
+        return page_widget
+
+    def _initialize_app(cls):
+        NativeApp.qapp = QtWidgets.QApplication(sys.argv)
+
+        # load fonts
+        font_path = cls.get_asset_path('Raleway-Light.ttf')
+        font_db = QtGui.QFontDatabase()
+        font_id = font_db.addApplicationFont(font_path)
+        if font_id == -1:
+            logging.warn('Could not load custom font')
+
+        NativeApp.fonts = {}
+
+        title_font = QtGui.QFont('Raleway')
+        title_font.setPixelSize(32)
+        NativeApp.fonts['app_title'] = title_font
+
+        chart_title_font = QtGui.QFont('Raleway')
+        chart_title_font.setPixelSize(20)
+        NativeApp.fonts['chart_title'] = chart_title_font
+
+        axis_label_font = QtGui.QFont('Raleway')
+        # this size will be rescaled by NativeMonitor.adjust_fonts
+        axis_label_font.setPixelSize(10)
+        NativeApp.fonts['axis_label'] = axis_label_font
 
     def initialize(self):
         if not self.qapp:
-            NativeApp.qapp = QtWidgets.QApplication(sys.argv)
+            self._initialize_app()
 
         self.window = QtWidgets.QMainWindow()
         self._settings_tags = []
@@ -330,29 +392,9 @@ class NativeApp(MonitorApp):
 
         # create the main widget and add monitors to it
         self._main = QtWidgets.QStackedWidget()
-        self._settings_page = SettingsWidget(self._main, self.stats)
 
-        def accept_settings(stats):
-            if len(stats) == 0:
-                raise exceptions.NoStatError()
-
-            self.stats = stats
-
-            stat_tags = [stat.tag for stat in stats]
-            logging.info('Setting tags: ' + str(stat_tags))
-            config.set_config({
-                'stats': stat_tags
-            })
-
-            self.adjust_monitors()
-            self._main.setCurrentWidget(self._monitor_page)
-
-        def cancel_settings():
-            self._main.setCurrentWidget(self._monitor_page)
-
-        self._settings_page.accepted.connect(accept_settings)
-        self._settings_page.cancelled.connect(cancel_settings)
-
+        # create monitor and settings pages
+        self._settings_page = self._create_settings_page()
         self._monitor_page = self._create_monitor_page()
         self.adjust_monitors()
 
@@ -402,8 +444,8 @@ class NativeApp(MonitorApp):
             self._monitor_page.layout().addWidget(monitor.widget)
 
         # keep all charts equally large
-        for i in range(self._monitor_page.layout().count()):
-            self._monitor_page.layout().setStretch(i, 1)
+        for i in range(self._monitor_page.layout().count() - 1):
+            self._monitor_page.layout().setStretch(i + 1, 1)
 
         # adjust axis font sizes of all monitors
         availableGeometry = self.qapp.desktop().availableGeometry(self.window)
