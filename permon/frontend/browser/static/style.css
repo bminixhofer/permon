@@ -19,7 +19,7 @@ body {
     cursor: pointer;
     background: none;
     border: none;
-    background-image: url('assets/settings.svg');
+    background-image: url('/assets/settings.svg');
     background-repeat: no-repeat;
 }
 
