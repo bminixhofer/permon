@@ -1,4 +1,7 @@
-@import url('https://fonts.googleapis.com/css?family=Raleway');
+@font-face {
+    font-family: Raleway;
+    src: url('/assets/Raleway-Regular.ttf') format('truetype');
+}
 
 body {
     margin: 0;
