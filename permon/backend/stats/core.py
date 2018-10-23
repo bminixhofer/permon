@@ -100,22 +100,15 @@ class CPUStat(Stat):
 
     def __init__(self, fps):
         self.proc_tracker = ProcessTracker()
-        self.buffer = []
-        self.buffer_size = 10
 
         super(CPUStat, self).__init__(fps=fps)
 
     def get_stat(self):
         cpu_percent = sum(psutil.cpu_percent(percpu=True))
-        self.buffer.append(cpu_percent)
-        if len(self.buffer) > self.buffer_size:
-            del self.buffer[0]
-
-        mean_percent = sum(self.buffer) / len(self.buffer)
         contributors = self.proc_tracker.get_contributors(
-            'cpu', adapt_to=mean_percent)
+            'cpu', adapt_to=cpu_percent)
 
-        return mean_percent, contributors
+        return cpu_percent, contributors
 
     @property
     def minimum(self):
