@@ -15,7 +15,9 @@ class Stat(ABC):
             raise exceptions.InvalidStatError(
                 'The stat class is not initialized.')
 
-        if not self.is_available():
+        try:
+            self.check_availability()
+        except exceptions.StatNotAvailableError():
             raise exceptions.InvalidStatError(
                 'Unavailable stats can not be instantiated.')
         self.fps = fps
@@ -44,8 +46,8 @@ class Stat(ABC):
                 'Stats must have a static tag attribute.')
 
     @classmethod
-    def is_available(cls):
-        return True
+    def check_availability(cls):
+        pass
 
     @classmethod
     def windows(cls, check_cls):
@@ -107,7 +109,11 @@ def get_stats_from_tags(tags):
 
     stats = []
     for stat in get_all_stats():
-        if stat.tag in tags and stat.is_available():
+        if stat.tag in tags:
+            try:
+                stat.check_availability()
+            except exceptions.StatNotAvailableError:
+                continue
             stats.append(stat)
 
     return stats[0] if is_one else stats

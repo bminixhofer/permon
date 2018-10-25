@@ -3,9 +3,9 @@ import re
 import threading
 from collections import defaultdict
 import subprocess
-import warnings
 import psutil
 from permon.backend import Stat
+from permon import exceptions
 
 
 class ProcessTracker():
@@ -152,17 +152,11 @@ class GPUStat(Stat):
     base_tag = 'vram_usage'
 
     @classmethod
-    def is_available(cls):
-        available = True
-
+    def check_availability(cls):
         try:
             subprocess.call(['nvidia-smi'])
         except OSError:
-            warnings.warn('Could not display vRAM usage. '
-                          'nvidia-smi not in PATH.')
-            available = False
-
-        return available
+            raise exceptions.StatNotAvailableError('nvidia-smi not in PATH.')
 
     def __init__(self, fps):
         super(GPUStat, self).__init__(fps=fps)
@@ -253,12 +247,10 @@ class CPUTempStat(Stat):
     base_tag = 'cpu_temp'
 
     @classmethod
-    def is_available(cls):
-        if 'coretemp' in psutil.sensors_temperatures():
-            return True
-
-        warnings.warn('CPU temperature sensor could not be found.')
-        return False
+    def check_availability(cls):
+        if 'coretemp' not in psutil.sensors_temperatures():
+            raise exceptions.StatNotAvailableError(
+                'CPU temperature sensor could not be found.')
 
     def __init__(self, fps):
         critical_temps = [x.critical for x in self.get_core_temps()]

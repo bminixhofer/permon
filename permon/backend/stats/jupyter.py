@@ -4,9 +4,9 @@ import csv
 import json
 import glob
 import appdirs
-import warnings
 from jupyter_client import BlockingKernelClient
 from permon.backend import Stat
+from permon import exceptions
 
 
 @Stat.windows
@@ -39,12 +39,10 @@ class JupyterRAMUsage(Stat):
             return json.load(f)
 
     @classmethod
-    def is_available(cls):
+    def check_availability(cls):
         if cls._read_latest_connection_file() is None:
-            warnings.warn('Could not find any running kernel.')
-            return False
-
-        return True
+            raise exceptions.StatNotAvailableError(
+                'Could not find any running kernel.')
 
     def __init__(self, fps):
         self.config = self._read_latest_connection_file()

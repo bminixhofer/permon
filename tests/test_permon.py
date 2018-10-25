@@ -6,10 +6,18 @@ import permon
 from permon.frontend import native, terminal, browser
 import permon.backend as backend
 from permon.backend import Stat
+from permon import exceptions
 
 FPS = 10
 warnings.filterwarnings("ignore")
-stat_classes = [x for x in backend.get_all_stats() if x.is_available()]
+stat_classes = []
+for stat in backend.get_all_stats():
+    try:
+        stat.check_availability()
+    except exceptions.StatNotAvailableError:
+        continue
+
+    stat_classes.append(stat)
 
 
 def check_if_valid_number(x):

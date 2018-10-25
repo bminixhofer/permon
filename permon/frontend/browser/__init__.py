@@ -121,7 +121,7 @@ class BrowserApp(MonitorApp):
                     logging.info(f'{origin} disconnected')
                     ws.close()
 
-                gevent.sleep(1)
+                gevent.sleep(1 / self.fps)
 
         @self.app.route('/settings', methods=['POST'])
         def set_settings():

@@ -4,3 +4,7 @@ class NoStatError(Exception):
 
 class InvalidStatError(Exception):
     pass
+
+
+class StatNotAvailableError(Exception):
+    pass
