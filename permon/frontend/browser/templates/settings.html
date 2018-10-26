@@ -10,8 +10,8 @@
     <div class="header">
         <h1>permon <span class="text-emphasized">Settings</span></h1>
     </div>
-    <h2>Enabled Monitors</h2>
     <form class="settings" method="POST" action="/settings">
+        <h2>Enabled Monitors</h2>
         <div class="enabled-monitors">
         {% for category in categories %}
             <h3>{{ category.name }} </h3>

@@ -5,18 +5,23 @@
 
 body {
     margin: 0;
-    padding: 0.5em;
-    background-color: #f5f5f5;
+    padding: 0;
+    background-color: white;
 }
 
 .header {
+    background-color: #444;
     display: flex;
     justify-content: space-between;
     align-items: center;
     height: 4rem;
+    padding: 0.2em 0.8em;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
 }
 
 .status-badge {
+    font-size: 1.2em;
+    font-weight: bold;
     font-family: Raleway;
     color: #f5f5f5;
     margin-left: auto;
@@ -24,10 +29,12 @@ body {
     border-radius: 3px;
     padding: 0.5em;
     background-color: #ed5565;
+    box-shadow: 0px 0px 10px 2px #ed5565;
 }
 
 .status-badge.connected {
     background-color: #48cfad;
+    box-shadow: 0px 0px 10px 2px #48cfad;
 }
 
 .settings-button {
@@ -44,39 +51,47 @@ body {
 .settings {
     display: flex;
     height: calc(100% - 4rem - 4rem - 1rem);
-    justify-content: space-between;
+    justify-content: flex-start;
     flex-direction: column;
     padding: 0.5em 2em;
 }
 
-.line {
-    fill: none;
-    stroke: #000;
-    stroke-width: 1.5px;
-}
-
 .chart-container {
     position: relative;
-    width: 100%;
     height: 100%;
 }
 
+.chart-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    margin: 0 5%;
+    width: 90%;
+    height: 100%;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+}
+
+.charts h2 {
+    margin: 0.8em 0 0.2em 5%;
+}
+
 .charts {
+    padding: 1rem 0;
     display: flex;
     flex-direction: column;
     justify-content: space-around;
-    height: calc(100vh - 4rem - 1rem);
+    height: calc(100vh - 4rem - 1rem - 2rem);
 }
 
 .text-emphasized {
-    color: #FBB829;
+    font-weight: lighter;
+    color: white;
 }
 
 h1 {
+    color: white;
+    font-family: 'Raleway';
     font-size: 2.5rem;
-    margin: 0;
-    right: 0.3em;
-    top: 0;
 }
 
 h2 {
@@ -89,10 +104,10 @@ h3 {
     font-size: 1.2em;
 }
 
-h1, h2, h3, label {
-    font-weight: 100;
+h2, h3, label {
+    font-weight: 300;
     font-family: Raleway;
-    color: black;
+    color: #333;
 }
 
 .stat {
@@ -125,11 +140,13 @@ input[type="checkbox"] {
 }
 
 input[type="checkbox"]:checked {
-    background-color: #FBB829;
+    background-color: #48cfad;
+    box-shadow: 0px 0px 1px 1px #48cfad;
     border: None;
 }
 
 .continuation {
+    margin-top: auto;
     display: flex;
     justify-content: space-between;
 }
@@ -141,7 +158,12 @@ input[type="button"], input[type="submit"] {
     background: None;
     border: None;
     border-radius: 3px;
-    background-color: #FBB829;
+    background-color: #333;
     font-size: 1.5em;
     padding: 0.6em 1em;
+}
+
+input[type="submit"] {
+    background-color: #48cfad;
+    box-shadow: 0px 0px 10px 2px #48cfad;
 }

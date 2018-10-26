@@ -69,7 +69,8 @@ function setupMonitor(stat) {
         return labelPositions.includes(y);
       },
       textStyle: {
-        color: '#000',
+        color: 'black',
+        fontFamily: 'Raleway',
       },
     },
     axisTick: {
@@ -79,6 +80,9 @@ function setupMonitor(stat) {
       },
     },
     splitLine: {
+      show: false,
+    },
+    axisLine: {
       show: false,
     },
     axisPointer: {
@@ -113,9 +117,9 @@ function setupMonitor(stat) {
       trigger: 'axis',
       triggerOn: 'none',
       formatter: tooltip => Math.round(tooltip[0].value[1] * 100) / 100,
-    },
-    axisPointer: {
-      triggerOn: 'mousemove',
+      axisPointer: {
+        type: 'none',
+      },
     },
     xAxis: {
       type: 'value',
@@ -132,18 +136,31 @@ function setupMonitor(stat) {
         },
         min: axisMin,
         max: axisMax,
+        axisLine: {
+          show: false,
+        },
+        axisLabel: {
+          textStyle: {
+            color: 'black',
+            fontFamily: 'Raleway',
+          },
+        },
       },
       rightAxis,
     ],
     color: [color],
     series: [{
       name: tag,
+      symbol: 'none',
       type: 'line',
       showSymbol: false,
       hoverAnimation: false,
       data,
       animationEasingUpdate: 'linear',
       animationDurationUpdate: 1000 / fps,
+      lineStyle: {
+        width: 3,
+      },
     }],
   };
   chart.setOption(options);
