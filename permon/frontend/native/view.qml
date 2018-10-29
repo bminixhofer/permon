@@ -75,15 +75,17 @@ StackView {
                 legend.visible: false
                 width: listView.width
                 height: listView.height / listView.count
-                margins.top: 30
+                margins.top: 40
                 margins.right: 0
-                margins.bottom: 0
-                margins.left: 5
+                margins.bottom: 10
+                margins.left: 0
 
                 Label {
                     text: model.name
-                    topPadding: 15
-                    leftPadding: 60
+                    topPadding: 25
+                    // the left margin of charts depends on the font size (unfortunately)
+                    // so the left paddding of the title label also has to depend on the same things as the font size
+                    leftPadding: listView.count * listView.height / 50
                     font.pixelSize: 22
                 }
 
@@ -94,17 +96,25 @@ StackView {
                     visible: false
                 }
 
-                ValueAxis {
+                CategoryAxis {
                     id: valueAxis
                     min: model.minimum == null ? -1 : model.minimum
-                    max: model.maximum == null ? 1 : model.maximums
+                    max: model.maximum == null ? 1 : model.maximum
+                    labelsPosition: CategoryAxis.AxisLabelsPositionOnValue
+                    labelsFont.family: "Roboto Mono"
+                    labelsFont.pixelSize: 12 / listView.count * listView.height / 250
+                    gridVisible: false
+                    color: "black"
                 }
 
                 CategoryAxis {
-                    gridVisible: false
                     id: contributorAxis
                     min: valueAxis.min
                     max: valueAxis.max
+                    labelsFont.family: "Roboto Mono"
+                    labelsFont.pixelSize: 12 / listView.count * listView.height / 250
+                    gridVisible: false
+                    color: "black"
                 }
 
                 LineSeries {
@@ -125,6 +135,7 @@ StackView {
 
                 Timer {
                     property int timeline: 0
+                    property bool valueLabelsInitialized: false
                     property var values: []
                     interval: 1000 / model.fps
                     running: true
@@ -147,11 +158,12 @@ StackView {
                         }
 
                         var agg = 0;
+                        var paddingLeft = '\u00A0';
                         model.contributors.forEach(function(contributor, index) {
                             agg += contributor[1];
-                            contributorAxis.append(contributor[0], agg);
+                            contributorAxis.append(paddingLeft + contributor[0], agg);
                         });
-                        contributorAxis.append('\u00A0'.repeat(80), contributorAxis.max);
+                        contributorAxis.append('<font color="white">' + '\u00A0'.repeat(20) + '</font>', contributorAxis.max);
 
                         if(model.maximum == null || model.mininum == null) {
                             var dataMax = Math.max.apply(null, values);
@@ -176,9 +188,48 @@ StackView {
                                     maximum = dataMax;
                                 }
                             }
-                            valueAxis.min = minimum;
-                            valueAxis.max = maximum;
+                            var labelCount = 5;
+                            if(!valueLabelsInitialized || (minimum != valueAxis.min || maximum != valueAxis.max)) {
+                                // redo values axis labels
+                                var distanceBetweenLabels = (maximum - minimum) / (labelCount - 1);
+                                var axisValues = Array.apply(null, Array(5)).map(function (_, i) {
+                                    return minimum + distanceBetweenLabels * i;
+                                });
+                                var axisLabels = formatLabels(axisValues);
+                                for(var i = 0; i < labelCount; i++) {
+                                    valueAxis.remove(valueAxis.categoriesLabels[0]);
+                                }
+                                for(var i = 0; i < labelCount; i++) {
+                                    valueAxis.append(axisLabels[i], axisValues[i]);
+                                }
+                                valueAxis.min = minimum;
+                                valueAxis.max = maximum;
+                                valueLabelsInitialized = true;
+                            }
                         }
+                    }
+                    function formatLabels(axisValues) {
+                        var maxValue = Math.abs(Math.max.apply(null, axisValues));
+
+                        function formatValue(x) {
+                            var result;
+                            if(maxValue <= 10) {
+                                result = x.toFixed(3);
+                            } else if(maxValue <= 100) {
+                                result = x.toFixed(2);
+                            } else if(maxValue <= 1000) {
+                                result = x.toFixed(1);
+                            } else if(maxValue <= 10000) {
+                                result = Math.floor(x / 50) * 50;
+                            } else if(maxValue > 10000) {
+                                result = Math.floor(x / 50) * 50;
+                            }
+                            result = result.toString();
+                            var paddingLeft = '\u00A0'.repeat(Math.max(8 - result.length, 0));
+                            var paddingRight = '\u00A0';
+                            return paddingLeft + result + paddingRight;
+                        }
+                        return axisValues.map(formatValue);
                     }
                     Component.onCompleted: {
                         for(var i = 0; i < model.bufferSize; i++) {

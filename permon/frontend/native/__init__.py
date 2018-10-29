@@ -5,7 +5,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt, QUrl, QVariant, QAbstractListModel, QModelIndex
 import PyQt5.QtGui as QtGui
 from PyQt5.QtQuick import QQuickView
-from permon.frontend import Monitor, MonitorApp, utils
+from permon.frontend import Monitor, MonitorApp
 
 
 class NativeMonitor(Monitor):
@@ -15,34 +15,6 @@ class NativeMonitor(Monitor):
                                             fps, color, app)
         self.value = 0
         self.contributors = []
-
-    def _set_yrange(self, minimum, maximum, n_labels=5):
-        axis = self.left_axis
-        if minimum == axis.min() and maximum == axis.max():
-            return
-
-        axis.setRange(minimum, maximum)
-        self.right_axis.setRange(minimum, maximum)
-
-        for s in axis.categoriesLabels():
-            axis.remove(s)
-
-        axis_values = [minimum + ((maximum - minimum) / (n_labels - 1)) * i
-                       for i in range(n_labels)]
-        axis_labels = utils.format_labels(axis_values)
-        for value, label in zip(axis_values, axis_labels):
-            # qt strips spaces from labels, to make them have the same size
-            # we have to pad them with non-breaking spaces (U+00A0)
-            axis.append(label, value)
-
-    def adjust_fonts(self, app_height, app_width, n_monitors):
-        font = QtGui.QFont(NativeApp.fonts['axis_label'])
-        real_fontsize = font.pixelSize() / n_monitors * app_height / 250
-        real_fontsize = min(real_fontsize, 16)
-        font.setPixelSize(real_fontsize)
-
-        self.right_axis.setLabelsFont(font)
-        self.left_axis.setLabelsFont(font)
 
     def update(self):
         # every frame, we remove the last point of the history and
@@ -127,11 +99,15 @@ class NativeApp(MonitorApp):
         if self.qapp is None:
             self.qapp = QtWidgets.QApplication(sys.argv)
 
-            font_path = self.get_asset_path('Raleway-Regular.ttf')
             font_db = QtGui.QFontDatabase()
-            font_id = font_db.addApplicationFont(font_path)
-            if font_id == -1:
-                logging.warn('Could not load custom font')
+            font_paths = [
+                self.get_asset_path('Raleway-Regular.ttf'),
+                self.get_asset_path('RobotoMono-Regular.ttf')
+            ]
+            for font_path in font_paths:
+                font_id = font_db.addApplicationFont(font_path)
+                if font_id == -1:
+                    logging.warn(f'Could not load font ({font_path})')
 
             font = QtGui.QFont('Raleway')
             self.qapp.setFont(font)
