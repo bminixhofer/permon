@@ -77,7 +77,7 @@ StackView {
                 height: listView.height / listView.count
                 margins.top: 30
                 margins.right: 0
-                margins.bottom: 5
+                margins.bottom: 8
                 margins.left: 0
 
                 Label {
@@ -85,7 +85,7 @@ StackView {
                     topPadding: 10
                     // the left margin of charts depends on the font size (unfortunately)
                     // so the left paddding of the title label also has to depend on the same things as the font size
-                    leftPadding: listView.count * listView.height / 50
+                    leftPadding: valueAxis.labelsFont.pixelSize * 6.4
                     font.pixelSize: 22
                 }
 
@@ -102,7 +102,7 @@ StackView {
                     max: model.maximum == null ? 1 : model.maximum
                     labelsPosition: CategoryAxis.AxisLabelsPositionOnValue
                     labelsFont.family: "Roboto Mono"
-                    labelsFont.pixelSize: 12 / listView.count * listView.height / 250
+                    labelsFont.pixelSize: Math.min(12 / listView.count * listView.height / 250, 16)
                     gridVisible: false
                     color: "black"
                 }
@@ -112,7 +112,7 @@ StackView {
                     min: valueAxis.min
                     max: valueAxis.max
                     labelsFont.family: "Roboto Mono"
-                    labelsFont.pixelSize: 12 / listView.count * listView.height / 250
+                    labelsFont.pixelSize: Math.min(12 / listView.count * listView.height / 250, 16)
                     gridVisible: false
                     color: "black"
                 }
@@ -135,6 +135,7 @@ StackView {
 
                 Timer {
                     property int timeline: 0
+                    property int labelCount: 5
                     property bool valueLabelsInitialized: false
                     property var values: []
                     interval: 1000 / model.fps
@@ -146,7 +147,7 @@ StackView {
                         values.push(model.value);
                         values.shift();
                         series.append(timeline, values[model.bufferSize - 1]);
-                        series.remove(timeline - model.bufferSize);
+                        series.remove(0);
 
                         axisX.min++;
                         axisX.max++;
@@ -165,7 +166,7 @@ StackView {
                         });
                         contributorAxis.append('<font color="white">' + '\u00A0'.repeat(20) + '</font>', contributorAxis.max);
 
-                        if(model.maximum == null || model.mininum == null) {
+                        if(model.maximum == null || model.minimum == null) {
                             var dataMax = Math.max.apply(null, values);
                             var dataMin = Math.min.apply(null, values);
 
@@ -188,24 +189,24 @@ StackView {
                                     maximum = dataMax;
                                 }
                             }
-                            var labelCount = 5;
-                            if(!valueLabelsInitialized || (minimum != valueAxis.min || maximum != valueAxis.max)) {
-                                // redo values axis labels
-                                var distanceBetweenLabels = (maximum - minimum) / (labelCount - 1);
-                                var axisValues = Array.apply(null, Array(5)).map(function (_, i) {
-                                    return minimum + distanceBetweenLabels * i;
-                                });
-                                var axisLabels = formatLabels(axisValues);
-                                for(var i = 0; i < labelCount; i++) {
-                                    valueAxis.remove(valueAxis.categoriesLabels[0]);
-                                }
-                                for(var i = 0; i < labelCount; i++) {
-                                    valueAxis.append(axisLabels[i], axisValues[i]);
-                                }
+                            if(minimum != valueAxis.min || maximum != valueAxis.max) {
                                 valueAxis.min = minimum;
                                 valueAxis.max = maximum;
-                                valueLabelsInitialized = true;
+                                refreshLabels(minimum, maximum);
                             }
+                        }
+                    }
+                    function refreshLabels(minimum, maximum) {
+                        var distanceBetweenLabels = (maximum - minimum) / (labelCount - 1);
+                        var axisValues = Array.apply(null, Array(5)).map(function (_, i) {
+                            return minimum + distanceBetweenLabels * i;
+                        });
+                        var axisLabels = formatLabels(axisValues);
+                        for(var i = 0; i < labelCount; i++) {
+                            valueAxis.remove(valueAxis.categoriesLabels[0]);
+                        }
+                        for(var i = 0; i < labelCount; i++) {
+                            valueAxis.append(axisLabels[i], axisValues[i]);
                         }
                     }
                     function formatLabels(axisValues) {
@@ -237,6 +238,9 @@ StackView {
                             series.append(timeline++, 0);
                         }
                         onTriggered();
+                        if(valueAxis.min != null && valueAxis.max != null) {
+                            refreshLabels(valueAxis.min, valueAxis.max);
+                        }
                     }
                 }
             }
