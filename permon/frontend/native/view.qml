@@ -69,6 +69,7 @@ StackView {
             anchors.fill: parent
             delegate: ChartView {
                 objectName: model.tag
+                id: chartView
 
                 antialiasing: true
                 legend.visible: false
@@ -94,9 +95,16 @@ StackView {
                 }
 
                 ValueAxis {
-                    id: axisY
-                    min: model.minimum
-                    max: model.maximum
+                    id: valueAxis
+                    min: model.minimum == null ? -1 : model.minimum
+                    max: model.maximum == null ? 1 : model.maximums
+                }
+
+                CategoryAxis {
+                    gridVisible: false
+                    id: contributorAxis
+                    min: valueAxis.min
+                    max: valueAxis.max
                 }
 
                 LineSeries {
@@ -108,25 +116,76 @@ StackView {
                         y: 0
                     }
                     axisX: axisX
-                    axisY: axisY
+                    axisY: valueAxis
+                }
+
+                LineSeries {
+                    axisYRight: contributorAxis
                 }
 
                 Timer {
                     property int timeline: 0
+                    property var values: []
                     interval: 1000 / model.fps
                     running: true
                     repeat: true
                     onTriggered: {
                         timeline++;
-                        series.append(timeline, model.value);
+
+                        values.push(model.value);
+                        values.shift();
+                        series.append(timeline, values[model.bufferSize - 1]);
+                        series.remove(timeline - model.bufferSize);
 
                         axisX.min++;
                         axisX.max++;
+
+                        // update contributors
+                        var labelCount = contributorAxis.count;
+                        for(var i = 0; i < labelCount; i++) {
+                            contributorAxis.remove(contributorAxis.categoriesLabels[0]);
+                        }
+
+                        var agg = 0;
+                        model.contributors.forEach(function(contributor, index) {
+                            agg += contributor[1];
+                            contributorAxis.append(contributor[0], agg);
+                        });
+                        contributorAxis.append('\u00A0'.repeat(80), contributorAxis.max);
+
+                        if(model.maximum == null || model.mininum == null) {
+                            var dataMax = Math.max.apply(null, values);
+                            var dataMin = Math.min.apply(null, values);
+
+                            var rangeisZero = dataMax == dataMin;
+
+                            var minimum = model.minimum;
+                            var maximum = model.maximum;
+
+                            if(minimum == null) {
+                                if(rangeisZero) {
+                                    minimum = -1;
+                                } else {
+                                    minimum = dataMin;
+                                }
+                            }
+                            if(maximum == null) {
+                                if(rangeisZero) {
+                                    maximum = 1;
+                                } else {
+                                    maximum = dataMax;
+                                }
+                            }
+                            valueAxis.min = minimum;
+                            valueAxis.max = maximum;
+                        }
                     }
                     Component.onCompleted: {
                         for(var i = 0; i < model.bufferSize; i++) {
+                            values.push(0);
                             series.append(timeline++, 0);
                         }
+                        onTriggered();
                     }
                 }
             }
