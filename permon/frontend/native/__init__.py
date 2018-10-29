@@ -119,7 +119,7 @@ class NativeApp(MonitorApp):
         root_context = view.rootContext()
         root_context.setContextProperty('monitorModel', model)
 
-        qml_file = os.path.join(os.path.dirname(__file__), 'view.qml')
+        qml_file = os.path.join(os.path.dirname(__file__), 'qml', 'view.qml')
         view.setSource(QUrl.fromLocalFile(os.path.abspath(qml_file)))
 
         if view.status() == QQuickView.Error:
