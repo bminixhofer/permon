@@ -58,7 +58,7 @@ StackView {
                 anchors.fill: source
                 color: "black"
                 radius: 10.0
-                samples: radius
+                samples: radius * 2
             }
         }
 
@@ -75,14 +75,14 @@ StackView {
                 legend.visible: false
                 width: listView.width
                 height: listView.height / listView.count
-                margins.top: 40
+                margins.top: 30
                 margins.right: 0
-                margins.bottom: 10
+                margins.bottom: 5
                 margins.left: 0
 
                 Label {
                     text: model.name
-                    topPadding: 25
+                    topPadding: 10
                     // the left margin of charts depends on the font size (unfortunately)
                     // so the left paddding of the title label also has to depend on the same things as the font size
                     leftPadding: listView.count * listView.height / 50
