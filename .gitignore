@@ -1,6 +1,11 @@
-## javascript ignores
-node_modules
-##
+# qt binary files
+*.qmlc
+
+# javascript stuff
+node_modules/
+
+# pytest files
+.pytest_cache/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
