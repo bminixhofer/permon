@@ -1,11 +1,12 @@
 import sys
 import os
 import logging
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt, QUrl, QVariant, QAbstractListModel, QModelIndex
-import PyQt5.QtGui as QtGui
-from PyQt5.QtQuick import QQuickView
+from PySide2 import QtWidgets
+from PySide2.QtCore import (Qt, QUrl, QAbstractListModel, QModelIndex, Slot,)
+import PySide2.QtGui as QtGui
+from PySide2.QtQuick import QQuickView
 from permon.frontend import Monitor, MonitorApp
+from permon import backend
 
 
 class NativeMonitor(Monitor):
@@ -36,7 +37,7 @@ class MonitorModel(QAbstractListModel):
     def __init__(self, parent=None):
         super(MonitorModel, self).__init__(parent)
 
-        self._monitors = []
+        self.monitors = []
 
         def get_and_update_value(monitor):
             monitor.update()
@@ -56,25 +57,106 @@ class MonitorModel(QAbstractListModel):
         self._roles = {(Qt.UserRole + i): key.encode()
                        for i, key in enumerate(self.exposed_properties.keys())}
 
-    def addMonitor(self, monitor, view):
+    def addMonitor(self, monitor):
         self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
-        self._monitors.append(monitor)
+        self.monitors.append(monitor)
         self.endInsertRows()
 
+    def removeMonitor(self, monitor):
+        monitor_index = self.monitors.index(monitor)
+        self.beginRemoveRows(QModelIndex(), monitor_index, monitor_index)
+        del self.monitors[monitor_index]
+        self.endRemoveRows()
+
     def rowCount(self, parent=QModelIndex()):
-        return len(self._monitors)
+        return len(self.monitors)
 
     def data(self, index, role=Qt.DisplayRole):
         try:
-            monitor = self._monitors[index.row()]
+            monitor = self.monitors[index.row()]
         except IndexError:
-            return QVariant()
+            return
 
         key = self._roles[role].decode()
         if key in self.exposed_properties:
             return self.exposed_properties[key](monitor)
 
-        return QVariant()
+    def roleNames(self):
+        return self._roles
+
+
+class SettingsModel(QAbstractListModel):
+    TypeRole = Qt.UserRole + 1
+    CheckedRole = Qt.UserRole + 2
+    TagRole = Qt.UserRole + 3
+    NameRole = Qt.UserRole + 4
+
+    _roles = {
+        TypeRole: b'type',
+        CheckedRole: b'checked',
+        TagRole: b'tag',
+        NameRole: b'name'
+    }
+
+    def __init__(self, displayed_monitors):
+        super(SettingsModel, self).__init__()
+        all_stats = backend.get_all_stats()
+
+        prev_root_tag = ''
+        for i, stat in enumerate(all_stats):
+            root_tag = stat.root_tag
+
+            if root_tag != prev_root_tag:
+                all_stats.insert(i, root_tag)
+            prev_root_tag = root_tag
+
+        self.monitors = displayed_monitors
+        self.stats = all_stats
+        self.new_stats = set(all_stats)
+
+    def _handle_category(self, item, role):
+        if role == self.TypeRole:
+            return 'category'
+        if role == self.NameRole:
+            return item
+
+    def _handle_stat(self, item, role):
+        if role == self.TypeRole:
+            return 'stat'
+        if role == self.NameRole:
+            return item.name
+        if role == self.TagRole:
+            return item.tag
+        if role == self.CheckedRole:
+            return item in [type(monitor.stat) for monitor in self.monitors]
+
+    @Slot(str, bool)
+    def toggleStat(self, tag, checked):
+        stat = backend.get_stats_from_tags(tag)
+        if checked:
+            self.new_stats.add(stat)
+        else:
+            self.new_stats.remove(stat)
+
+    def rowCount(self, parent=QModelIndex()):
+        return len(self.stats)
+
+    def data(self, index, role=Qt.DisplayRole):
+        try:
+            item = self.stats[index.row()]
+        except IndexError:
+            return
+
+        inherits_stat = False
+        try:
+            inherits_stat = issubclass(item, backend.Stat)
+        except TypeError:
+            pass
+
+        if inherits_stat:
+            return self._handle_stat(item, role)
+        else:
+            return self._handle_category(item, role)
 
     def roleNames(self):
         return self._roles
@@ -94,6 +176,10 @@ class NativeApp(MonitorApp):
             'app': self,
             'thickness': line_thickness
         }
+        self.monitor_model = MonitorModel()
+        self.monitors = self.monitor_model.monitors
+
+        self.settings_model = SettingsModel(self.monitors)
 
     def initialize(self):
         if self.qapp is None:
@@ -115,9 +201,9 @@ class NativeApp(MonitorApp):
         view = QQuickView()
         view.setResizeMode(QQuickView.SizeRootObjectToView)
 
-        model = MonitorModel()
         root_context = view.rootContext()
-        root_context.setContextProperty('monitorModel', model)
+        root_context.setContextProperty('monitorModel', self.monitor_model)
+        root_context.setContextProperty('settingsModel', self.settings_model)
 
         qml_file = os.path.join(os.path.dirname(__file__), 'qml', 'view.qml')
         view.setSource(QUrl.fromLocalFile(os.path.abspath(qml_file)))
@@ -128,8 +214,7 @@ class NativeApp(MonitorApp):
         for stat in self.stats:
             monitor = NativeMonitor(stat, color=self.next_color(),
                                     **self.monitor_params)
-            model.addMonitor(monitor, view)
-            self.monitors.append(monitor)
+            self.monitor_model.addMonitor(monitor)
 
         view.show()
         self.qapp.exec_()

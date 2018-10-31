@@ -8,11 +8,11 @@ StackView {
     width: Screen.desktopAvailableWidth * 0.8
     initialItem: statPage
 
+    SettingsPage {
+        id: settingsPage
+    }
     StatPage {
         id: statPage
         onSettingsButtonClicked: stack.push(settingsPage)
-    }
-    SettingsPage {
-        id: settingsPage
     }
 }
