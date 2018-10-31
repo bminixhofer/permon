@@ -70,7 +70,7 @@ function setupMonitor(stat) {
       },
       textStyle: {
         color: 'black',
-        fontFamily: 'Raleway',
+        fontFamily: 'Roboto Mono',
       },
     },
     axisTick: {
@@ -78,12 +78,17 @@ function setupMonitor(stat) {
       interval(y) {
         return tickPositions.includes(y);
       },
+      lineStyle: {
+        width: 2,
+      },
     },
     splitLine: {
       show: false,
     },
     axisLine: {
-      show: false,
+      lineStyle: {
+        width: 2,
+      },
     },
     axisPointer: {
       show: false,
@@ -108,7 +113,7 @@ function setupMonitor(stat) {
   }
   const options = {
     grid: {
-      left: '5%',
+      left: 60,
       top: 10,
       right: '5%',
       bottom: 10,
@@ -136,13 +141,20 @@ function setupMonitor(stat) {
         },
         min: axisMin,
         max: axisMax,
+        axisTick: {
+          lineStyle: {
+            width: 2,
+          },
+        },
         axisLine: {
-          show: false,
+          lineStyle: {
+            width: 2,
+          },
         },
         axisLabel: {
           textStyle: {
             color: 'black',
-            fontFamily: 'Raleway',
+            fontFamily: 'Roboto Mono',
           },
         },
       },

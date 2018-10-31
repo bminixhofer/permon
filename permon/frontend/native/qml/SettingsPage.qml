@@ -49,71 +49,85 @@ Page {
             samples: radius * 2
         }
     }
-    ListView {
-        id: listView
+
+    ColumnLayout {
         anchors.fill: parent
-        model: settingsModel
+        spacing: 0
 
-        delegate: Loader {
-            x: 20
+        Label {
+            Layout.topMargin: 10
+            Layout.leftMargin: 20
+            text: "Enabled Stats"
+            font.pixelSize: 26
+        }
 
-            sourceComponent: {
-                switch(model.type) {
-                    case "category": return category;
-                    case "stat": return stat;
+        ListView {
+            id: listView
+            width: parent.width
+            height: 1000
+            model: settingsModel
+
+            delegate: Loader {
+                x: 30
+
+                sourceComponent: {
+                    switch(model.type) {
+                        case "category": return category;
+                        case "stat": return stat;
+                    }
                 }
-            }
 
-            Component {
-                id: category
+                Component {
+                    id: category
 
-                Label {
-                    height: 40
-                    verticalAlignment: Text.AlignBottom
-                    text: model.name
-                    font.pixelSize: 22
-                }
-            }
-
-            Component {
-                id: stat
-                RowLayout {
-                    height: 30
-                    width: parent.width
-
-                    CheckBox {
-                        id: checkbox
-                        Layout.leftMargin: 15
-                        checked: model.checked
+                    Label {
+                        height: 40
+                        verticalAlignment: Text.AlignVCenter
                         text: model.name
+                        font.pixelSize: 22
+                    }
+                }
 
-                        indicator: Rectangle {
-                            x: 5
-                            y: 5
-                            height: parent.height - 10
-                            width: height
-                            border.color: "#333"
-                            border.width: 2
+                Component {
+                    id: stat
+                    RowLayout {
+                        height: 30
+                        width: parent.width
 
-                            Rectangle {
-                                visible: checkbox.checked
-                                x: 4
-                                y: 4
-                                width: parent.width - x * 2
-                                height: parent.height - y * 2
-                                color: "#48cfad"
+                        CheckBox {
+                            id: checkbox
+                            Layout.leftMargin: 10
+                            checked: model.checked
+                            text: model.name
+
+                            indicator: Rectangle {
+                                x: 5
+                                y: 5
+                                height: parent.height - 10
+                                width: height
+                                border.color: "#333"
+                                border.width: 2
+
+                                Rectangle {
+                                    visible: checkbox.checked
+                                    x: 4
+                                    y: 4
+                                    width: parent.width - x * 2
+                                    height: parent.height - y * 2
+                                    color: "#48cfad"
+                                }
                             }
-                        }
 
-                        contentItem: Text {
-                            text: parent.text
-                            font.family: "Roboto Mono"
-                            anchors.left: parent.indicator.right
-                            anchors.leftMargin: 10
-                        }
+                            contentItem: Text {
+                                text: parent.text
+                                font.family: "Roboto Mono"
+                                anchors.left: parent.indicator.right
+                                anchors.leftMargin: 10
+                            }
 
-                        onClicked: {
-                            settingsModel.toggleStat(model.tag, checked);
+                            onClicked: {
+                                settingsModel.toggleStat(model.tag, checked);
+                            }
                         }
                     }
                 }
