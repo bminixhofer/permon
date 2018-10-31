@@ -138,7 +138,7 @@ Page {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    settingsModel.reset();
+                    settingsModel.resetSettings();
                     settingsPage.cancelButtonClicked();
                 }
             }
