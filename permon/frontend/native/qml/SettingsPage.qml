@@ -127,11 +127,21 @@ Page {
             Layout.leftMargin: 20
             text: "Cancel"
             font.pixelSize: 20
+            font.bold: true
             background: Rectangle {
+                id: cancelButtonBackground
                 implicitWidth: 100
                 implicitHeight: 50
-                border.color: "#333"
-                border.width: 2
+            }
+
+            DropShadow {
+                anchors.fill: cancelButtonBackground
+                color: "#777"
+                radius: 10.0
+                samples: radius * 2
+                source: cancelButtonBackground
+                horizontalOffset: 3
+                verticalOffset: 3
             }
 
             MouseArea {
@@ -153,20 +163,22 @@ Page {
             Layout.rightMargin: 20
             text: "<font color='white'>Accept</font>"
             font.pixelSize: 20
+            font.bold: true
             background: Rectangle {
-                id: buttonBackground
+                id: acceptButtonBackground
                 implicitWidth: 100
                 implicitHeight: 50
                 color: "#48cfad"
-                radius: 3
             }
 
-            Glow {
-                anchors.fill: buttonBackground
-                color: "#48cfad"
-                radius: 6
+            DropShadow {
+                anchors.fill: acceptButtonBackground
+                color: "#777"
+                radius: 10.0
                 samples: radius * 2
-                source: buttonBackground
+                source: acceptButtonBackground
+                horizontalOffset: 3
+                verticalOffset: 3
             }
 
             MouseArea {
