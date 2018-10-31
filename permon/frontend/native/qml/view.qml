@@ -8,11 +8,20 @@ StackView {
     width: Screen.desktopAvailableWidth * 0.8
     initialItem: statPage
 
-    SettingsPage {
-        id: settingsPage
-    }
-    StatPage {
+    Component {
         id: statPage
-        onSettingsButtonClicked: stack.push(settingsPage)
+
+        StatPage {
+            onSettingsButtonClicked: stack.push(settingsPage)
+        }
+    }
+
+    Component {
+        id: settingsPage
+
+        SettingsPage {
+            onCancelButtonClicked: stack.pop()
+            onAcceptButtonClicked: stack.pop()
+        }
     }
 }

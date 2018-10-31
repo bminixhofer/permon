@@ -1,8 +1,10 @@
 import sys
 import os
 import logging
+import bisect
 from PySide2 import QtWidgets
-from PySide2.QtCore import (Qt, QUrl, QAbstractListModel, QModelIndex, Slot,)
+from PySide2.QtCore import (Qt, QUrl, QAbstractListModel, QModelIndex, Slot,
+                            Signal)
 import PySide2.QtGui as QtGui
 from PySide2.QtQuick import QQuickView
 from permon.frontend import Monitor, MonitorApp
@@ -58,8 +60,12 @@ class MonitorModel(QAbstractListModel):
                        for i, key in enumerate(self.exposed_properties.keys())}
 
     def addMonitor(self, monitor):
-        self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
-        self.monitors.append(monitor)
+        # make sure monitors stay in the same order
+        monitor_tags = [monitor.stat.tag for monitor in self.monitors]
+        new_index = bisect.bisect(monitor_tags, monitor.stat.tag)
+
+        self.beginInsertRows(QModelIndex(), new_index, new_index)
+        self.monitors.insert(new_index, monitor)
         self.endInsertRows()
 
     def removeMonitor(self, monitor):
@@ -86,6 +92,8 @@ class MonitorModel(QAbstractListModel):
 
 
 class SettingsModel(QAbstractListModel):
+    submitted = Signal(set)
+
     TypeRole = Qt.UserRole + 1
     CheckedRole = Qt.UserRole + 2
     TagRole = Qt.UserRole + 3
@@ -112,7 +120,10 @@ class SettingsModel(QAbstractListModel):
 
         self.monitors = displayed_monitors
         self.stats = all_stats
-        self.new_stats = set(all_stats)
+        self.resetSettings()
+
+    def _get_displayed_stats(self):
+        return [type(monitor.stat) for monitor in self.monitors]
 
     def _handle_category(self, item, role):
         if role == self.TypeRole:
@@ -128,15 +139,38 @@ class SettingsModel(QAbstractListModel):
         if role == self.TagRole:
             return item.tag
         if role == self.CheckedRole:
-            return item in [type(monitor.stat) for monitor in self.monitors]
+            return item in self._get_displayed_stats()
 
     @Slot(str, bool)
     def toggleStat(self, tag, checked):
         stat = backend.get_stats_from_tags(tag)
         if checked:
-            self.new_stats.add(stat)
+            self.added_stats.add(stat)
+
+            try:
+                self.removed_stats.remove(stat)
+            except KeyError:
+                pass
         else:
-            self.new_stats.remove(stat)
+            self.removed_stats.add(stat)
+
+            try:
+                self.added_stats.remove(stat)
+            except KeyError:
+                pass
+
+    @Slot()
+    def resetSettings(self):
+        self.removed_stats = set()
+        self.added_stats = set()
+
+    @Slot()
+    def submitSettings(self):
+        displayed_stats = set(self._get_displayed_stats())
+        displayed_stats -= self.removed_stats
+        displayed_stats |= self.added_stats
+
+        self.submitted.emit(list(displayed_stats))
 
     def rowCount(self, parent=QModelIndex()):
         return len(self.stats)
@@ -180,6 +214,37 @@ class NativeApp(MonitorApp):
         self.monitors = self.monitor_model.monitors
 
         self.settings_model = SettingsModel(self.monitors)
+        self.settings_model.submitted.connect(self.adjust_monitors)
+
+    def adjust_monitors(self, stats):
+        displayed_stats = []
+        removed_monitors = []
+
+        for monitor in self.monitors.copy():
+            if type(monitor.stat) in stats:
+                displayed_stats.append(type(monitor.stat))
+            else:
+                removed_monitors.append(monitor)
+                self.monitor_model.removeMonitor(monitor)
+
+        new_stats = list(set(stats) - set(displayed_stats))
+        new_stats = sorted(new_stats, key=lambda stat: stat.tag)
+
+        for stat in new_stats:
+            monitor = NativeMonitor(stat, color=self.next_color(),
+                                    **self.monitor_params)
+            self.monitor_model.addMonitor(monitor)
+
+        if logging.getLogger().isEnabledFor(logging.INFO):
+            displayed = [stat.tag for stat in displayed_stats] or 'No Monitors'
+            new = [stat.tag for stat in new_stats] or 'No Monitors'
+            removed = [monitor.stat.tag for monitor in removed_monitors] or \
+                'No Monitors'
+
+            logging.info('Adjusted monitors')
+            logging.info(f'{displayed} were already displayed')
+            logging.info(f'{new} were added')
+            logging.info(f'{removed} were removed')
 
     def initialize(self):
         if self.qapp is None:
@@ -198,6 +263,8 @@ class NativeApp(MonitorApp):
             font = QtGui.QFont('Raleway')
             self.qapp.setFont(font)
 
+        self.adjust_monitors(self.stats)
+
         view = QQuickView()
         view.setResizeMode(QQuickView.SizeRootObjectToView)
 
@@ -210,11 +277,6 @@ class NativeApp(MonitorApp):
 
         if view.status() == QQuickView.Error:
             sys.exit(-1)
-
-        for stat in self.stats:
-            monitor = NativeMonitor(stat, color=self.next_color(),
-                                    **self.monitor_params)
-            self.monitor_model.addMonitor(monitor)
 
         view.show()
         self.qapp.exec_()

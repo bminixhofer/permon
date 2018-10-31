@@ -4,6 +4,10 @@ import QtQuick.Controls 2.0
 import QtGraphicalEffects 1.0
 
 Page {
+    signal cancelButtonClicked
+    signal acceptButtonClicked
+    id: settingsPage
+
     header: ToolBar {
         height: 50
 
@@ -129,6 +133,15 @@ Page {
                 border.color: "#333"
                 border.width: 2
             }
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    settingsModel.reset();
+                    settingsPage.cancelButtonClicked();
+                }
+            }
         }
 
         Item {
@@ -147,12 +160,22 @@ Page {
                 color: "#48cfad"
                 radius: 3
             }
+
             Glow {
                 anchors.fill: buttonBackground
                 color: "#48cfad"
                 radius: 6
                 samples: radius * 2
                 source: buttonBackground
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    settingsModel.submitSettings();
+                    settingsPage.acceptButtonClicked();
+                }
             }
         }
     }
