@@ -2,6 +2,7 @@ import sys
 import os
 import logging
 import bisect
+import signal
 from PySide2 import QtWidgets
 from PySide2.QtCore import (Qt, QUrl, QAbstractListModel, QModelIndex, Slot,
                             Signal)
@@ -278,9 +279,27 @@ class NativeApp(MonitorApp):
         if view.status() == QQuickView.Error:
             sys.exit(-1)
 
+        def signal_handler(signal, frame):
+            # the app can not gracefully quit
+            # when there is a keyboard interrupt
+            # because the QAbstractListModel catches all errors
+            # in a part of its code
+            print()
+            os._exit(0)
+
+        signal.signal(signal.SIGINT, signal_handler)
         view.show()
         self.qapp.exec_()
-        del view
+        self.quit()
+
+    def quit(self):
+        # delete everything with a reference to monitors
+        # so that all stats are deleted, and possible threads
+        # they are using stopped
+        del self.monitors
+        del self.settings_model
+        del self.monitor_model
+        self.qapp.exit()
 
     def paint():
         pass
