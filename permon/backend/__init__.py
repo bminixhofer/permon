@@ -17,7 +17,7 @@ class Stat(ABC):
 
         try:
             self.check_availability()
-        except exceptions.StatNotAvailableError():
+        except exceptions.StatNotAvailableError:
             raise exceptions.InvalidStatError(
                 'Unavailable stats can not be instantiated.')
         self.fps = fps
