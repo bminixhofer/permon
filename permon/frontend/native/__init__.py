@@ -9,7 +9,7 @@ from PySide2.QtCore import (Qt, QUrl, QAbstractListModel, QModelIndex, Slot,
 import PySide2.QtGui as QtGui
 from PySide2.QtQuick import QQuickView
 from permon.frontend import Monitor, MonitorApp
-from permon import backend
+from permon import backend, exceptions
 
 
 class NativeMonitor(Monitor):
@@ -101,6 +101,7 @@ class SettingsModel(QAbstractListModel):
     NameRole = Qt.UserRole + 4
     IsFirstInCategoryRole = Qt.UserRole + 5
     RootTagRole = Qt.UserRole + 6
+    ErrorMessageRole = Qt.UserRole + 7
 
     _roles = {
         TypeRole: b'type',
@@ -108,7 +109,8 @@ class SettingsModel(QAbstractListModel):
         TagRole: b'tag',
         NameRole: b'name',
         IsFirstInCategoryRole: b'isFirstInCategory',
-        RootTagRole: b'rootTag'
+        RootTagRole: b'rootTag',
+        ErrorMessageRole: b'errorMessage'
     }
 
     def __init__(self, displayed_monitors):
@@ -117,6 +119,7 @@ class SettingsModel(QAbstractListModel):
 
         self.stats = all_stats
         self.monitors = displayed_monitors
+        self.error_messages = [''] * len(self.stats)
         self.resetSettings()
 
     def _get_displayed_stats(self):
@@ -173,6 +176,8 @@ class SettingsModel(QAbstractListModel):
                 stats[stat_index].root_tag
         if role == self.RootTagRole:
             return stat.root_tag
+        if role == self.ErrorMessageRole:
+            return self.error_messages[index.row()]
 
     def setData(self, index, value, role=Qt.DisplayRole):
         try:
@@ -182,6 +187,12 @@ class SettingsModel(QAbstractListModel):
 
         if role == self.CheckedRole:
             if value:
+                try:
+                    stat.check_availability()
+                except exceptions.StatNotAvailableError as e:
+                    self.error_messages[index.row()] = str(e)
+                    return False
+
                 self.added_stats.add(stat)
 
                 try:
@@ -198,7 +209,8 @@ class SettingsModel(QAbstractListModel):
         else:
             return False
 
-        self.dataChanged.emit(index, index, [self.CheckedRole])
+        self.dataChanged.emit(index, index, [self.CheckedRole,
+                                             self.ErrorMessageRole])
         self.dataChanged.emit(self.index(0, 0),
                               self.index(self.rowCount() - 1, 0),
                               [self.IsFirstInCategoryRole])

@@ -59,8 +59,7 @@ Page {
             Layout.leftMargin: 20
             Layout.rightMargin: 20
             Layout.preferredWidth: parent.width
-            spacing: 50
-
+            spacing: 200
 
             ColumnLayout {
                 Layout.preferredWidth: parent.Layout.preferredWidth / 2
@@ -70,43 +69,11 @@ Page {
                 }
 
                 ListView {
-                    id: listView
+                    id: displayedStats
                     model: settingsModel
                     Layout.fillHeight: true
                     Layout.fillWidth: true
 
-                    // delegate: ColumnLayout {
-                    //     id: stat
-                    //     Layout.fillWidth: true
-
-                    //     Label {
-                    //         Layout.leftMargin: 10
-                    //         visible: model.isFirstInCategory
-                    //         verticalAlignment: Text.AlignVCenter
-                    //         text: model.rootTag
-                    //         font.pixelSize: 22
-                    //     }
-
-                    //     RowLayout {
-                    //         Layout.fillWidth: true
-                    //         visible: model.checked
-
-                    //         Label {
-                    //             Layout.leftMargin: 20
-                    //             font.pixelSize: 18
-                    //             font.family: "Roboto Mono"
-                    //             text: model.name
-                    //         }
-
-                    //         Item {
-                    //             Layout.fillWidth: true
-                    //         }
-
-                    //         Label {
-                    //             text: "test"
-                    //         }
-                    //     }
-                    // }
                     delegate: Column {
                         width: parent.width
                         Label {
@@ -147,50 +114,79 @@ Page {
                 }
             }
 
+            // Rectangle {
+            //     Layout.alignment: Qt.AlignTop
+            //     Layout.preferredWidth: parent.Layout.preferredWidth / 2
+            //     height:
+            //     color: "black"
+            // }
             ColumnLayout {
                 Layout.preferredWidth: parent.Layout.preferredWidth / 2
                 Layout.alignment: Qt.AlignTop
 
                 Label {
+                    Layout.alignment: Qt.AlignTop
                     text: "Add a Stat"
                     font.pixelSize: 26
                 }
 
                 ComboBox {
+                    Layout.alignment: Qt.AlignTop
                     id: statBox
                     Layout.fillWidth: true
                     textRole: "name"
                     model: settingsModel
                 }
 
-                Button {
-                    Layout.alignment: Qt.AlignRight
+                Item {
+                    Layout.alignment: Qt.AlignBottom
+                    Layout.fillWidth: true
 
-                    text: "<font color='white'>Add</font>"
-                    font.pixelSize: 20
-                    font.bold: true
-                    background: Rectangle {
-                        implicitWidth: 100
-                        implicitHeight: 50
-                        color: "#48cfad"
+                    Label {
+                        anchors.left: parent.left
+                        anchors.top: parent.bottom
+                        anchors.topMargin: 13
+                        property string errorMessage;
+
+                        id: latestErrorMessage
+                        color: "#ed5565"
+                        font.family: "Roboto Mono"
+                        text: errorMessage ? "Error: " + errorMessage : ""
                     }
 
-                    DropShadow {
-                        anchors.fill: source
-                        color: "#777"
-                        radius: 10.0
-                        samples: radius * 2
-                        source: parent.background
-                        horizontalOffset: 3
-                        verticalOffset: 3
-                    }
+                    Button {
+                        anchors.right: parent.right
+                        text: "<font color='white'>Add</font>"
+                        font.pixelSize: 20
+                        font.bold: true
+                        background: Rectangle {
+                            implicitWidth: 100
+                            implicitHeight: 50
+                            color: "#48cfad"
+                        }
 
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            var index = settingsModel.index(statBox.currentIndex, 0);
-                            settingsModel.setData(index, true, Qt.UserRole + 2 /* Checked Role */)
+                        DropShadow {
+                            anchors.fill: source
+                            color: "#777"
+                            radius: 10.0
+                            samples: radius * 2
+                            source: parent.background
+                            horizontalOffset: 3
+                            verticalOffset: 3
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                var CheckedRole = Qt.UserRole + 2;
+                                var ErrorMessageRole = Qt.UserRole + 7;
+
+                                var index = settingsModel.index(statBox.currentIndex, 0);
+                                settingsModel.setData(index, true, CheckedRole)
+
+                                latestErrorMessage.errorMessage = settingsModel.data(index, ErrorMessageRole);
+                            }
                         }
                     }
                 }
