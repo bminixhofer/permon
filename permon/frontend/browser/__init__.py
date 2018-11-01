@@ -5,6 +5,8 @@ import threading
 import time
 import logging
 import flask
+import sys
+import os
 from flask import Flask, Response, request, redirect
 from flask_sockets import Sockets
 import gevent
@@ -56,6 +58,7 @@ class BrowserApp(MonitorApp):
 
         self.port = port
         self.ip = ip
+        self.stopped = False
 
     def _get_stat_tree(self):
         stats = backend.get_all_stats()
@@ -136,7 +139,8 @@ class BrowserApp(MonitorApp):
             logging_level = None
         server = pywsgi.WSGIServer((self.ip, self.port), self.app,
                                    handler_class=WebSocketHandler,
-                                   log=logging_level)
+                                   log=logging_level,
+                                   error_log=open('trash', 'w'))
         update_thread = threading.Thread(target=self.update_forever)
         update_thread.start()
 
@@ -145,7 +149,20 @@ class BrowserApp(MonitorApp):
         )
 
         webbrowser.open(url)
-        server.serve_forever()
+
+        stderr = sys.stderr
+        try:
+            sys.stderr = open(os.devnull, 'w')
+            server.serve_forever()
+        except KeyboardInterrupt:
+            server.stop()
+            print()
+        finally:
+            sys.stderr = stderr
+
+        self.stopped = True
+        update_thread.join()
+        del self.monitors
 
     def adjust_monitors(self):
         displayed_stats = []
@@ -168,6 +185,9 @@ class BrowserApp(MonitorApp):
                                      app=self)
             self.monitors.append(monitor)
 
+        self.monitors = sorted(self.monitors,
+                               key=lambda monitor: monitor.stat.tag)
+
         self.setup_info = [monitor.get_json_info()
                            for monitor in self.monitors]
 
@@ -183,7 +203,7 @@ class BrowserApp(MonitorApp):
             logging.info(f'{removed} were removed')
 
     def update_forever(self):
-        while True:
+        while not self.stopped:
             self.update()
             time.sleep(1 / self.fps)
 
