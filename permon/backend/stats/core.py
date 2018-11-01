@@ -153,10 +153,9 @@ class GPUStat(Stat):
 
     @classmethod
     def check_availability(cls):
-        try:
-            subprocess.call(['nvidia-smi'])
-        except OSError:
-            raise exceptions.StatNotAvailableError('nvidia-smi not in PATH.')
+        status, message = subprocess.getstatusoutput('nvidia-smi')
+        if status != 0:
+            raise exceptions.StatNotAvailableError(message)
 
     def __init__(self, fps):
         super(GPUStat, self).__init__(fps=fps)
