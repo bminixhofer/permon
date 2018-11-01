@@ -99,66 +99,28 @@ class SettingsModel(QAbstractListModel):
     CheckedRole = Qt.UserRole + 2
     TagRole = Qt.UserRole + 3
     NameRole = Qt.UserRole + 4
+    IsFirstInCategoryRole = Qt.UserRole + 5
+    RootTagRole = Qt.UserRole + 6
 
     _roles = {
         TypeRole: b'type',
         CheckedRole: b'checked',
         TagRole: b'tag',
-        NameRole: b'name'
+        NameRole: b'name',
+        IsFirstInCategoryRole: b'isFirstInCategory',
+        RootTagRole: b'rootTag'
     }
 
     def __init__(self, displayed_monitors):
         super(SettingsModel, self).__init__()
         all_stats = backend.get_all_stats()
 
-        prev_root_tag = ''
-        for i, stat in enumerate(all_stats):
-            root_tag = stat.root_tag
-
-            if root_tag != prev_root_tag:
-                all_stats.insert(i, root_tag)
-            prev_root_tag = root_tag
-
-        self.monitors = displayed_monitors
         self.stats = all_stats
+        self.monitors = displayed_monitors
         self.resetSettings()
 
     def _get_displayed_stats(self):
         return [type(monitor.stat) for monitor in self.monitors]
-
-    def _handle_category(self, item, role):
-        if role == self.TypeRole:
-            return 'category'
-        if role == self.NameRole:
-            return item
-
-    def _handle_stat(self, item, role):
-        if role == self.TypeRole:
-            return 'stat'
-        if role == self.NameRole:
-            return item.name
-        if role == self.TagRole:
-            return item.tag
-        if role == self.CheckedRole:
-            return item in self._get_displayed_stats()
-
-    @Slot(str, bool)
-    def toggleStat(self, tag, checked):
-        stat = backend.get_stats_from_tags(tag)
-        if checked:
-            self.added_stats.add(stat)
-
-            try:
-                self.removed_stats.remove(stat)
-            except KeyError:
-                pass
-        else:
-            self.removed_stats.add(stat)
-
-            try:
-                self.added_stats.remove(stat)
-            except KeyError:
-                pass
 
     @Slot()
     def resetSettings(self):
@@ -178,20 +140,69 @@ class SettingsModel(QAbstractListModel):
 
     def data(self, index, role=Qt.DisplayRole):
         try:
-            item = self.stats[index.row()]
+            stat = self.stats[index.row()]
         except IndexError:
             return
 
-        inherits_stat = False
-        try:
-            inherits_stat = issubclass(item, backend.Stat)
-        except TypeError:
-            pass
+        if role == self.TypeRole:
+            return 'stat'
+        if role == self.NameRole:
+            return stat.name
+        if role == self.TagRole:
+            return stat.tag
+        if role == self.CheckedRole:
+            if stat in self.removed_stats:
+                return False
+            if stat in self.added_stats:
+                return True
 
-        if inherits_stat:
-            return self._handle_stat(item, role)
+            return stat in self._get_displayed_stats()
+        if role == self.IsFirstInCategoryRole:
+            displayed_stats = self._get_displayed_stats()
+            stats = [stat for stat in displayed_stats
+                     if stat not in self.removed_stats]
+            stats = sorted(list(set(stats) | self.added_stats),
+                           key=lambda stat: stat.tag)
+            try:
+                stat_index = stats.index(stat)
+            except ValueError:
+                return False
+
+            return stat_index == 0 or \
+                stats[stat_index - 1].root_tag != \
+                stats[stat_index].root_tag
+        if role == self.RootTagRole:
+            return stat.root_tag
+
+    def setData(self, index, value, role=Qt.DisplayRole):
+        try:
+            stat = self.stats[index.row()]
+        except IndexError:
+            return
+
+        if role == self.CheckedRole:
+            if value:
+                self.added_stats.add(stat)
+
+                try:
+                    self.removed_stats.remove(stat)
+                except KeyError:
+                    pass
+            else:
+                self.removed_stats.add(stat)
+
+                try:
+                    self.added_stats.remove(stat)
+                except KeyError:
+                    pass
         else:
-            return self._handle_category(item, role)
+            return False
+
+        self.dataChanged.emit(index, index, [self.CheckedRole])
+        self.dataChanged.emit(self.index(0, 0),
+                              self.index(self.rowCount() - 1, 0),
+                              [self.IsFirstInCategoryRole])
+        return True
 
     def roleNames(self):
         return self._roles

@@ -1,6 +1,6 @@
 import QtQuick 2.0
 import QtQuick.Layouts 1.11
-import QtQuick.Controls 2.0
+import QtQuick.Controls 2.4
 import QtGraphicalEffects 1.0
 
 Page {
@@ -54,84 +54,151 @@ Page {
         anchors.fill: parent
         spacing: 0
 
-        Label {
+        RowLayout {
             Layout.topMargin: 10
             Layout.leftMargin: 20
-            text: "Enabled Stats"
-            font.pixelSize: 26
-        }
+            Layout.rightMargin: 20
+            Layout.preferredWidth: parent.width
+            spacing: 50
 
-        ListView {
-            id: listView
-            width: parent.width
-            height: 1000
-            model: settingsModel
 
-            delegate: Loader {
-                x: 30
-
-                sourceComponent: {
-                    switch(model.type) {
-                        case "category": return category;
-                        case "stat": return stat;
-                    }
+            ColumnLayout {
+                Layout.preferredWidth: parent.Layout.preferredWidth / 2
+                Label {
+                    text: "Displayed Stats"
+                    font.pixelSize: 26
                 }
 
-                Component {
-                    id: category
+                ListView {
+                    id: listView
+                    model: settingsModel
+                    Layout.fillHeight: true
+                    Layout.fillWidth: true
 
-                    Label {
-                        height: 40
-                        verticalAlignment: Text.AlignVCenter
-                        text: model.name
-                        font.pixelSize: 22
-                    }
-                }
+                    // delegate: ColumnLayout {
+                    //     id: stat
+                    //     Layout.fillWidth: true
 
-                Component {
-                    id: stat
-                    RowLayout {
-                        height: 30
+                    //     Label {
+                    //         Layout.leftMargin: 10
+                    //         visible: model.isFirstInCategory
+                    //         verticalAlignment: Text.AlignVCenter
+                    //         text: model.rootTag
+                    //         font.pixelSize: 22
+                    //     }
+
+                    //     RowLayout {
+                    //         Layout.fillWidth: true
+                    //         visible: model.checked
+
+                    //         Label {
+                    //             Layout.leftMargin: 20
+                    //             font.pixelSize: 18
+                    //             font.family: "Roboto Mono"
+                    //             text: model.name
+                    //         }
+
+                    //         Item {
+                    //             Layout.fillWidth: true
+                    //         }
+
+                    //         Label {
+                    //             text: "test"
+                    //         }
+                    //     }
+                    // }
+                    delegate: Column {
                         width: parent.width
-
-                        CheckBox {
-                            id: checkbox
+                        Label {
                             Layout.leftMargin: 10
-                            checked: model.checked
-                            text: model.name
+                            visible: model.isFirstInCategory
+                            verticalAlignment: Text.AlignVCenter
+                            text: model.rootTag
+                            font.pixelSize: 22
+                        }
 
-                            indicator: Rectangle {
-                                x: 5
-                                y: 5
-                                height: parent.height - 10
-                                width: height
-                                border.color: "#333"
-                                border.width: 2
-
-                                Rectangle {
-                                    visible: checkbox.checked
-                                    x: 4
-                                    y: 4
-                                    width: parent.width - x * 2
-                                    height: parent.height - y * 2
-                                    color: "#48cfad"
-                                }
-                            }
-
-                            contentItem: Text {
-                                text: parent.text
+                        RowLayout {
+                            visible: model.checked
+                            width: parent.width
+                            Label {
+                                Layout.leftMargin: 20
+                                font.pixelSize: 18
                                 font.family: "Roboto Mono"
-                                anchors.left: parent.indicator.right
-                                anchors.leftMargin: 10
+                                text: model.name
                             }
 
-                            onClicked: {
-                                settingsModel.toggleStat(model.tag, checked);
+                            Label {
+                                color: "#ed5565"
+                                Layout.alignment: Qt.AlignRight
+                                text: "X"
+                                font.pixelSize: 18
+                                font.bold: true
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        model.checked = false;
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
+
+            ColumnLayout {
+                Layout.preferredWidth: parent.Layout.preferredWidth / 2
+                Layout.alignment: Qt.AlignTop
+
+                Label {
+                    text: "Add a Stat"
+                    font.pixelSize: 26
+                }
+
+                ComboBox {
+                    id: statBox
+                    Layout.fillWidth: true
+                    textRole: "name"
+                    model: settingsModel
+                }
+
+                Button {
+                    Layout.alignment: Qt.AlignRight
+
+                    text: "<font color='white'>Add</font>"
+                    font.pixelSize: 20
+                    font.bold: true
+                    background: Rectangle {
+                        implicitWidth: 100
+                        implicitHeight: 50
+                        color: "#48cfad"
+                    }
+
+                    DropShadow {
+                        anchors.fill: source
+                        color: "#777"
+                        radius: 10.0
+                        samples: radius * 2
+                        source: parent.background
+                        horizontalOffset: 3
+                        verticalOffset: 3
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            var index = settingsModel.index(statBox.currentIndex, 0);
+                            settingsModel.setData(index, true, Qt.UserRole + 2 /* Checked Role */)
+                        }
+                    }
+                }
+            }
+        }
+
+        Item {
+            Layout.fillHeight: true
         }
     }
 
@@ -179,18 +246,17 @@ Page {
             font.pixelSize: 20
             font.bold: true
             background: Rectangle {
-                id: acceptButtonBackground
                 implicitWidth: 100
                 implicitHeight: 50
                 color: "#48cfad"
             }
 
             DropShadow {
-                anchors.fill: acceptButtonBackground
+                anchors.fill: source
                 color: "#777"
                 radius: 10.0
                 samples: radius * 2
-                source: acceptButtonBackground
+                source: parent.background
                 horizontalOffset: 3
                 verticalOffset: 3
             }
