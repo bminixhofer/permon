@@ -3,6 +3,7 @@ import os
 import logging
 import bisect
 import signal
+import json
 from PySide2 import QtWidgets
 from PySide2.QtCore import (Qt, QUrl, QAbstractListModel, QModelIndex, Slot,
                             Signal)
@@ -95,22 +96,18 @@ class MonitorModel(QAbstractListModel):
 class SettingsModel(QAbstractListModel):
     submitted = Signal(set)
 
-    TypeRole = Qt.UserRole + 1
-    CheckedRole = Qt.UserRole + 2
-    TagRole = Qt.UserRole + 3
-    NameRole = Qt.UserRole + 4
-    IsFirstInCategoryRole = Qt.UserRole + 5
-    RootTagRole = Qt.UserRole + 6
-    ErrorMessageRole = Qt.UserRole + 7
+    CheckedRole = Qt.UserRole + 1
+    TagRole = Qt.UserRole + 2
+    NameRole = Qt.UserRole + 3
+    IsFirstInCategoryRole = Qt.UserRole + 4
+    RootTagRole = Qt.UserRole + 5
 
     _roles = {
-        TypeRole: b'type',
         CheckedRole: b'checked',
         TagRole: b'tag',
         NameRole: b'name',
         IsFirstInCategoryRole: b'isFirstInCategory',
         RootTagRole: b'rootTag',
-        ErrorMessageRole: b'errorMessage'
     }
 
     def __init__(self, displayed_monitors):
@@ -119,7 +116,6 @@ class SettingsModel(QAbstractListModel):
 
         self.stats = all_stats
         self.monitors = displayed_monitors
-        self.error_messages = [''] * len(self.stats)
         self.resetSettings()
 
     def _get_displayed_stats(self):
@@ -138,6 +134,54 @@ class SettingsModel(QAbstractListModel):
 
         self.submitted.emit(list(displayed_stats))
 
+    @Slot(int, str, result=str)
+    def addStat(self, index, settings_str):
+        settings = json.loads(settings_str)
+        stat = self.stats[index]
+        stat.set_settings(settings)
+
+        try:
+            stat.check_availability()
+        except exceptions.StatNotAvailableError as e:
+            return str(e)
+
+        self.added_stats.add(stat)
+        try:
+            self.removed_stats.remove(stat)
+        except KeyError:
+            pass
+        self.handleToggledStat(index)
+        return ''
+
+    @Slot(int)
+    def removeStat(self, index):
+        stat = self.stats[index]
+
+        self.removed_stats.add(stat)
+
+        try:
+            self.added_stats.remove(stat)
+        except KeyError:
+            pass
+        self.handleToggledStat(index)
+
+    @Slot(int, result=str)
+    def getSettings(self, index):
+        stat = self.stats[index]
+        settings_list = [{
+            'name': key,
+            'defaultValue': value
+        } for key, value in stat.default_settings.items()]
+
+        return json.dumps(settings_list)
+
+    def handleToggledStat(self, index):
+        model_index = self.index(index, 0)
+        self.dataChanged.emit(model_index, model_index, [self.CheckedRole])
+        self.dataChanged.emit(self.index(0, 0),
+                              self.index(self.rowCount() - 1, 0),
+                              [self.IsFirstInCategoryRole])
+
     def rowCount(self, parent=QModelIndex()):
         return len(self.stats)
 
@@ -147,8 +191,6 @@ class SettingsModel(QAbstractListModel):
         except IndexError:
             return
 
-        if role == self.TypeRole:
-            return 'stat'
         if role == self.NameRole:
             return stat.name
         if role == self.TagRole:
@@ -176,45 +218,6 @@ class SettingsModel(QAbstractListModel):
                 stats[stat_index].root_tag
         if role == self.RootTagRole:
             return stat.root_tag
-        if role == self.ErrorMessageRole:
-            return self.error_messages[index.row()]
-
-    def setData(self, index, value, role=Qt.DisplayRole):
-        try:
-            stat = self.stats[index.row()]
-        except IndexError:
-            return
-
-        if role == self.CheckedRole:
-            if value:
-                try:
-                    stat.check_availability()
-                except exceptions.StatNotAvailableError as e:
-                    self.error_messages[index.row()] = str(e)
-                    return False
-
-                self.added_stats.add(stat)
-
-                try:
-                    self.removed_stats.remove(stat)
-                except KeyError:
-                    pass
-            else:
-                self.removed_stats.add(stat)
-
-                try:
-                    self.added_stats.remove(stat)
-                except KeyError:
-                    pass
-        else:
-            return False
-
-        self.dataChanged.emit(index, index, [self.CheckedRole,
-                                             self.ErrorMessageRole])
-        self.dataChanged.emit(self.index(0, 0),
-                              self.index(self.rowCount() - 1, 0),
-                              [self.IsFirstInCategoryRole])
-        return True
 
     def roleNames(self):
         return self._roles

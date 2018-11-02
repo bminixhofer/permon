@@ -105,7 +105,7 @@ Page {
                                     anchors.fill: parent
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
-                                        model.checked = false;
+                                        settingsModel.removeStat(index);
                                     }
                                 }
                             }
@@ -131,21 +131,68 @@ Page {
                 }
 
                 ComboBox {
+                    Layout.topMargin: 5
                     Layout.alignment: Qt.AlignTop
                     id: statBox
                     Layout.fillWidth: true
                     textRole: "name"
                     model: settingsModel
+
+                    onActivated: {
+                        latestErrorMessage.errorMessage = "";
+                        settingsRepeater.model = JSON.parse(settingsModel.getSettings(index));
+                    }
                 }
 
-                Item {
+                Column {
+                    Layout.fillWidth: true
+                    Repeater {
+                        id: settingsRepeater
+
+                        RowLayout {
+                            property string key: modelData["name"]
+                            property string value: textField.text
+
+                            width: parent.width
+
+                            Label {
+                                font.pixelSize: 18
+                                font.capitalization: Font.Capitalize
+                                text: modelData["name"]
+                            }
+                            TextField {
+                                id: textField
+                                Layout.alignment: Qt.AlignRight
+                                horizontalAlignment: TextInput.AlignRight
+                                font.family: "Roboto Mono"
+                                text: modelData["defaultValue"]
+
+                                background: Rectangle {
+                                    implicitWidth: 200
+                                    implicitHeight: 40
+                                }
+
+                                DropShadow {
+                                    z: -1
+                                    anchors.fill: source
+                                    color: "#777"
+                                    radius: 10.0
+                                    samples: radius * 2
+                                    source: parent.background
+                                    horizontalOffset: 3
+                                    verticalOffset: 3
+                                }
+                            }
+                        }
+                    }
+                }
+
+                RowLayout {
                     Layout.alignment: Qt.AlignBottom
                     Layout.fillWidth: true
 
                     Label {
-                        anchors.left: parent.left
-                        anchors.top: parent.bottom
-                        anchors.topMargin: 13
+                        Layout.fillWidth: true
                         property string errorMessage;
 
                         id: latestErrorMessage
@@ -155,7 +202,6 @@ Page {
                     }
 
                     Button {
-                        anchors.right: parent.right
                         text: "<font color='white'>Add</font>"
                         font.pixelSize: 20
                         font.bold: true
@@ -179,13 +225,16 @@ Page {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                var CheckedRole = Qt.UserRole + 2;
-                                var ErrorMessageRole = Qt.UserRole + 7;
+                                var settings = {};
+                                for(var i = 0; i < settingsRepeater.count; i++) {
+                                    var key = settingsRepeater.itemAt(i).key;
+                                    var value = settingsRepeater.itemAt(i).value;
 
-                                var index = settingsModel.index(statBox.currentIndex, 0);
-                                settingsModel.setData(index, true, CheckedRole)
+                                    settings[key] = value;
+                                }
 
-                                latestErrorMessage.errorMessage = settingsModel.data(index, ErrorMessageRole);
+                                var errorMessage = settingsModel.addStat(statBox.currentIndex, JSON.stringify(settings));
+                                latestErrorMessage.errorMessage = errorMessage;
                             }
                         }
                     }
