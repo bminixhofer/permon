@@ -6,9 +6,10 @@ from permon import exceptions
 
 
 class Stat(ABC):
+    _initialized = False
     windows_classes = []
     linux_classes = []
-    _initialized = False
+    default_settings = {}
 
     def __init__(self, fps):
         if not self._initialized:
@@ -33,6 +34,7 @@ class Stat(ABC):
             # base_tag has already been defined by the stat creator
             cls.root_tag = filename
             cls.tag = f'{cls.root_tag}.{cls.base_tag}'
+            cls.settings = cls.default_settings.copy()
 
             cls._initialized = True
 
@@ -44,6 +46,16 @@ class Stat(ABC):
         if not hasattr(check_cls, 'base_tag'):
             raise exceptions.InvalidStatError(
                 'Stats must have a static tag attribute.')
+
+    @classmethod
+    def set_settings(cls, settings):
+        assert set(settings.keys()) == set(cls.default_settings.keys())
+
+        for key, value in cls.default_settings.items():
+            key_type = type(value)
+            # cast the settings value to the type
+            # specified in the default settings
+            cls.settings[key] = key_type(settings[key])
 
     @classmethod
     def check_availability(cls):
