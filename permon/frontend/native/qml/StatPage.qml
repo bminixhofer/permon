@@ -8,6 +8,7 @@ Page {
     property int labelCount: 5
     property int leftMargin: 8
     property int rightMargin: 20
+    property alias errorMessage: errorMessage.message
     signal settingsButtonClicked
 
     id: statPage
@@ -38,8 +39,15 @@ Page {
                     text: "Stats"
                 }
 
-                Item {
+                Label {
                     Layout.fillWidth: true
+                    property string message;
+
+                    id: errorMessage
+                    font.family: "Roboto Mono"
+                    horizontalAlignment: Text.AlignRight
+                    color: "#ed5565"
+                    text: message ? "Error: " + message : ""
                 }
 
                 Button {

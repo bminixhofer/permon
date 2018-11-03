@@ -5,8 +5,8 @@ import bisect
 import signal
 import json
 from PySide2 import QtWidgets
-from PySide2.QtCore import (Qt, QUrl, QAbstractListModel, QModelIndex, Slot,
-                            Signal)
+from PySide2.QtCore import (Qt, QUrl, QAbstractListModel, QObject, QModelIndex,
+                            Slot, Signal)
 import PySide2.QtGui as QtGui
 from PySide2.QtQuick import QQuickView
 from permon.frontend import Monitor, MonitorApp
@@ -93,22 +93,8 @@ class MonitorModel(QAbstractListModel):
         return self._roles
 
 
-class SettingsModel(QAbstractListModel):
+class SettingsModel(QObject):
     submitted = Signal(set)
-
-    CheckedRole = Qt.UserRole + 1
-    TagRole = Qt.UserRole + 2
-    NameRole = Qt.UserRole + 3
-    IsFirstInCategoryRole = Qt.UserRole + 4
-    RootTagRole = Qt.UserRole + 5
-
-    _roles = {
-        CheckedRole: b'checked',
-        TagRole: b'tag',
-        NameRole: b'name',
-        IsFirstInCategoryRole: b'isFirstInCategory',
-        RootTagRole: b'rootTag',
-    }
 
     def __init__(self, displayed_monitors):
         super(SettingsModel, self).__init__()
@@ -118,8 +104,12 @@ class SettingsModel(QAbstractListModel):
         self.monitors = displayed_monitors
         self.resetSettings()
 
-    def _get_displayed_stats(self):
+    def get_displayed_stats(self):
         return [type(monitor.stat) for monitor in self.monitors]
+
+    def get_not_displayed_stats(self):
+        stats = list(set(self.stats) - set(self.get_displayed_stats()))
+        return sorted(stats, key=lambda stat: stat.tag)
 
     @Slot()
     def resetSettings(self):
@@ -128,7 +118,7 @@ class SettingsModel(QAbstractListModel):
 
     @Slot()
     def submitSettings(self):
-        displayed_stats = set(self._get_displayed_stats())
+        displayed_stats = set(self.get_displayed_stats())
         displayed_stats -= self.removed_stats
         displayed_stats |= self.added_stats
 
@@ -137,7 +127,7 @@ class SettingsModel(QAbstractListModel):
     @Slot(int, str, result=str)
     def addStat(self, index, settings_str):
         settings = json.loads(settings_str)
-        stat = self.stats[index]
+        stat = self.get_not_displayed_stats()[index]
         stat.set_settings(settings)
 
         try:
@@ -150,24 +140,21 @@ class SettingsModel(QAbstractListModel):
             self.removed_stats.remove(stat)
         except KeyError:
             pass
-        self.handleToggledStat(index)
         return ''
 
     @Slot(int)
     def removeStat(self, index):
-        stat = self.stats[index]
-
+        stat = self.get_displayed_stats()[index]
         self.removed_stats.add(stat)
 
         try:
             self.added_stats.remove(stat)
         except KeyError:
             pass
-        self.handleToggledStat(index)
 
     @Slot(int, result=str)
     def getSettings(self, index):
-        stat = self.stats[index]
+        stat = self.get_not_displayed_stats()[index]
         settings_list = [{
             'name': key,
             'defaultValue': value
@@ -175,49 +162,14 @@ class SettingsModel(QAbstractListModel):
 
         return json.dumps(settings_list)
 
-    def handleToggledStat(self, index):
-        model_index = self.index(index, 0)
-        self.dataChanged.emit(model_index, model_index, [self.CheckedRole])
-        self.dataChanged.emit(self.index(0, 0),
-                              self.index(self.rowCount() - 1, 0),
-                              [self.IsFirstInCategoryRole])
+    @Slot(bool, result=str)
+    def getStats(self, displayed):
+        stats = self.get_displayed_stats() if displayed else \
+                self.get_not_displayed_stats()
+        return json.dumps([stat.name for stat in stats])
 
     def rowCount(self, parent=QModelIndex()):
         return len(self.stats)
-
-    def data(self, index, role=Qt.DisplayRole):
-        try:
-            stat = self.stats[index.row()]
-        except IndexError:
-            return
-
-        if role == self.NameRole:
-            return stat.name
-        if role == self.TagRole:
-            return stat.tag
-        if role == self.CheckedRole:
-            if stat in self.removed_stats:
-                return False
-            if stat in self.added_stats:
-                return True
-
-            return stat in self._get_displayed_stats()
-        if role == self.IsFirstInCategoryRole:
-            displayed_stats = self._get_displayed_stats()
-            stats = [stat for stat in displayed_stats
-                     if stat not in self.removed_stats]
-            stats = sorted(list(set(stats) | self.added_stats),
-                           key=lambda stat: stat.tag)
-            try:
-                stat_index = stats.index(stat)
-            except ValueError:
-                return False
-
-            return stat_index == 0 or \
-                stats[stat_index - 1].root_tag != \
-                stats[stat_index].root_tag
-        if role == self.RootTagRole:
-            return stat.root_tag
 
     def roleNames(self):
         return self._roles
