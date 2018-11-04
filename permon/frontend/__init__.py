@@ -2,7 +2,7 @@ import os
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 import numpy as np
-from permon import exceptions
+from permon import exceptions, backend
 
 
 class Monitor(ABC):
@@ -50,6 +50,16 @@ class MonitorApp(ABC):
 
         if len(self.stats) == 0:
             raise exceptions.NoStatError()
+
+    def get_all_stats(self):
+        return backend.get_all_stats()
+
+    def get_displayed_stats(self):
+        return [type(monitor.stat) for monitor in self.monitors]
+
+    def get_not_displayed_stats(self):
+        stats = set(self.get_all_stats()) - set(self.get_displayed_stats())
+        return sorted(list(stats), key=lambda stat: stat.tag)
 
     def next_color(self):
         color_counts = OrderedDict([(color, 0) for color in self.colors])
