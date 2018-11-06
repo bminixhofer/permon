@@ -14,13 +14,33 @@
     <div class="header">
         <h1>permon <span class="text-emphasized">Stats</span></h1>
         <div class="status-badge"></div>
-        <a href="/settings"><button class="settings-button"></button></a>
+
+        <input type="checkbox" id="settings-toggle" name="settings-toggle"/>
+        <label for="settings-toggle" class="settings-toggle-label"></label>
+        <div class="settings">
+            <div class="stat-adder">
+                <h2>Add Stat</h2>
+                <select>
+                    {% for stat in not_displayed_stats %}
+                        <option value="{{ stat.tag }}">{{ stat.name }}</option>
+                    {% endfor %}
+                </select>
+                <input type="button" value="Add"/>
+            </div>
+            <div class="stat-remover">
+                <h2>Remove Stat</h2>
+                <select>
+                    {% for stat in displayed_stats %}
+                    <option value="{{ stat.tag }}">{{ stat.name }}</option>
+                    {% endfor %}
+                </select>
+                <input type="button" value="Remove"/>
+            </div>
+        </div>
     </div>
     <div data-fps="{{ fps }}" data-buffersize="{{ buffer_size }}"class="charts">
-        {% for stat in stats %}
-        <h2>{{ stat.name }}</h2>
-        <div id="{{ stat.tag }}" class="chart-container">
-        </div>
+        {% for stat in displayed_stats %}
+        <div id="{{ stat.tag }}" class="chart-container"></div>
         {% endfor %}
     </div>
 </body>

@@ -11,6 +11,7 @@ body {
     margin: 0;
     padding: 0;
     background-color: white;
+    overflow: hidden;
 }
 
 .header {
@@ -41,40 +42,88 @@ body {
     box-shadow: 0px 0px 10px 2px #48cfad;
 }
 
-.settings-button {
+#settings-toggle {
+    display: none;
+}
+
+.settings-toggle-label {
     width: 50px;
     height: 50px;
-    outline: none;
     cursor: pointer;
-    background: none;
-    border: none;
     background-image: url('/assets/settings.svg');
     background-repeat: no-repeat;
 }
 
 .settings {
+    z-index: 1;
+    position: absolute;
+    height: calc(100% - 5.4rem);
+    width: 25rem;
+    top: 4.4rem;
+    background-color: rgba(255, 255, 255, 0.95);
+    right: -27rem;
+    transition: right 0.2s;
     display: flex;
-    height: calc(100% - 7rem);
     justify-content: flex-start;
     flex-direction: column;
-    padding: 0.5em 2em;
+    align-items: stretch;
+    padding: 0.5em 1em;
+    box-shadow: 0 0px 6px rgba(0,0,0,0.16), 0 0px 6px rgba(0,0,0,0.23);
+}
+
+.settings > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex: 1;
+}
+
+.settings input[type="button"] {
+    margin-top: auto;
+    align-self: flex-end;
+}
+
+.settings select {
+    width: 100%;
+    height: 2em;
+    font-size: 1.2em;
+    padding: 0.3em;
+    background: none;
+    border: none;
+    outline: none;
+    color: #333;
+    background-color: #dedede;
+}
+
+#settings-toggle:checked ~ .settings {
+    right: 0;
 }
 
 .chart-container {
-    position: relative;
     height: 100%;
+    position: relative;
 }
 
-.charts h2 {
-    margin: 0.8em 0 0 60px;
+.chart-container h2 {
+    margin: 0 0 0 60px;
+    height: 2em;
+}
+
+.chart-container .chart {
+    position: absolute;
+    height: calc(100% - 2em);
+    width: 100%;
+    right: 0;
+    top: 2em;
 }
 
 .charts {
-    padding: 1rem 0;
     display: flex;
     flex-direction: column;
     justify-content: space-around;
-    height: calc(100vh - 4rem - 1rem - 2rem);
+    height: calc(100% - 5rem);
+    padding-top: 0.5em;
 }
 
 .text-emphasized {
@@ -89,7 +138,7 @@ h1 {
 }
 
 h2 {
-    margin: 0.3em 0 0 0;
+    margin: 0.3em 0 0.3em 0;
     font-size: 1.7em;
 }
 
@@ -104,61 +153,30 @@ h2, h3, label {
     color: #333;
 }
 
-label {
-    font-family: Roboto Mono;
-}
-
 .stat {
     font-size: 1.1em;
     padding: 0.2em 0 0.2em 2em;
 }
 
 label {
+    font-family: Roboto Mono;
     cursor: pointer;
     font-size: 1.2em;
     display: relative;
 }
 
-input[type="checkbox"] {
+input[type="button"] {
     cursor: pointer;
-    outline: 0;
-    vertical-align: bottom;
-    -webkit-appearance: none;
-    background-color: #fafafa;
-    height: 22px;
-    width: 22px;
-    margin: 0;
-    padding: 0;
-    margin-right: 4px;
-    top: -3px;
-	display: inline-block;
-	position: relative;
-    outline: 3px solid black;
-}
-
-input[type="checkbox"]:checked {
     background-color: #48cfad;
-    border: 2px solid white;
-}
-
-.continuation {
-    margin-top: auto;
-    display: flex;
-    justify-content: space-between;
-}
-
-input[type="button"], input[type="submit"] {
-    cursor: pointer;
+    color: #f5f5f5;
     font-family: Raleway;
-    background: None;
     border: none;
+    outline: none;
     font-size: 1.5em;
     font-weight: bolder;
-    padding: 0.7em 1em;
+    text-align: center;
+    width: 5em;
+    height: 2.5em;
+    padding: 0.1em 0.1em;
     box-shadow: 5px 5px 20px rgba(0,0,0,0.4), 0 3px 6px rgba(0,0,0,0.23);
-}
-
-input[type="submit"] {
-    color: #f5f5f5;
-    background-color: #48cfad;
 }

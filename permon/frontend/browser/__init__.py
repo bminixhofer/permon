@@ -7,14 +7,14 @@ import logging
 import flask
 import sys
 import os
-from flask import Flask, Response, request, redirect
+from flask import Flask, Response, request
 from flask_sockets import Sockets
 import gevent
 from gevent import pywsgi
 import geventwebsocket
 from geventwebsocket.handler import WebSocketHandler
 from permon.frontend import MonitorApp, Monitor
-from permon import backend
+from permon import backend, exceptions
 
 
 class BrowserMonitor(Monitor):
@@ -60,25 +60,6 @@ class BrowserApp(MonitorApp):
         self.ip = ip
         self.stopped = False
 
-    def _get_stat_tree(self):
-        stats = backend.get_all_stats()
-
-        stat_tree = dict()
-        for stat in stats:
-            if stat.root_tag not in stat_tree:
-                stat_tree[stat.root_tag] = []
-
-            stat_tree[stat.root_tag].append({
-                'tag': stat.tag,
-                'name': stat.name,
-                'checked': stat in self.stats
-            })
-        stat_tree = [{
-            'name': root_tag,
-            'stats': stats
-        } for root_tag, stats in stat_tree.items()]
-        return stat_tree
-
     def initialize(self):
         self.app = Flask(__name__)
         self.sockets = Sockets(self.app)
@@ -91,22 +72,65 @@ class BrowserApp(MonitorApp):
 
         @self.app.route('/')
         def index():
-            return flask.render_template('index.html',
-                                         fps=self.fps,
-                                         buffer_size=self.buffer_size,
-                                         stats=self.setup_info)
+            template_args = {
+                'fps': self.fps,
+                'buffer_size': self.buffer_size,
+                'displayed_stats': self.get_displayed_stats(),
+                'not_displayed_stats': self.get_not_displayed_stats()
+            }
+            return flask.render_template('index.html', **template_args)
 
-        @self.app.route('/settings')
-        def settings():
-            return flask.render_template('settings.html',
-                                         categories=self._get_stat_tree())
+        @self.app.route('/stats', methods=['GET'])
+        def get_stats():
+            return Response(json.dumps(self.setup_info),
+                            mimetype='application/json')
 
-        @self.app.route('/statInfo')
-        def stat_info():
-            return Response(json.dumps(self.setup_info), mimetype='text/json')
+        @self.app.route('/stats', methods=['DELETE'])
+        def remove_stat():
+            data = request.get_json()
+            try:
+                stat = backend.get_stats_from_tags(data['tag'])
+            except exceptions.InvalidStatError:
+                return Response(status=400)
 
-        @self.sockets.route('/statUpdates')
-        def socket(ws):
+            # DEBUG: temporary workaround
+            target_monitor = None
+            for monitor in self.monitors:
+                if type(monitor.stat) == stat:
+                    target_monitor = monitor
+
+            try:
+                self.stats.remove(stat)
+            except ValueError:
+                return Response(status=404)
+            self.adjust_monitors()
+
+            return Response(json.dumps(target_monitor.get_json_info()),
+                            status=200, mimetype='application/json')
+
+        @self.app.route('/stats', methods=['PUT'])
+        def add_stat():
+            data = request.get_json()
+            try:
+                stat = backend.get_stats_from_tags(data['tag'])
+                stat.set_settings(data['settings'])
+            except exceptions.InvalidStatError:
+                return Response(status=400)
+
+            if stat not in self.stats:
+                self.stats.append(stat)
+            self.adjust_monitors()
+
+            # DEBUG: temporary workaround
+            target_monitor = None
+            for monitor in self.monitors:
+                if type(monitor.stat) == stat:
+                    target_monitor = monitor
+            return Response(json.dumps(target_monitor.get_json_info()),
+                            status=200, mimetype='application/json')
+
+        @self.sockets.route('/stats')
+        def get_stat_updates(ws):
             origin = ws.origin
             logging.info(f'{origin} connected')
             while not ws.closed:
@@ -125,13 +149,6 @@ class BrowserApp(MonitorApp):
                     ws.close()
 
                 gevent.sleep(1 / self.fps)
-
-        @self.app.route('/settings', methods=['POST'])
-        def set_settings():
-            self.stats = backend.get_stats_from_tags(list(request.form.keys()))
-            self.adjust_monitors()
-
-            return redirect('/')
 
         if logging.getLogger().isEnabledFor(logging.INFO):
             logging_level = 'default'

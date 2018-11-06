@@ -38,6 +38,16 @@ function setupMonitor(stat) {
     tag, maximum, minimum, color, history,
   } = stat;
 
+  const chartContainer = document.getElementById(tag);
+  const heading = document.createElement('h2');
+  heading.textContent = stat.name;
+
+  const chartElement = document.createElement('div');
+  chartElement.classList.add('chart');
+
+  chartContainer.appendChild(heading);
+  chartContainer.appendChild(chartElement);
+
   let dataIndex = 0;
   function makePoint(x) {
     dataIndex += 1;
@@ -56,8 +66,7 @@ function setupMonitor(stat) {
   }
   data = data.concat(history.map(x => makePoint(x)));
 
-  const chartContainer = document.getElementById(tag);
-  const chart = echarts.init(chartContainer);
+  const chart = echarts.init(chartElement);
   const contributorData = Array(categoryResolution).fill('');
   let tickPositions = [];
   let labelPositions = [];
@@ -178,11 +187,19 @@ function setupMonitor(stat) {
   chart.setOption(options);
 
   let tooltipRepeater;
-  const rect = chartContainer.getBoundingClientRect();
+  const rect = chartElement.getBoundingClientRect();
 
-  window.addEventListener('resize', () => chart.resize());
+  window.addEventListener('resize', () => {
+    chart.setOption({
+      animation: false
+    });
+    chart.resize();
+    chart.setOption({
+      animation: true
+    });
+  });
 
-  chartContainer.addEventListener('mouseover', (event) => {
+  chartElement.addEventListener('mouseover', (event) => {
     tooltipRepeater = setInterval(() => {
       chart.dispatchAction({
         type: 'showTip',
@@ -191,7 +208,7 @@ function setupMonitor(stat) {
       });
     }, 100);
   });
-  chartContainer.addEventListener('mouseout', () => {
+  chartElement.addEventListener('mouseout', () => {
     chart.dispatchAction({
       type: 'hideTip',
     });
@@ -249,7 +266,7 @@ function setupMonitor(stat) {
   chartUpdateFunctions.push(updateChart);
 }
 
-const request = new Request(`${window.location.protocol}//${window.location.host}/statInfo`);
+const request = new Request(`/stats`);
 fetch(request).then(response => response.json()).then((stats) => {
   stats.forEach((stat) => {
     setupMonitor(stat);
@@ -263,7 +280,7 @@ fetch(request).then(response => response.json()).then((stats) => {
   }, 1000 / fps);
 });
 
-const socket = new WebSocket(`ws://${window.location.host}/statUpdates`);
+const socket = new WebSocket(`ws://${window.location.host}/stats`);
 socket.onmessage = function onSocketMessage(event) {
   lastUpdateDate = Date.now();
   const eventData = JSON.parse(event.data);
@@ -271,7 +288,93 @@ socket.onmessage = function onSocketMessage(event) {
 
   const dataKeysChanged = JSON.stringify(Object.keys(eventData)) !== JSON.stringify(currentKeys);
   if (currentKeys.length > 0 && dataKeysChanged) {
-    window.location.reload();
+    // window.location.reload();
   }
   currentData = eventData;
 };
+
+const removeStatBox = document.querySelector('.stat-remover select');
+const addStatBox = document.querySelector('.stat-adder select');
+
+document.querySelector('.stat-remover input[type="button"]').addEventListener('click', () => {
+  data = {
+    tag: removeStatBox.value,
+  }
+  const request = new Request(`/stats`, {
+    'method': 'DELETE',
+    'headers': {
+      'Content-Type': 'application/json'
+    },
+    'body': JSON.stringify(data)
+  });
+  fetch(request).then((response) => {
+    if(response.status != 200) {
+      throw response.statusText;
+    }
+    return response;
+  }).then((response) => response.json()).then((response) => {
+    removeStatBox.querySelector(`option[value="${response.tag}"]`).remove();
+
+    optionIndex = bisect(Array.from(addStatBox.children).map((x) => x.value), response.tag);
+    const optionElement = document.createElement('option');
+    optionElement.value = response.tag;
+    optionElement.textContent = response.name;
+    addStatBox.insertBefore(optionElement, addStatBox.children[optionIndex]);
+
+    document.getElementById(response.tag).remove();
+    window.dispatchEvent(new Event('resize'));
+  }).catch((err) => console.error(err));
+});
+
+document.querySelector('.stat-adder input[type="button"]').addEventListener('click', () => {
+  const data = {
+    tag: addStatBox.value,
+    settings: {}
+  };
+  const request = new Request(`/stats`, {
+    'method': 'PUT',
+    'headers': {
+      'Content-Type': 'application/json'
+    },
+    'body': JSON.stringify(data)
+  });
+  fetch(request).then((response) => {
+    if(response.status != 200) {
+      throw response.statusText;
+    }
+    if(document.getElementById(data.tag)) {
+      throw 'Stat already added.';
+    }
+    return response;
+  }).then((response) => response.json()).then((response) => {
+    addStatBox.querySelector(`option[value="${response.tag}"]`).remove();
+
+    optionIndex = bisect(Array.from(removeStatBox.children).map((x) => x.value), response.tag);
+    const optionElement = document.createElement('option');
+    optionElement.value = response.tag;
+    optionElement.textContent = response.name;
+    removeStatBox.insertBefore(optionElement, removeStatBox.children[optionIndex]);
+
+    const chart = document.createElement('div');
+    chart.classList.add('chart-container');
+    chart.id = response.tag;
+
+    const childIds = Array.from(charts.children).map((child) => child.id);
+    const index = bisect(childIds, chart.id);
+
+    charts.insertBefore(chart, charts.children[index]);
+
+    setupMonitor(response);
+    window.dispatchEvent(new Event('resize'));
+  }).catch((err) => console.error(err));
+
+});
+
+function bisect(array, key) {
+  for(let i = 0; i < array.length; i++) {
+    if(array[i] > key) {
+      return i;
+    }
+  }
+  return array.length - 1;
+}
