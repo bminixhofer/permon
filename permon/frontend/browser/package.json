@@ -3,14 +3,20 @@
   "version": "1.0.0",
   "description": "The browser frontend for permon.",
   "main": "__init__.py",
-  "dependencies": {},
+  "dependencies": {
+    "clone": "^2.1.2",
+    "echarts": "^4.2.0-rc.2",
+    "webpack": "^4.25.1"
+  },
   "devDependencies": {
     "eslint": "^5.7.0",
     "eslint-config-airbnb-base": "^13.1.0",
-    "eslint-plugin-import": "^2.14.0"
+    "eslint-plugin-import": "^2.14.0",
+    "webpack-cli": "^3.1.2"
   },
   "scripts": {
-    "test": "eslint . --ignore-pattern static/echarts.min.js"
+    "build": "webpack --display errors-only",
+    "test": "eslint . --ignore-pattern static/bundle.min.js"
   },
   "repository": {
     "type": "git",
