@@ -6,10 +6,19 @@ import QtGraphicalEffects 1.0
 Drawer {
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
     edge: Qt.RightEdge
-    interactive: true
+    interactive: false
+    modal: false
 
     background: Rectangle {
+        anchors.fill: parent
         opacity: 0.9
+
+        Rectangle {
+            z: -1
+            anchors.fill: parent
+            border.width: 2
+            border.color: "#888"
+        }
     }
 
     ColumnLayout {
