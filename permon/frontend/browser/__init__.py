@@ -53,11 +53,13 @@ class BrowserMonitor(Monitor):
 
 
 class BrowserApp(MonitorApp):
-    def __init__(self, stats, colors, buffer_size, fps, port, ip):
+    def __init__(self, stats, colors, buffer_size, fps, port, ip,
+                 open_browser):
         super(BrowserApp, self).__init__(stats, colors, buffer_size, fps)
 
         self.port = port
         self.ip = ip
+        self.open_browser = open_browser
         self.stopped = False
 
     def initialize(self):
@@ -113,9 +115,11 @@ class BrowserApp(MonitorApp):
             data = request.get_json()
             try:
                 stat = backend.get_stats_from_tags(data['tag'])
-                stat.set_settings(data['settings'])
-            except exceptions.InvalidStatError:
-                return Response(status=400)
+            except (exceptions.InvalidStatError,
+                    exceptions.StatNotAvailableError) as e:
+                return Response(str(e), status=400)
+
+            stat.set_settings(data['settings'])
 
             if stat not in self.stats:
                 self.stats.append(stat)
@@ -156,8 +160,7 @@ class BrowserApp(MonitorApp):
             logging_level = None
         server = pywsgi.WSGIServer((self.ip, self.port), self.app,
                                    handler_class=WebSocketHandler,
-                                   log=logging_level,
-                                   error_log=open('trash', 'w'))
+                                   log=logging_level)
         update_thread = threading.Thread(target=self.update_forever)
         update_thread.start()
 
@@ -165,7 +168,8 @@ class BrowserApp(MonitorApp):
             ('http', f'{self.ip}:{self.port}', '/', '', '', '')
         )
 
-        webbrowser.open(url)
+        if self.open_browser:
+            webbrowser.open(url)
 
         stderr = sys.stderr
         try:

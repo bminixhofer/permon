@@ -1,8 +1,11 @@
 import { setupMonitor } from './monitors';
+import { setErrorMessage, clearErrorMessage } from './status';
 
 const charts = document.querySelector('.charts');
 const removeStatBox = document.querySelector('.stat-remover select');
+const removeStatButton = document.querySelector('.stat-remover input');
 const addStatBox = document.querySelector('.stat-adder select');
+const addStatButton = document.querySelector('.stat-adder input');
 
 function bisect(array, key) {
   for (let i = 0; i < array.length; i += 1) {
@@ -13,12 +16,12 @@ function bisect(array, key) {
   return array.length - 1;
 }
 
-function setupChangeStat(select, otherSelect, requestCallback, doneCallback) {
-  select.addEventListener('click', () => {
+function setupChangeStat(button, select, otherSelect, requestCallback, doneCallback) {
+  button.addEventListener('click', () => {
     const request = requestCallback();
     fetch(request).then((response) => {
       if (response.status !== 200) {
-        throw response.statusText;
+        throw response;
       }
       return response;
     }).then(response => response.json()).then((response) => {
@@ -35,8 +38,12 @@ function setupChangeStat(select, otherSelect, requestCallback, doneCallback) {
       doneCallback(response);
 
       window.dispatchEvent(new Event('resize'));
+      clearErrorMessage();
     })
-      .catch();
+      .catch(async (response) => {
+        const text = await response.text();
+        setErrorMessage(text);
+      });
   });
 }
 
@@ -50,7 +57,7 @@ const removeRequestCallback = () => new Request('/stats', {
   }),
 });
 const addRequestCallback = () => new Request('/stats', {
-  method: 'DELETE',
+  method: 'PUT',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -61,19 +68,19 @@ const addRequestCallback = () => new Request('/stats', {
 });
 
 export default function setupSettings() {
-  setupChangeStat(removeStatBox, addStatBox, removeRequestCallback, (response) => {
-    document.getElementById(response.tag).remove();
+  setupChangeStat(removeStatButton, removeStatBox, addStatBox, removeRequestCallback, (res) => {
+    document.getElementById(res.tag).remove();
   });
-  setupChangeStat(addStatBox, removeStatBox, addRequestCallback, (response) => {
+  setupChangeStat(addStatButton, addStatBox, removeStatBox, addRequestCallback, (res) => {
     const chart = document.createElement('div');
     chart.classList.add('chart-container');
-    chart.id = response.tag;
+    chart.id = res.tag;
 
     const childIds = Array.from(charts.children).map(child => child.id);
     const index = bisect(childIds, chart.id);
 
     charts.insertBefore(chart, charts.children[index]);
 
-    setupMonitor(response);
+    setupMonitor(res);
   });
 }

@@ -1,6 +1,6 @@
 import echarts from 'echarts';
 import clone from 'clone';
-import setStatus from './status';
+import { setStatus } from './status';
 
 const charts = document.querySelector('.charts');
 const { fps, buffersize } = charts.dataset;

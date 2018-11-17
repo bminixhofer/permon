@@ -26,6 +26,9 @@ def parse_args(args, current_config):
     browser_parser.add_argument('--ip', type=str, default='localhost', help="""
     the IP address permon will listen on.
     """)
+    browser_parser.add_argument('--no-browser',  action='store_true', default=False, help="""
+    don't open permon in a browser after startup.
+    """)
 
     stat_str = ', '.join(current_config['stats'])
     for subparser in subparsers.choices.values():
@@ -74,7 +77,8 @@ def main():
     if args.subcommand == 'browser':
         app = browser.BrowserApp(stats, colors=colors,
                                  buffer_size=50, fps=1,
-                                 port=args.port, ip=args.ip)
+                                 port=args.port, ip=args.ip,
+                                 open_browser=not args.no_browser)
     elif args.subcommand == 'native':
         app = native.NativeApp(stats, colors=colors,
                                buffer_size=500, fps=10)

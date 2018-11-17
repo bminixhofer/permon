@@ -1,6 +1,7 @@
 const statusBadge = document.querySelector('.status-badge');
+const errorMessage = document.querySelector('.error-message');
 
-export default function setStatus(connected) {
+export function setStatus(connected) {
   if (connected) {
     statusBadge.textContent = 'Connected';
     statusBadge.classList.add('connected');
@@ -8,4 +9,12 @@ export default function setStatus(connected) {
     statusBadge.textContent = 'Not Connected';
     statusBadge.classList.remove('connected');
   }
+}
+
+export function setErrorMessage(message) {
+  errorMessage.textContent = `Error: ${message}`;
+}
+
+export function clearErrorMessage() {
+  errorMessage.textContent = '';
 }

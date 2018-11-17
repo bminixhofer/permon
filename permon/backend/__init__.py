@@ -122,10 +122,7 @@ def get_stats_from_tags(tags):
     stats = []
     for stat in get_all_stats():
         if stat.tag in tags:
-            try:
-                stat.check_availability()
-            except exceptions.StatNotAvailableError:
-                continue
+            stat.check_availability()
             stats.append(stat)
 
     return stats[0] if is_one else stats
