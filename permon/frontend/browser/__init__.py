@@ -72,6 +72,10 @@ class BrowserApp(MonitorApp):
         def assets(path):
             return flask.send_from_directory(self.get_asset_path(), path)
 
+        @self.app.route('/dist/<path:path>')
+        def dist(path):
+            return flask.send_from_directory('dist', path)
+
         @self.app.route('/')
         def index():
             template_args = {
