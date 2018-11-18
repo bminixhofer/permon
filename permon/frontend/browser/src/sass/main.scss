@@ -142,17 +142,19 @@ body {
         align-items: flex-start;
 
         .stat-setting {
-            padding: 0.2em 0;
             display: flex;
             justify-content: space-between;
+            align-items: initial;
             width: 100%;
 
             label {
                 flex: 1;
-                line-height: 2em;
+                font-size: 1.5em;
+                line-height: 3em;
             }
 
             input {
+                margin: 0.3em;
                 flex: 1;
             }
         }
@@ -221,7 +223,7 @@ input[type="button"] {
 input[type="text"] {
     font-family: Roboto Mono;
     text-align: right;
-    padding: 0.8em;
+    padding: 0.3em;
     width: 7em;
     border: none;
     box-shadow: 5px 5px 20px rgba(0,0,0,0.4), 0 3px 6px rgba(0,0,0,0.23);
