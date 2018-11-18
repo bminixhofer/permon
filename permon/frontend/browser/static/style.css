@@ -91,6 +91,36 @@ body {
     align-self: flex-end;
 }
 
+.stat-settings {
+    padding: 0.3em 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-setting {
+    padding: 0.2em 0;
+    display: flex;
+    justify-content: space-between;
+}
+
+.settings input[type="text"] {
+    font-family: Roboto Mono;
+    text-align: right;
+    padding: 0.8em;
+    flex: 1;
+    border: none;
+    box-shadow: 5px 5px 20px rgba(0,0,0,0.4), 0 3px 6px rgba(0,0,0,0.23);
+    outline: none;
+}
+
+.settings label {
+    flex: 1;
+    line-height: 2em;
+    text-transform: capitalize;
+    font-family: Raleway;
+}
+
 .settings select {
     width: 100%;
     height: 2em;

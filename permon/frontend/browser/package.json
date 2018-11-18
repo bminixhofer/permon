@@ -16,7 +16,7 @@
   },
   "scripts": {
     "build": "webpack --display errors-only",
-    "develop": "webpack --watch --progress --display errors-only",
+    "develop": "webpack --watch --progress",
     "test": "eslint . --ignore-pattern static/bundle.min.js"
   },
   "repository": {

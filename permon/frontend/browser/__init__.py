@@ -45,7 +45,7 @@ class BrowserMonitor(Monitor):
             'maximum': self.stat.maximum,
             'tag': self.stat.tag,
             'name': self.stat.name,
-            'history': self.values
+            'history': self.values,
         }
 
     def paint(self):
@@ -86,6 +86,15 @@ class BrowserApp(MonitorApp):
         def get_stats():
             return Response(json.dumps(self.setup_info),
                             mimetype='application/json')
+
+        @self.app.route('/allStats', methods=['GET'])
+        def get_all_stats():
+            info = {}
+            for stat in backend.get_all_stats():
+                info[stat.tag] = {
+                    'settings': stat.settings
+                }
+            return Response(json.dumps(info), mimetype='application/json')
 
         @self.app.route('/stats', methods=['DELETE'])
         def remove_stat():

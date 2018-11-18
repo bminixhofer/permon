@@ -6,6 +6,7 @@ const removeStatBox = document.querySelector('.stat-remover select');
 const removeStatButton = document.querySelector('.stat-remover input');
 const addStatBox = document.querySelector('.stat-adder select');
 const addStatButton = document.querySelector('.stat-adder input');
+const statSettingsDiv = document.querySelector('.stat-settings');
 
 function bisect(array, key) {
   for (let i = 0; i < array.length; i += 1) {
@@ -27,6 +28,7 @@ function setupChangeStat(button, select, otherSelect, requestCallback, doneCallb
     }).then(response => response.json()).then((response) => {
       // remove the element from the current combo box
       select.querySelector(`option[value="${response.tag}"]`).remove();
+      select.dispatchEvent(new Event('change'));
 
       // add the element to the other combo box
       const optionIndex = bisect(Array.from(otherSelect.children).map(x => x.value), response.tag);
@@ -34,6 +36,7 @@ function setupChangeStat(button, select, otherSelect, requestCallback, doneCallb
       optionElement.value = response.tag;
       optionElement.textContent = response.name;
       otherSelect.insertBefore(optionElement, otherSelect.children[optionIndex]);
+      otherSelect.dispatchEvent(new Event('change'));
 
       doneCallback(response);
 
@@ -45,6 +48,7 @@ function setupChangeStat(button, select, otherSelect, requestCallback, doneCallb
         setErrorMessage(text);
       });
   });
+  select.dispatchEvent(new Event('change'));
 }
 
 const removeRequestCallback = () => new Request('/stats', {
@@ -56,18 +60,55 @@ const removeRequestCallback = () => new Request('/stats', {
     tag: removeStatBox.value,
   }),
 });
-const addRequestCallback = () => new Request('/stats', {
-  method: 'PUT',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    tag: addStatBox.value,
-    settings: {},
-  }),
-});
+const addRequestCallback = () => {
+  const settings = {};
+  statSettingsDiv.querySelectorAll('input[type="text"]').forEach((element) => {
+    settings[element.dataset.key] = element.value;
+  });
+  return new Request('/stats', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      tag: addStatBox.value,
+      settings,
+    }),
+  });
+};
 
-export default function setupSettings() {
+function setupStatSettings(select, stats) {
+  select.addEventListener('change', () => {
+    const selectedOption = select.options[select.selectedIndex];
+    const { settings } = stats[selectedOption.value];
+
+    // remove all previous children
+    statSettingsDiv.innerHTML = '';
+    Object.entries(settings).forEach(([key, value]) => {
+      const id = `setting-${key}`;
+
+      const element = document.createElement('input');
+      element.type = 'text';
+      element.id = id;
+      element.dataset.key = key;
+      element.value = value;
+
+      const label = document.createElement('label');
+      label.textContent = key;
+      label.for = id;
+
+      const container = document.createElement('div');
+      container.classList.add('stat-setting');
+      container.appendChild(label);
+      container.appendChild(element);
+
+      statSettingsDiv.append(container);
+    });
+  });
+}
+
+export default function setupSettings(stats) {
+  setupStatSettings(addStatBox, stats);
   setupChangeStat(removeStatButton, removeStatBox, addStatBox, removeRequestCallback, (res) => {
     document.getElementById(res.tag).remove();
   });

@@ -287,21 +287,18 @@ export function setupMonitor(stat) {
   updateFunctions.push(updateChart);
 }
 
-export function setupMonitors() {
+export function setupMonitors(stats) {
   window.addEventListener('mousemove', (event) => {
     mousePos.x = event.pageX;
     mousePos.y = event.pageY;
   });
 
-  const request = new Request('/stats');
-  fetch(request).then(response => response.json()).then((stats) => {
-    stats.forEach(stat => setupMonitor(stat));
-    setInterval(() => {
-      const isConnected = Date.now() - lastUpdateDate < updateTimeout;
-      setStatus(isConnected);
-      if (isConnected) {
-        updateFunctions.forEach(func => func());
-      }
-    }, 1000 / fps);
-  });
+  stats.forEach(stat => setupMonitor(stat));
+  setInterval(() => {
+    const isConnected = Date.now() - lastUpdateDate < updateTimeout;
+    setStatus(isConnected);
+    if (isConnected) {
+      updateFunctions.forEach(func => func());
+    }
+  }, 1000 / fps);
 }
