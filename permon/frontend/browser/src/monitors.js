@@ -60,7 +60,7 @@ const defaultChartOptions = {
   grid: {
     left: 60,
     top: 10,
-    right: '5%',
+    right: 60,
     bottom: 10,
   },
   tooltip: {

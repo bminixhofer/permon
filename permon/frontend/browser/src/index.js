@@ -1,4 +1,4 @@
-import './sass/main.css';
+import './sass/main.scss';
 import { setupSocket, setupMonitors } from './monitors';
 import setupSettings from './settings';
 import { setStatus } from './status';
