@@ -6,10 +6,10 @@
   "dependencies": {
     "clone": "^2.1.2",
     "echarts": "^4.2.0-rc.2",
-    "webpack": "^4.25.1"
+    "webpack": "^4.25.1",
+    "autoprefixer": "^9.3.1"
   },
   "devDependencies": {
-    "autoprefixer": "^9.3.1",
     "clean-webpack-plugin": "^1.0.0",
     "eslint": "^5.7.0",
     "eslint-config-airbnb-base": "^13.1.0",
@@ -20,7 +20,7 @@
   "scripts": {
     "build": "webpack --display --mode=production errors-only",
     "develop": "webpack --watch --progress --mode=development",
-    "test": "eslint . --ignore-pattern static/bundle.min.js"
+    "test": "eslint . --ignore-pattern dist/"
   },
   "repository": {
     "type": "git",

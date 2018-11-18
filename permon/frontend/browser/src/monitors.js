@@ -55,7 +55,25 @@ const defaultContributorAxisOptions = {
   min: 0,
   max: categoryResolution,
 };
-const formatter = value => Math.round(value * 100) / 100;
+
+function formatLabel(label) {
+  const value = Math.abs(label);
+  let out = label;
+  if (value <= 10) {
+    out = Math.round(label * 1000) / 1000;
+  } else if (value <= 100) {
+    out = Math.round(label * 100) / 100;
+  } else if (value <= 1000) {
+    out = Math.round(label * 10) / 10;
+  } else if (value <= 10000) {
+    out = Math.round(label / 50) * 50;
+  } else if (value > 10000) {
+    out = Math.round(label / 100) * 100;
+  }
+
+  return out;
+}
+
 const defaultChartOptions = {
   grid: {
     left: 60,
@@ -66,7 +84,7 @@ const defaultChartOptions = {
   tooltip: {
     trigger: 'axis',
     triggerOn: 'none',
-    formatter: tooltip => formatter(tooltip[0].value[1]),
+    formatter: tooltip => formatLabel(tooltip[0].value[1]),
     axisPointer: {
       type: 'none',
     },
@@ -95,7 +113,7 @@ const defaultChartOptions = {
         },
       },
       axisLabel: {
-        formatter: value => formatter(value),
+        formatter: value => formatLabel(value),
         textStyle: {
           color: 'black',
           fontFamily: 'Roboto Mono',
