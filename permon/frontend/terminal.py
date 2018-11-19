@@ -62,8 +62,7 @@ class TerminalMonitor(Monitor):
 
         interval = float(abs(maximum - minimum))
         # we have to reserve 1 line for the chart title
-        # and 1 to make sure the height is not exceeded
-        height = self.resolution[0] - 2
+        height = self.resolution[0] - 1
 
         if interval > 0:
             ratio = (height - 1) / interval
@@ -179,9 +178,9 @@ class TerminalApp(MonitorApp):
         n_charts = len(self.stats)
 
         # every chart can take up 1 / n_charts of the terminal space
-        # use the height - 1 because the full height seems not to be usable
-        # in some terminals
-        height = (self.term.height - 1) // n_charts
+        # the terminal space is equal to the height - 2 because there can
+        # be one empty line at the top and one at the bottom
+        height = (self.term.height - 2) // n_charts
         resolution = (height, self.term.width)
 
         for i, stat in enumerate(self.stats):
