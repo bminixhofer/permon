@@ -40,6 +40,7 @@ class TerminalMonitor(Monitor):
             contrib = {}
         self.values[-1] = value
         self.latest_contrib = contrib
+        self.paint()
 
     def paint(self):
         minimum = self.stat.minimum
@@ -162,6 +163,12 @@ class TerminalMonitor(Monitor):
 
 
 class TerminalApp(MonitorApp):
+    def add_stat(self, stat):
+        pass
+
+    def remove_stat(self, stat):
+        pass
+
     def initialize(self):
         self.term = blessings.Terminal()
         self.colors = [self.term.green, self.term.red, self.term.blue,
@@ -191,17 +198,10 @@ class TerminalApp(MonitorApp):
 
         try:
             while True:
+                print(self.term.move(0, 1))
                 self.update()
-                self.paint()
                 time.sleep(1 / self.fps)
         except KeyboardInterrupt:
             print(self.term.exit_fullscreen())
             # explicitly delete monitors to stop threads run by stats
             del self.monitors
-
-    def paint(self):
-        # every frame, paint all monitors and move the cursor
-        # back to the start
-        print(self.term.move(0, 1))
-        for monitor in self.monitors:
-            monitor.paint()

@@ -10,6 +10,7 @@ from PySide2.QtCore import (Qt, QUrl, QAbstractListModel, QObject, QModelIndex,
 import PySide2.QtGui as QtGui
 from PySide2.QtQuick import QQuickView
 from permon.frontend import Monitor, MonitorApp
+from permon.backend import Stat
 from permon import exceptions
 
 
@@ -32,9 +33,6 @@ class NativeMonitor(Monitor):
 
         self.value = value
         self.contributors = contributors
-
-    def paint(self):
-        pass
 
 
 class MonitorModel(QAbstractListModel):
@@ -94,7 +92,8 @@ class MonitorModel(QAbstractListModel):
 
 
 class SettingsModel(QObject):
-    statsChanged = Signal(list)
+    statAdded = Signal(Stat)
+    statRemoved = Signal(Stat)
 
     def __init__(self, app):
         super(SettingsModel, self).__init__()
@@ -111,13 +110,12 @@ class SettingsModel(QObject):
         except exceptions.StatNotAvailableError as e:
             return str(e)
 
-        self.statsChanged.emit(self.app.get_displayed_stats() + [stat])
+        self.statAdded.emit(stat)
 
     @Slot(int)
     def removeStat(self, index):
         stat = self.app.get_displayed_stats()[index]
-        stats_without_removed = set(self.app.get_displayed_stats()) - {stat}
-        self.statsChanged.emit(list(stats_without_removed))
+        self.statRemoved.emit(stat)
 
     @Slot(int, result=str)
     def getSettings(self, index):
@@ -154,37 +152,26 @@ class NativeApp(MonitorApp):
         self.monitors = self.monitor_model.monitors
 
         self.settings_model = SettingsModel(self)
-        self.settings_model.statsChanged.connect(self.adjust_monitors)
+        self.settings_model.statAdded.connect(self.add_stat)
+        self.settings_model.statRemoved.connect(self.remove_stat)
 
-    def adjust_monitors(self, stats):
-        displayed_stats = []
-        removed_monitors = []
+    def add_stat(self, stat):
+        monitor = NativeMonitor(stat, color=self.next_color(),
+                                **self.monitor_params)
+        self.monitor_model.addMonitor(monitor)
+        logging.info(f'Added {stat.tag}')
 
-        for monitor in self.monitors.copy():
-            if type(monitor.stat) in stats:
-                displayed_stats.append(type(monitor.stat))
-            else:
-                removed_monitors.append(monitor)
-                self.monitor_model.removeMonitor(monitor)
+    def remove_stat(self, stat):
+        monitor_of_stat = None
+        for monitor in self.monitors:
+            if type(monitor.stat) == stat:
+                monitor_of_stat = monitor
 
-        new_stats = list(set(stats) - set(displayed_stats))
-        new_stats = sorted(new_stats, key=lambda stat: stat.tag)
-
-        for stat in new_stats:
-            monitor = NativeMonitor(stat, color=self.next_color(),
-                                    **self.monitor_params)
-            self.monitor_model.addMonitor(monitor)
-
-        if logging.getLogger().isEnabledFor(logging.INFO):
-            displayed = [stat.tag for stat in displayed_stats] or 'No Monitors'
-            new = [stat.tag for stat in new_stats] or 'No Monitors'
-            removed = [monitor.stat.tag for monitor in removed_monitors] or \
-                'No Monitors'
-
-            logging.info('Adjusted monitors')
-            logging.info(f'{displayed} were already displayed')
-            logging.info(f'{new} were added')
-            logging.info(f'{removed} were removed')
+        if monitor is not None:
+            self.monitor_model.removeMonitor(monitor_of_stat)
+            logging.info(f'Removed {stat.tag}')
+        else:
+            logging.error(f'Removing {stat.tag} failed')
 
     def initialize(self):
         if self.qapp is None:
@@ -203,7 +190,8 @@ class NativeApp(MonitorApp):
             font = QtGui.QFont('Raleway')
             self.qapp.setFont(font)
 
-        self.adjust_monitors(self.stats)
+        for stat in self.stats:
+            self.add_stat(stat)
 
         view = QQuickView()
         view.setResizeMode(QQuickView.SizeRootObjectToView)
@@ -239,6 +227,3 @@ class NativeApp(MonitorApp):
         del self.settings_model
         del self.monitor_model
         self.qapp.exit()
-
-    def paint():
-        pass

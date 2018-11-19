@@ -26,10 +26,6 @@ class Monitor(ABC):
     def update(self):
         pass
 
-    @abstractmethod
-    def paint(self):
-        pass
-
 
 class MonitorApp(ABC):
     @classmethod
@@ -41,7 +37,7 @@ class MonitorApp(ABC):
     def __init__(self, stats, colors, buffer_size, fps):
         assert len(colors) > 0, 'App must have at least one color.'
 
-        self.stats = stats
+        self._initial_stats = stats
         self.colors = colors
         self._color_index = 0
         self.buffer_size = buffer_size
@@ -75,10 +71,20 @@ class MonitorApp(ABC):
     def initialize(self):
         pass
 
+    @abstractmethod
+    def add_stat(self, stat):
+        pass
+
+    @abstractmethod
+    def remove_stat(self, stat):
+        pass
+
     def update(self):
         for monitor in self.monitors:
             monitor.update()
 
-    @abstractmethod
-    def paint(self):
-        pass
+    @property
+    def stats(self):
+        if len(self.monitors) > 0:
+            return [monitor.stat for monitor in self.monitors]
+        return self._initial_stats
