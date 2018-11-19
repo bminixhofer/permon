@@ -4,7 +4,7 @@ __version__ = '1.0.0'
 import logging
 import sys
 from permon.frontend import native, terminal, browser
-from permon import config, backend
+from permon import config, backend, exceptions
 
 
 def parse_args(args, current_config):
@@ -85,6 +85,14 @@ def main():
     elif args.subcommand == 'terminal':
         app = terminal.TerminalApp(stats, colors=colors,
                                    buffer_size=500, fps=10)
+
+    try:
+        app.check_availability()
+    except exceptions.FrontendNotAvailableError as e:
+        logging.error(
+            f'frontend "{args.subcommand}" is not available. Reason: {str(e)}')
+        sys.exit(1)
+
     app.initialize()
 
 

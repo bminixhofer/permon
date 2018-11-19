@@ -79,6 +79,9 @@ class MonitorApp(ABC):
     def remove_stat(self, stat):
         pass
 
+    def check_availability(self):
+        pass
+
     def update(self):
         for monitor in self.monitors:
             monitor.update()

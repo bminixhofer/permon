@@ -1,8 +1,19 @@
 import math
 import time
-import blessings
+import os
+import importlib
 import numpy as np
 from permon.frontend import Monitor, MonitorApp, utils
+from permon import exceptions
+# support pip 9 and pip >= 10
+try:
+    from pip import main as pipmain
+except ImportError:
+    from pip._internal import main as pipmain
+
+# blessings will be imported later if possible
+# because it is not available on windows
+blessings = None
 
 
 class TerminalMonitor(Monitor):
@@ -204,3 +215,24 @@ class TerminalApp(MonitorApp):
             print(self.term.exit_fullscreen())
             # explicitly delete monitors to stop threads run by stats
             del self.monitors
+
+    def check_availability(self):
+        global blessings
+
+        try:
+            blessings = importlib.import_module('blessings')
+        except ImportError:
+            if os.name == 'nt':
+                raise exceptions.FrontendNotAvailableError(
+                    'The terminal frontend is currently '
+                    'not available on windows.')
+
+            choice = input('Required package "blessings" is not installed. '
+                           'Install? (y)es / (n)o: ')
+
+            if choice.lower() in ['y', 'yes']:
+                pipmain(['install', 'blessings'])
+                blessings = importlib.import_module('blessings')
+            else:
+                raise exceptions.FrontendNotAvailableError(
+                    'Blessings is not installed.')

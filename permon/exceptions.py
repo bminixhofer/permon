@@ -8,3 +8,7 @@ class InvalidStatError(Exception):
 
 class StatNotAvailableError(Exception):
     pass
+
+
+class FrontendNotAvailableError(Exception):
+    pass
