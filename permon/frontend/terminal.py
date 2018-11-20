@@ -191,7 +191,7 @@ class TerminalApp(MonitorApp):
         height = (self.term.height - 2) // n_charts
         resolution = (height, self.term.width)
 
-        for i, stat in enumerate(self.stats):
+        for i, stat in enumerate(self.initial_stats):
             monitor = TerminalMonitor(stat,
                                       buffer_size=self.buffer_size,
                                       fps=self.fps,

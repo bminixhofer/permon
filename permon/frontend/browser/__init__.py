@@ -170,7 +170,7 @@ class BrowserApp(MonitorApp):
         self.app = flask.Flask(__name__)
         self.sockets = flask_sockets.Sockets(self.app)
 
-        for stat in self.stats:
+        for stat in self.initial_stats:
             self.add_stat(stat)
 
         self.app.route('/')(self._get_index)

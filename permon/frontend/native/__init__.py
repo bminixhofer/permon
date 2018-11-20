@@ -100,7 +100,7 @@ class NativeApp(MonitorApp):
             font = QtGui.QFont('Raleway')
             self.qapp.setFont(font)
 
-        for stat in self.stats:
+        for stat in self.initial_stats:
             self.add_stat(stat)
 
         view = QtQuick.QQuickView()

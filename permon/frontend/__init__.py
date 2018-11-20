@@ -56,14 +56,14 @@ class MonitorApp(ABC):
     def __init__(self, stats, colors, buffer_size, fps):
         assert len(colors) > 0, 'App must have at least one color.'
 
-        self._initial_stats = stats
+        self.initial_stats = stats
         self.colors = colors
         self._color_index = 0
         self.buffer_size = buffer_size
         self.fps = fps
         self.monitors = []
 
-        if len(self.stats) == 0:
+        if len(self.initial_stats) == 0:
             raise exceptions.NoStatError()
 
     def get_all_stats(self):
@@ -107,6 +107,4 @@ class MonitorApp(ABC):
 
     @property
     def stats(self):
-        if len(self.monitors) > 0:
-            return [monitor.stat for monitor in self.monitors]
-        return self._initial_stats
+        return [monitor.stat for monitor in self.monitors]
