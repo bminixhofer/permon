@@ -1,6 +1,5 @@
 import sys
 import pytest
-import numpy as np
 import warnings
 import permon
 from permon.frontend import native, terminal, browser
@@ -21,7 +20,6 @@ for stat in backend.get_all_stats():
 
 
 def check_if_valid_number(x):
-    assert not np.isnan(x)
     assert isinstance(x, float) or isinstance(x, int)
 
 

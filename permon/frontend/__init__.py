@@ -2,7 +2,6 @@ import os
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 from importlib import util
-import numpy as np
 from permon import exceptions, backend
 
 # support pip 9 and pip >= 10
@@ -18,7 +17,7 @@ class Monitor(ABC):
         self.stat = stat(fps=fps)
 
         if self.stat.minimum is not None and self.stat.maximum is not None:
-            assert np.abs(self.stat.maximum - self.stat.minimum) > 0, \
+            assert abs(self.stat.maximum - self.stat.minimum) > 0, \
                 'Graph range must be greater than zero.'
 
         self.buffer_size = buffer_size

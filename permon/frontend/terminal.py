@@ -1,7 +1,6 @@
 import math
 import time
 import os
-import numpy as np
 from permon.frontend import Monitor, MonitorApp, utils
 from permon import exceptions
 
@@ -27,8 +26,7 @@ class TerminalMonitor(Monitor):
         self.r_axis_width = right_axis_width
         # fill unknown history with the minimum value (or 0 if it is unknown)
         axis_space = self.axis_width + self.r_axis_width
-        self.values = np.full(resolution[1] - axis_space,
-                              self.stat.minimum or 0, dtype=np.float32)
+        self.values = [self.stat.minimum or 0.] * (resolution[1] - axis_space)
         self.symbols = {
             'axis': ' ┤',
             'right_axis': '├',
@@ -41,14 +39,14 @@ class TerminalMonitor(Monitor):
         }
 
     def update(self):
-        self.values = np.roll(self.values, -1, axis=0)
+        del self.values[0]
 
         if self.stat.has_contributor_breakdown:
             value, contrib = self.stat.get_stat()
         else:
             value = self.stat.get_stat()
             contrib = {}
-        self.values[-1] = value
+        self.values.append(value)
         self.latest_contrib = contrib
         self.paint()
 
@@ -58,7 +56,7 @@ class TerminalMonitor(Monitor):
 
         # if we dont know the min or max and they cant be determined by
         # the history, we have to set some defaults (e. g. -1 and 1)
-        range_is_zero = np.max(self.values) == np.min(self.values)
+        range_is_zero = max(self.values) == min(self.values)
         if minimum is None:
             if range_is_zero:
                 minimum = -self.values[0] - 1
@@ -80,8 +78,8 @@ class TerminalMonitor(Monitor):
             ratio = 1
 
         # round to the 4th decimal to avoid small float errors from python
-        min_cell = int(np.floor(round(minimum * ratio, 4)))
-        max_cell = int(np.ceil(round(maximum * ratio, 4)))
+        min_cell = int(math.floor(round(minimum * ratio, 4)))
+        max_cell = int(math.ceil(round(maximum * ratio, 4)))
 
         rows = max(abs(max_cell - min_cell), 1)
         width = len(self.values)

@@ -1,5 +1,4 @@
 blessings==1.6.1
-numpy==1.14.0
 psutil==5.4.1
 PySide2==5.11.1
 flake8==3.5.0
