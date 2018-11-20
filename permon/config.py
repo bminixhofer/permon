@@ -28,7 +28,7 @@ def get_config():
     return config
 
 
-def set_config(custom_config={}):
+def set_config(custom_config):
     assert set(custom_config.keys()).issubset(set(default_config.keys())), \
         'custom config keys must exist in the default config.'
     # merge custom config into default config
@@ -52,3 +52,7 @@ def show_config():
     print(f'Config directory: {config_dir}')
     print(f'Config path: {config_path}')
     print(f'Config: {config_str}')
+
+
+def reset_config():
+    set_config({})

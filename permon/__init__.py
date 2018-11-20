@@ -47,7 +47,7 @@ def parse_args(args, current_config):
             """)
 
     config_parser = subparsers.add_parser('config')
-    config_parser.add_argument('command', choices=['edit', 'show'], help=f"""
+    config_parser.add_argument('command', choices=['edit', 'show', 'reset'], help=f"""
     which command to run.
     """)
 
@@ -63,6 +63,8 @@ def main():
             config.edit_config()
         if args.command == 'show':
             config.show_config()
+        if args.command == 'reset':
+            config.reset_config()
         sys.exit(0)
 
     stat_tags = args.stats
