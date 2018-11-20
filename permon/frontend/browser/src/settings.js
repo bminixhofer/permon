@@ -2,6 +2,9 @@ import { setupMonitor } from './monitors';
 import { setErrorMessage, clearErrorMessage } from './status';
 
 const charts = document.querySelector('.charts');
+const settingsElement = document.querySelector('.settings');
+const settingsToggle = document.querySelector('#settings-toggle');
+const settingsToggleLabel = document.querySelector('.settings-toggle-label');
 const removeStatBox = document.querySelector('.stat-remover select');
 const removeStatButton = document.querySelector('.stat-remover input');
 const addStatBox = document.querySelector('.stat-adder select');
@@ -108,6 +111,13 @@ function setupStatSettings(select, stats) {
 }
 
 export default function setupSettings(stats) {
+  window.addEventListener('click', (event) => {
+    if (![settingsToggle, settingsToggleLabel].includes(event.target) &&
+        !settingsElement.contains(event.target)) {
+      settingsToggle.checked = false;
+    }
+  });
+
   setupStatSettings(addStatBox, stats);
   setupChangeStat(removeStatButton, removeStatBox, addStatBox, removeRequestCallback, (res) => {
     document.getElementById(res.tag).remove();

@@ -4,6 +4,7 @@ import json
 import threading
 import time
 import logging
+import bisect
 from permon.frontend import MonitorApp, Monitor
 from permon import backend, exceptions
 
@@ -144,7 +145,10 @@ class BrowserApp(MonitorApp):
                                  buffer_size=self.buffer_size,
                                  fps=self.fps,
                                  app=self)
-        self.monitors.append(monitor)
+        tags = [stat.tag for stat in self.stats]
+        new_index = bisect.bisect(tags, monitor.stat.tag)
+
+        self.monitors.insert(new_index, monitor)
         logging.info(f'Added {stat.tag}')
         return monitor
 

@@ -88,6 +88,8 @@ const defaultChartOptions = {
     axisPointer: {
       type: 'none',
     },
+    position: point => [point[0], '0'],
+    extraCssText: 'height: calc(100% - 10px); border-radius: 0; border-left: 2px solid #333; background: none; color: #333;',
   },
   xAxis: {
     type: 'value',
@@ -226,7 +228,6 @@ export function setupMonitor(stat) {
   chart.setOption(chartOptions);
 
   let tooltipRepeater;
-  const rect = chartElement.getBoundingClientRect();
 
   window.addEventListener('resize', () => {
     chart.setOption({
@@ -240,6 +241,7 @@ export function setupMonitor(stat) {
 
   chartElement.addEventListener('mouseover', (event) => {
     tooltipRepeater = setInterval(() => {
+      const rect = chartElement.getBoundingClientRect();
       chart.dispatchAction({
         type: 'showTip',
         x: (mousePos.x || event.pageX) - rect.x,
