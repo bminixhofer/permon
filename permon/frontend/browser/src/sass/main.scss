@@ -13,13 +13,15 @@ $secondary: #48cfad;
 
 html {
     font-size: 10px;
+    overflow: hidden;
 }
 
 body {
+    overflow: hidden;
     margin: 0;
     padding: 0;
     background-color: white;
-    overflow: hidden;
+    position: relative;
 }
 
 .header {

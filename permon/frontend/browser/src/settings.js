@@ -112,8 +112,8 @@ function setupStatSettings(select, stats) {
 
 export default function setupSettings(stats) {
   window.addEventListener('click', (event) => {
-    if (![settingsToggle, settingsToggleLabel].includes(event.target) &&
-        !settingsElement.contains(event.target)) {
+    if (![settingsToggle, settingsToggleLabel].includes(event.target)
+        && !settingsElement.contains(event.target)) {
       settingsToggle.checked = false;
     }
   });
