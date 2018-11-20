@@ -6,7 +6,6 @@ import os
 import sys
 from shutil import rmtree
 from setuptools import setup, Command, find_packages
-import permon
 
 # Package meta-data.
 NAME = 'permon'
@@ -15,13 +14,15 @@ URL = 'https://github.com/bminixhofer/permon'
 EMAIL = 'bminixhofer@gmail.com'
 AUTHOR = 'Benjamin Minixhofer'
 REQUIRES_PYTHON = '>=3.6.0'
-VERSION = permon.__version__
 
 REQUIRED = [
-    'numpy', 'psutil'
+    'numpy', 'psutil', 'appdirs', 'jupyter_client'
 ]
 
 here = os.path.abspath(os.path.dirname(__file__))
+package_root = os.path.join(here, 'permon')
+VERSION = open(os.path.join(package_root, 'VERSION')).read()
+
 
 with io.open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = '\n' + f.read()

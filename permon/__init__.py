@@ -1,10 +1,13 @@
 #!/usr/bin/env python
-__version__ = '1.0.0'
 
 import logging
 import sys
+import os
 from permon.frontend import native, terminal, browser
 from permon import config, backend, exceptions
+
+here = os.path.abspath(os.path.dirname(__file__))
+__version__ = open(os.path.join(here, 'VERSION')).read()
 
 
 def parse_args(args, current_config):
@@ -87,7 +90,7 @@ def main():
                                    buffer_size=500, fps=10)
 
     try:
-        app.check_availability()
+        app.make_available()
     except exceptions.FrontendNotAvailableError as e:
         logging.error(
             f'frontend "{args.subcommand}" is not available. Reason: {str(e)}')

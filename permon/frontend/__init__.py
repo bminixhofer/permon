@@ -1,8 +1,15 @@
 import os
 from abc import ABC, abstractmethod
 from collections import OrderedDict
+from importlib import util
 import numpy as np
 from permon import exceptions, backend
+
+# support pip 9 and pip >= 10
+try:
+    from pip import main as pipmain
+except ImportError:
+    from pip._internal import main as pipmain
 
 
 class Monitor(ABC):
@@ -33,6 +40,19 @@ class MonitorApp(ABC):
         directory_path = os.path.dirname(__file__)
         absolute_path = os.path.join(directory_path, 'assets', *relative_path)
         return absolute_path
+
+    @classmethod
+    def verify_installed(cls, package_name):
+        spec = util.find_spec(package_name)
+        if spec is None or spec.loader is None:
+            choice = input(f'Required package "{package_name}" is '
+                           'not installed. Install? (y)es / (n)o: ')
+
+            if choice.lower() in ['y', 'yes']:
+                pipmain(['install', package_name])
+            else:
+                raise exceptions.FrontendNotAvailableError(
+                    f'{package_name} is not installed.')
 
     def __init__(self, stats, colors, buffer_size, fps):
         assert len(colors) > 0, 'App must have at least one color.'
@@ -79,7 +99,7 @@ class MonitorApp(ABC):
     def remove_stat(self, stat):
         pass
 
-    def check_availability(self):
+    def make_available(self):
         pass
 
     def update(self):

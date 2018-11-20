@@ -4,15 +4,22 @@ import json
 import threading
 import time
 import logging
-import flask
-from flask import Flask, Response, request
-from flask_sockets import Sockets
-import gevent
-from gevent import pywsgi
-import geventwebsocket
-from geventwebsocket.handler import WebSocketHandler
 from permon.frontend import MonitorApp, Monitor
 from permon import backend, exceptions
+
+flask = None
+flask_sockets = None
+gevent = None
+geventwebsocket = None
+
+
+def import_delayed():
+    import flask  # noqa: F401
+    import flask_sockets  # noqa: F401
+    import gevent  # noqa: F401
+    import geventwebsocket  # noqa: F401
+
+    globals().update(locals().copy())
 
 
 class BrowserMonitor(Monitor):
@@ -74,7 +81,8 @@ class BrowserApp(MonitorApp):
 
     def _get_stat(self):
         stat_info = [monitor.get_json_info() for monitor in self.monitors]
-        return Response(json.dumps(stat_info), mimetype='application/json')
+        return flask.Response(json.dumps(stat_info),
+                              mimetype='application/json')
 
     def _get_all_stats(self):
         info = {}
@@ -82,7 +90,7 @@ class BrowserApp(MonitorApp):
             info[stat.tag] = {
                 'settings': stat.settings
             }
-        return Response(json.dumps(info), mimetype='application/json')
+        return flask.Response(json.dumps(info), mimetype='application/json')
 
     def _get_stat_updates(self, ws):
         origin = ws.origin
@@ -105,31 +113,31 @@ class BrowserApp(MonitorApp):
             gevent.sleep(1 / self.fps)
 
     def _add_stat_handler(self):
-        data = request.get_json()
+        data = flask.request.get_json()
         try:
             stat = backend.get_stats_from_tags(data['tag'])
         except (exceptions.InvalidStatError,
                 exceptions.StatNotAvailableError) as e:
-            return Response(str(e), status=400)
+            return flask.Response(str(e), status=400)
 
         if stat in self.stats:
-            return Response('Stat already added.', status=400)
+            return flask.Response('Stat already added.', status=400)
 
         stat.set_settings(data['settings'])
         monitor = self.add_stat(stat)
-        return Response(json.dumps(monitor.get_json_info()),
-                        status=200, mimetype='application/json')
+        return flask.Response(json.dumps(monitor.get_json_info()),
+                              status=200, mimetype='application/json')
 
     def _remove_stat_handler(self):
-        data = request.get_json()
+        data = flask.request.get_json()
         try:
             stat = backend.get_stats_from_tags(data['tag'])
         except exceptions.InvalidStatError:
-            return Response(status=400)
+            return flask.Response(status=400)
 
         monitor = self.remove_stat(stat)
-        return Response(json.dumps(monitor.get_json_info()),
-                        status=200, mimetype='application/json')
+        return flask.Response(json.dumps(monitor.get_json_info()),
+                              status=200, mimetype='application/json')
 
     def add_stat(self, stat):
         monitor = BrowserMonitor(stat, color=self.next_color(),
@@ -155,8 +163,8 @@ class BrowserApp(MonitorApp):
         return monitor_of_stat
 
     def initialize(self):
-        self.app = Flask(__name__)
-        self.sockets = Sockets(self.app)
+        self.app = flask.Flask(__name__)
+        self.sockets = flask_sockets.Sockets(self.app)
 
         for stat in self.stats:
             self.add_stat(stat)
@@ -174,9 +182,10 @@ class BrowserApp(MonitorApp):
             logging_level = 'default'
         else:
             logging_level = None
-        server = pywsgi.WSGIServer((self.ip, self.port), self.app,
-                                   handler_class=WebSocketHandler,
-                                   log=logging_level)
+        handler = geventwebsocket.handler.WebSocketHandler
+        server = gevent.pywsgi.WSGIServer((self.ip, self.port), self.app,
+                                          handler_class=handler,
+                                          log=logging_level)
         update_thread = threading.Thread(target=self.update_forever)
         update_thread.start()
 
@@ -201,3 +210,9 @@ class BrowserApp(MonitorApp):
         while not self.stopped:
             self.update()
             time.sleep(1 / self.fps)
+
+    def make_available(self):
+        self.verify_installed('flask')
+        self.verify_installed('flask_sockets')
+
+        import_delayed()
