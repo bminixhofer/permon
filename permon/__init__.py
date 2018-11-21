@@ -3,6 +3,7 @@
 import logging
 import sys
 import os
+import permon
 from permon.frontend import native, terminal, browser
 from permon import config, backend, exceptions
 
@@ -14,49 +15,57 @@ def parse_args(args, current_config):
     from argparse import ArgumentParser
 
     parser = ArgumentParser()
+    parser.add_argument('--version', action='store_true', default=False, help="""
+        show permon's version and exit
+    """)
+
     subparsers = parser.add_subparsers(dest='subcommand', help="""
     the subcommand to launch.
     When terminal, browser or native, runs the respective frontend.
-    When config, runs command to interact with configuration.
+    When config, runs command to interact with configuration
     """)
 
     subparsers.add_parser('terminal')
     subparsers.add_parser('native')
     browser_parser = subparsers.add_parser('browser')
     browser_parser.add_argument('--port', type=int, default=1234, help="""
-    the port permon will listen on.
+    the port permon will listen on
     """)
     browser_parser.add_argument('--ip', type=str, default='localhost', help="""
-    the IP address permon will listen on.
+    the IP address permon will listen on
     """)
     browser_parser.add_argument('--no-browser',  action='store_true', default=False, help="""
-    don't open permon in a browser after startup.
+    don't open permon in a browser after startup
     """)
 
     stat_str = ', '.join(current_config['stats'])
     for subparser in subparsers.choices.values():
         subparser.add_argument('stats', nargs='*', default=current_config['stats'], help=f"""
-        which stats to display.
+        which stats to display
         If none are given, take those from the config file ({stat_str})
         """)
         if subparser.prog != 'permon terminal':
             # verbose logging is not possible for permon terminal
             # because it needs standard out to display stats
             subparser.add_argument('--verbose', action='store_true', default=current_config['verbose'], help=f"""
-            whether to display verbose logging.
+            whether to enable verbose logging
             """)
 
     config_parser = subparsers.add_parser('config')
     config_parser.add_argument('command', choices=['edit', 'show', 'reset'], help=f"""
-    which command to run.
+    which command to run
     """)
 
-    return parser.parse_args(args)
+    return parser, parser.parse_args(args)
 
 
 def main():
     current_config = config.get_config()
-    args = parse_args(sys.argv[1:], current_config)
+    parser, args = parse_args(sys.argv[1:], current_config)
+
+    if args.version:
+        print(permon.__version__)
+        sys.exit(0)
 
     if args.subcommand == 'config':
         if args.command == 'edit':
@@ -67,6 +76,10 @@ def main():
             config.reset_config()
         sys.exit(0)
 
+    if args.subcommand is None:
+        parser.print_help()
+        parser.exit(1)
+
     stat_tags = args.stats
     stats = backend.get_stats_from_tags(stat_tags)
 
@@ -75,7 +88,7 @@ def main():
 
     verbose = 0 if args.subcommand == 'terminal' else args.verbose
     logging_level = logging.INFO if verbose else logging.WARNING
-    logging.basicConfig(format='%(asctime)s %(message)s',
+    logging.basicConfig(format='%(asctime)s \t %(message)s',
                         datefmt='%d-%m-%Y %I:%M:%S %p',
                         level=logging_level)
 

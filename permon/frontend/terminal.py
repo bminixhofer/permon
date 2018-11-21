@@ -183,7 +183,7 @@ class TerminalApp(MonitorApp):
 
         assert self.term.is_a_tty, \
             'Attempting to run in a non-tty environment.'
-        n_charts = len(self.stats)
+        n_charts = len(self.initial_stats)
 
         # every chart can take up 1 / n_charts of the terminal space
         # the terminal space is equal to the height - 2 because there can
