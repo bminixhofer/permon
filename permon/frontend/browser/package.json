@@ -4,17 +4,22 @@
   "description": "The browser frontend for permon.",
   "main": "__init__.py",
   "dependencies": {
+    "autoprefixer": "^9.3.1",
     "clone": "^2.1.2",
     "echarts": "^4.2.0-rc.2",
-    "webpack": "^4.25.1",
-    "autoprefixer": "^9.3.1"
+    "node-sass": "^4.10.0",
+    "webpack": "^4.25.1"
   },
   "devDependencies": {
     "clean-webpack-plugin": "^1.0.0",
+    "css-loader": "^1.0.1",
     "eslint": "^5.7.0",
     "eslint-config-airbnb-base": "^13.1.0",
     "eslint-plugin-import": "^2.14.0",
     "mini-css-extract-plugin": "^0.4.4",
+    "postcss-loader": "^3.0.0",
+    "sass-loader": "^7.1.0",
+    "style-loader": "^0.23.1",
     "webpack-cli": "^3.1.2"
   },
   "scripts": {
