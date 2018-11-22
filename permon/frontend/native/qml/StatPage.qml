@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick 2.11
 import QtQuick.Controls 2.0
 import QtQuick.Layouts 1.11
 import QtGraphicalEffects 1.0
@@ -78,6 +78,7 @@ Page {
     }
 
     ListView {
+        z: 1
         id: listView
         objectName: "listView"
         model: monitorModel
@@ -146,6 +147,31 @@ Page {
 
             LineSeries {
                 axisYRight: contributorAxis
+            }
+
+            TextMetrics {
+                id: textMetrics
+                font.family: "Roboto Mono"
+                font.pixelSize: valueAxis.labelsFont.pixelSize
+                text: "x"
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+
+                hoverEnabled: true
+                onPositionChanged: function(event) {
+                    var baseSize = textMetrics.advanceWidth;
+                    tooltip.x = Math.min(Math.max(event.x, baseSize * (statPage.leftMargin + 1) + 15), parent.width - baseSize * (statPage.rightMargin) - 18);
+                }
+            }
+
+            Rectangle {
+                id: tooltip
+                color: 'black'
+                height: parent.height - 20
+                width: 3
             }
 
             Timer {
