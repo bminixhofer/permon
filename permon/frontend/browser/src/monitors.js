@@ -89,6 +89,9 @@ const defaultChartOptions = {
       type: 'none',
     },
     position: point => [point[0], '0'],
+    textStyle: {
+      fontFamily: 'Roboto Mono',
+    },
     extraCssText: 'height: calc(100% - 10px); border-radius: 0; border-left: 2px solid #333; background: none; color: #333;',
   },
   xAxis: {

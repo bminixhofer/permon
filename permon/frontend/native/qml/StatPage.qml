@@ -34,12 +34,6 @@ Page {
                 }
 
                 Label {
-                    font.pixelSize: 26
-                    color: "white"
-                    text: "Stats"
-                }
-
-                Label {
                     Layout.fillWidth: true
                     property string message;
 
