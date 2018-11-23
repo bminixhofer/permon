@@ -149,35 +149,53 @@ Page {
                 axisYRight: contributorAxis
             }
 
-            TextMetrics {
-                id: textMetrics
-                font.family: "Roboto Mono"
-                font.pixelSize: valueAxis.labelsFont.pixelSize
-                text: "x"
-            }
-
             MouseArea {
-                anchors.fill: parent
+                y: tooltip.y
+                height: tooltip.height
+                x: chartView.plotArea.x
+                width: chartView.plotArea.width
                 cursorShape: Qt.PointingHandCursor
 
                 hoverEnabled: true
                 onPositionChanged: function(event) {
-                    var baseSize = textMetrics.advanceWidth;
-                    tooltip.x = Math.min(Math.max(event.x, baseSize * (statPage.leftMargin + 1) + 15), parent.width - baseSize * (statPage.rightMargin) - 18);
+                    tooltip.x = Math.min(Math.max(x + event.x, tooltip.minimum), tooltip.maximum);
+                    timer.refreshTooltip();
+                }
+                onEntered: {
+                    tooltip.visible = true;
+                }
+                onExited: {
+                    tooltip.visible = false;
                 }
             }
 
             Rectangle {
                 id: tooltip
-                color: 'black'
-                height: parent.height - 20
-                width: 3
+                property var minimum: chartView.plotArea.x
+                property var maximum: chartView.plotArea.x + chartView.plotArea.width
+                property var relativePosition: (x - minimum) / (maximum - minimum)
+                property var text: ""
+
+                color: '#333'
+                opacity: 0.7
+                height: chartView.plotArea.height
+                y: chartView.plotArea.y
+                width: 2
+                visible: false
+
+                Text {
+                    x: 5
+                    font.family: "Roboto Mono"
+                    font.pixelSize: 10
+                    text: tooltip.text
+                }
             }
 
             Timer {
                 property int timeline: 0
                 property bool valueLabelsInitialized: false
                 property var values: []
+                id: timer
                 interval: 1000 / model.fps
                 running: true
                 repeat: true
@@ -191,6 +209,11 @@ Page {
 
                     axisX.min++;
                     axisX.max++;
+
+                    // update tooltip
+                    if(tooltip.visible) {
+                        refreshTooltip();
+                    }
 
                     // update contributors
                     var contributorCount = contributorAxis.count;
@@ -249,28 +272,35 @@ Page {
                         valueAxis.append(axisLabels[i], axisValues[i]);
                     }
                 }
+                function formatValue(x, maxValue) {
+                    var result;
+                    if(maxValue <= 10) {
+                        result = x.toFixed(3);
+                    } else if(maxValue <= 100) {
+                        result = x.toFixed(2);
+                    } else if(maxValue <= 1000) {
+                        result = x.toFixed(1);
+                    } else if(maxValue <= 10000) {
+                        result = Math.floor(x / 50) * 50;
+                    } else if(maxValue > 10000) {
+                        result = Math.floor(x / 50) * 50;
+                    }
+                    return result ? result.toString() : "";
+                }
                 function formatLabels(axisValues) {
                     var maxValue = Math.abs(Math.max.apply(null, axisValues));
 
-                    function formatValue(x) {
-                        var result;
-                        if(maxValue <= 10) {
-                            result = x.toFixed(3);
-                        } else if(maxValue <= 100) {
-                            result = x.toFixed(2);
-                        } else if(maxValue <= 1000) {
-                            result = x.toFixed(1);
-                        } else if(maxValue <= 10000) {
-                            result = Math.floor(x / 50) * 50;
-                        } else if(maxValue > 10000) {
-                            result = Math.floor(x / 50) * 50;
-                        }
-                        result = result.toString();
+                    return axisValues.map(function(x) {
+                        var result = formatValue(x, maxValue);
                         var paddingLeft = '\u00A0'.repeat(Math.max(statPage.leftMargin - result.length, 0));
                         var paddingRight = '\u00A0';
+
                         return paddingLeft + result + paddingRight;
-                    }
-                    return axisValues.map(formatValue);
+                    });
+                }
+                function refreshTooltip() {
+                    var hoveredValue = values[Math.floor(tooltip.relativePosition * (model.bufferSize - 1))];
+                    tooltip.text = formatValue(hoveredValue, hoveredValue);
                 }
                 Component.onCompleted: {
                     for(var i = 0; i < model.bufferSize; i++) {
