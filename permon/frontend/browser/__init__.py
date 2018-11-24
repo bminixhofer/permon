@@ -179,7 +179,7 @@ class BrowserApp(MonitorApp):
         new_index = bisect.bisect(tags, monitor.stat.tag)
 
         self.monitors.insert(new_index, monitor)
-        logging.info(f'Added {stat.tag}')
+        super(BrowserApp, self).add_stat(stat)
         return monitor
 
     def remove_stat(self, stat):
@@ -190,7 +190,7 @@ class BrowserApp(MonitorApp):
 
         if monitor_of_stat is not None:
             self.monitors.remove(monitor_of_stat)
-            logging.info(f'Removed {stat.tag}')
+            super(BrowserApp, self).remove_stat(stat)
         else:
             logging.error(f'Removing {stat.tag} failed')
 

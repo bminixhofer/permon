@@ -2,7 +2,8 @@ import os
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 from importlib import util
-from permon import exceptions, backend
+import logging
+from permon import exceptions, backend, config
 
 # support pip 9 and pip >= 10
 try:
@@ -90,13 +91,23 @@ class MonitorApp(ABC):
     def initialize(self):
         pass
 
-    @abstractmethod
     def add_stat(self, stat):
-        pass
+        previous_stats = config.get_config()['stats'].copy()
+        if stat.tag not in previous_stats:
+            previous_stats.append(stat.tag)
+        config.set_config({
+            'stats': previous_stats
+        })
+        logging.info(f'Added stat {stat.tag}')
 
-    @abstractmethod
     def remove_stat(self, stat):
-        pass
+        previous_stats = config.get_config()['stats'].copy()
+        if stat.tag in previous_stats:
+            previous_stats.remove(stat.tag)
+        config.set_config({
+            'stats': previous_stats
+        })
+        logging.info(f'Removed stat {stat.tag}')
 
     def make_available(self):
         pass

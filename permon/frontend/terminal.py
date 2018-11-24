@@ -170,12 +170,6 @@ class TerminalMonitor(Monitor):
 
 
 class TerminalApp(MonitorApp):
-    def add_stat(self, stat):
-        pass
-
-    def remove_stat(self, stat):
-        pass
-
     def initialize(self):
         self.term = blessings.Terminal()
         self.colors = [self.term.green, self.term.red, self.term.blue,

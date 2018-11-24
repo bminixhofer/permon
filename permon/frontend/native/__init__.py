@@ -62,7 +62,7 @@ class NativeApp(MonitorApp):
         monitor = NativeMonitor(stat, color=self.next_color(),
                                 **self.monitor_params)
         self.monitor_model.addMonitor(monitor)
-        logging.info(f'Added {stat.tag}')
+        super(NativeApp, self).add_stat(stat)
 
     def remove_stat(self, stat):
         monitor_of_stat = None
@@ -70,9 +70,9 @@ class NativeApp(MonitorApp):
             if type(monitor.stat) == stat:
                 monitor_of_stat = monitor
 
-        if monitor is not None:
+        if monitor_of_stat is not None:
             self.monitor_model.removeMonitor(monitor_of_stat)
-            logging.info(f'Removed {stat.tag}')
+            super(NativeApp, self).remove_stat(stat)
         else:
             logging.error(f'Removing {stat.tag} failed')
 
