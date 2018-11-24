@@ -34,11 +34,8 @@ body {
     box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
 
     .error-message {
-        font-size: 1.2em;
         margin-left: auto;
         margin-right: 1em;
-        font-family: Roboto Mono;
-        color: #ed5565;
     }
 
     .status-badge {
@@ -89,7 +86,13 @@ body {
         font-size: 3em;
         margin-bottom: 0.5em;
         padding: 0.2em 0.3em;
+        width: 12em;
+        max-width: 80vw;
         box-shadow: 3px 3px 10px rgba(0,0,0,0.4);
+    }
+
+    .error-message {
+        height: 2.5em;
     }
 }
 
@@ -242,4 +245,10 @@ input[type="text"] {
     border: none;
     box-shadow: 5px 5px 20px rgba(0,0,0,0.4), 0 3px 6px rgba(0,0,0,0.23);
     outline: none;
+}
+
+.error-message {
+    font-size: 1.2em;
+    font-family: Roboto Mono;
+    color: #ed5565;
 }

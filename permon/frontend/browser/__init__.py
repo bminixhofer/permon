@@ -5,8 +5,9 @@ import threading
 import time
 import logging
 import bisect
+import secrets
 from permon.frontend import MonitorApp, Monitor
-from permon import backend, exceptions, security
+from permon import backend, exceptions, security, config
 
 flask = None
 flask_sockets = None
@@ -67,6 +68,7 @@ class BrowserApp(MonitorApp):
         self.port = port
         self.ip = ip
         self.open_browser = open_browser
+        self.password_hash = config.get_config()['password']
         self.stopped = False
 
     def _get_assets(self, path):
@@ -76,20 +78,33 @@ class BrowserApp(MonitorApp):
         return flask.send_from_directory('dist', path)
 
     def _get_index(self):
+        if not flask_login.current_user.is_authenticated:
+            token = flask.request.args.get('token')
+            if token and token == self.password_hash:
+                flask_login.login_user(self.user)
+            else:
+                return flask.redirect('/login')
+
         template_args = {
-                'fps': self.fps,
-                'buffer_size': self.buffer_size,
-                'displayed_stats': self.get_displayed_stats(),
-                'not_displayed_stats': self.get_not_displayed_stats()
-            }
+            'fps': self.fps,
+            'buffer_size': self.buffer_size,
+            'displayed_stats': self.get_displayed_stats(),
+            'not_displayed_stats': self.get_not_displayed_stats()
+        }
         return flask.render_template('index.html', **template_args)
 
     def _get_login(self):
+        if flask_login.current_user.is_authenticated:
+            return flask.redirect('/')
         return flask.send_from_directory('static', 'login.html')
 
     def _post_login(self):
-        flask_login.login_user(self.user)
-        return flask.redirect('/')
+        password = flask.request.get_json()['password']
+        if password == self.password_hash:
+            flask_login.login_user(self.user)
+            return flask.redirect('/')
+
+        return flask.Response('Wrong password or login token.', status=401)
 
     def _get_stat(self):
         stat_info = [monitor.get_json_info() for monitor in self.monitors]
@@ -108,6 +123,9 @@ class BrowserApp(MonitorApp):
         origin = ws.origin
         logging.info(f'{origin} connected')
         while not ws.closed:
+            if not flask_login.current_user.is_authenticated:
+                break
+
             stat_updates = dict()
             for monitor in self.monitors:
                 if monitor.contributors:
@@ -178,7 +196,16 @@ class BrowserApp(MonitorApp):
         return monitor_of_stat
 
     def initialize(self):
-        self.user = User(id=0)
+        if self.password_hash is None:
+            token = secrets.token_hex()
+            logging.warning(('No password set. '
+                             'A random token to login has been generated: '
+                             f'{token}'))
+            self.password_hash = security.encrypt_password(token)
+
+        # make the user id a function of the password so that sessions
+        # are invalidated when the password changes
+        self.user = User(id=security.encrypt_password(self.password_hash))
 
         self.app = flask.Flask(__name__)
         self.app.config.update(
@@ -186,15 +213,18 @@ class BrowserApp(MonitorApp):
         )
         self.login_manager = flask_login.LoginManager(app=self.app)
         self.login_manager.login_view = '_get_login'
-        self.login_manager.user_loader(lambda user_id: self.user)
 
+        def user_loader(user_id):
+            return self.user if user_id == self.user.id else None
+
+        self.login_manager.user_loader(user_loader)
         self.sockets = flask_sockets.Sockets(self.app)
 
         for stat in self.initial_stats:
             self.add_stat(stat)
 
         routings = {
-            ('/', 'GET'): [flask_login.login_required, self._get_index],
+            ('/', 'GET'): [self._get_index],
             ('/login', 'GET'): [self._get_login],
             ('/login', 'POST'): [self._post_login],
             ('/assets/<path:path>', 'GET'): [self._get_assets],
@@ -232,10 +262,12 @@ class BrowserApp(MonitorApp):
         update_thread.start()
 
         url = parse.urlunparse(
-            ('http', f'{self.ip}:{self.port}', '/', '', '', '')
+            ('http', f'{self.ip}:{self.port}', '/',
+             '', f'token={self.password_hash}', '')
         )
 
         if self.open_browser:
+            logging.info(f'Opening {url}')
             webbrowser.open(url)
 
         try:

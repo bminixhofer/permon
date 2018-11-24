@@ -20,15 +20,17 @@ def get_secret_key():
         return token
 
 
+def encrypt_password(password):
+    return hashlib.sha256(password.encode('utf-8')).hexdigest()
+
+
 def prompt_password():
     passwords_match = False
     while not passwords_match:
-        password = hashlib.sha256(
-            getpass.getpass('Enter Password: ').encode('utf-8')
-        ).hexdigest()
-        verify_password = hashlib.sha256(
-            getpass.getpass('Verify Password: ').encode('utf-8')
-        ).hexdigest()
+        password = encrypt_password(getpass.getpass('Enter Password: '))
+        verify_password = encrypt_password(
+            getpass.getpass('Verify Password: '))
+
         if password == verify_password:
             passwords_match = True
         else:
