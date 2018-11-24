@@ -5,7 +5,7 @@ import sys
 import os
 import permon
 from permon.frontend import native, terminal, browser
-from permon import config, backend, exceptions
+from permon import config, backend, exceptions, security
 
 here = os.path.abspath(os.path.dirname(__file__))
 __version__ = open(os.path.join(here, 'VERSION')).read()
@@ -56,6 +56,8 @@ def parse_args(args, current_config):
     which command to run
     """)
 
+    subparsers.add_parser('password')
+
     return parser, parser.parse_args(args)
 
 
@@ -74,6 +76,10 @@ def main():
             config.show_config()
         if args.command == 'reset':
             config.reset_config()
+        sys.exit(0)
+
+    if args.subcommand == 'password':
+        security.prompt_password()
         sys.exit(0)
 
     if args.subcommand is None:

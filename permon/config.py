@@ -13,7 +13,8 @@ default_config = {
               'core.write_speed'],
     'colors': ['#ed5565', '#ffce54', '#48cfad', '#sd9cec', '#ec87c0',
                '#fc6e51', '#a0d468', '#4fc1e9', '#ac92ec'],
-    'verbose': False
+    'verbose': False,
+    'password': None
 }
 
 
