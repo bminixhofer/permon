@@ -146,7 +146,8 @@ const defaultChartOptions = {
 let lastUpdateDate = Date.now();
 
 export function setupSocket() {
-  const socket = new WebSocket(`ws://${window.location.host}/stats`);
+  const webSocketPrefix = window.location.protocol === 'http:' ? 'ws' : 'wss';
+  const socket = new WebSocket(`${webSocketPrefix}://${window.location.host}/stats`);
   socket.onmessage = function onSocketMessage(event) {
     lastUpdateDate = Date.now();
     const eventData = JSON.parse(event.data);

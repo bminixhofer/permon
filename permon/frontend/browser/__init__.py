@@ -62,12 +62,13 @@ class BrowserMonitor(Monitor):
 
 class BrowserApp(MonitorApp):
     def __init__(self, stats, colors, buffer_size, fps, port, ip,
-                 open_browser):
+                 open_browser, ssl_context=None):
         super(BrowserApp, self).__init__(stats, colors, buffer_size, fps)
 
         self.port = port
         self.ip = ip
         self.open_browser = open_browser
+        self.ssl_context = ssl_context
         self.password_hash = config.get_config()['password']
         self.stopped = False
 
@@ -254,15 +255,22 @@ class BrowserApp(MonitorApp):
             logging_level = 'default'
         else:
             logging_level = None
+
         handler = geventwebsocket.handler.WebSocketHandler
+        ssl_args = {
+            'certfile': self.ssl_context[0],
+            'keyfile': self.ssl_context[1]
+        } if self.ssl_context else {}
+
         server = gevent.pywsgi.WSGIServer((self.ip, self.port), self.app,
                                           handler_class=handler,
-                                          log=logging_level)
+                                          log=logging_level, **ssl_args)
         update_thread = threading.Thread(target=self.update_forever)
         update_thread.start()
 
+        protocol = 'https' if self.ssl_context else 'http'
         url = parse.urlunparse(
-            ('http', f'{self.ip}:{self.port}', '/',
+            (protocol, f'{self.ip}:{self.port}', '/',
              '', f'token={self.password_hash}', '')
         )
 

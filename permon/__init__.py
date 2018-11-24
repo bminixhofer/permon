@@ -37,6 +37,12 @@ def parse_args(args, current_config):
     browser_parser.add_argument('--no-browser',  action='store_true', default=False, help="""
     don't open permon in a browser after startup
     """)
+    browser_parser.add_argument('--certfile', type=str, help="""
+    the path to an SSL/TLS certificate file
+    """)
+    browser_parser.add_argument('--keyfile', type=str, help="""
+    the path to a private key file for usage with SSL/TLS
+    """)
 
     stat_str = ', '.join(current_config['stats'])
     for subparser in subparsers.choices.values():
@@ -99,10 +105,19 @@ def main():
                         level=logging_level)
 
     if args.subcommand == 'browser':
+        ssl_context = None
+        if args.certfile and args.keyfile:
+            ssl_context = (args.certfile, args.keyfile)
+        if bool(args.certfile) != bool(args.keyfile):
+            raise ValueError(
+                'either certfile and keyfile or none of both must be supplied.'
+            )
+
         app = browser.BrowserApp(stats, colors=colors,
                                  buffer_size=50, fps=1,
                                  port=args.port, ip=args.ip,
-                                 open_browser=not args.no_browser)
+                                 open_browser=not args.no_browser,
+                                 ssl_context=ssl_context)
     elif args.subcommand == 'native':
         app = native.NativeApp(stats, colors=colors,
                                buffer_size=500, fps=10)
