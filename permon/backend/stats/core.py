@@ -97,6 +97,10 @@ class ProcessTracker():
 class CPUStat(Stat):
     name = 'CPU Usage [%]'
     base_tag = 'cpu_usage'
+    default_settings = {
+        'smoothing': 3,
+        'fit': 'best'
+    }
 
     def __init__(self, fps):
         self.proc_tracker = ProcessTracker()

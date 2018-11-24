@@ -6,19 +6,23 @@ import time
 import logging
 import bisect
 from permon.frontend import MonitorApp, Monitor
-from permon import backend, exceptions
+from permon import backend, exceptions, security
 
 flask = None
 flask_sockets = None
+flask_login = None
 gevent = None
 geventwebsocket = None
+User = None
 
 
 def import_delayed():
     import flask  # noqa: F401
     import flask_sockets  # noqa: F401
+    import flask_login  # noqa: F401
     import gevent  # noqa: F401
     import geventwebsocket  # noqa: F401
+    from permon.frontend.browser.utils import User  # noqa: F401
 
     globals().update(locals().copy())
 
@@ -79,6 +83,13 @@ class BrowserApp(MonitorApp):
                 'not_displayed_stats': self.get_not_displayed_stats()
             }
         return flask.render_template('index.html', **template_args)
+
+    def _get_login(self):
+        return flask.send_from_directory('static', 'login.html')
+
+    def _post_login(self):
+        flask_login.login_user(self.user)
+        return flask.redirect('/')
 
     def _get_stat(self):
         stat_info = [monitor.get_json_info() for monitor in self.monitors]
@@ -167,20 +178,47 @@ class BrowserApp(MonitorApp):
         return monitor_of_stat
 
     def initialize(self):
+        self.user = User(id=0)
+
         self.app = flask.Flask(__name__)
+        self.app.config.update(
+            SECRET_KEY=security.get_secret_key()
+        )
+        self.login_manager = flask_login.LoginManager(app=self.app)
+        self.login_manager.login_view = '_get_login'
+        self.login_manager.user_loader(lambda user_id: self.user)
+
         self.sockets = flask_sockets.Sockets(self.app)
 
         for stat in self.initial_stats:
             self.add_stat(stat)
 
-        self.app.route('/')(self._get_index)
-        self.app.route('/assets/<path:path>')(self._get_assets)
-        self.app.route('/dist/<path:path>')(self._get_from_build_dir)
-        self.app.route('/allStats', methods=['GET'])(self._get_all_stats)
-        self.app.route('/stats', methods=['GET'])(self._get_stat)
-        self.app.route('/stats', methods=['DELETE'])(self._remove_stat_handler)
-        self.app.route('/stats', methods=['PUT'])(self._add_stat_handler)
-        self.sockets.route('/stats')(self._get_stat_updates)
+        routings = {
+            ('/', 'GET'): [flask_login.login_required, self._get_index],
+            ('/login', 'GET'): [self._get_login],
+            ('/login', 'POST'): [self._post_login],
+            ('/assets/<path:path>', 'GET'): [self._get_assets],
+            ('/dist/<path:path>', 'GET'): [self._get_from_build_dir],
+            ('/allStats', 'GET'): [flask_login.login_required,
+                                   self._get_all_stats],
+            ('/stats', 'GET'): [flask_login.login_required, self._get_stat],
+            ('/stats', 'DELETE'): [flask_login.login_required,
+                                   self._remove_stat_handler],
+            ('/stats', 'PUT'): [flask_login.login_required,
+                                self._add_stat_handler]
+        }
+
+        for (rule, method), functions in routings.items():
+            # start with the last function in the list (index n)
+            result_func = functions[-1]
+            # apply functions with indeces from n - 1 to 0 to the base function
+            for function in functions[:-1][::-1]:
+                result_func = function(result_func)
+
+            self.app.route(rule, methods=[method])(result_func)
+
+        self.sockets.route('/stats')(flask_login.login_required(
+            self._get_stat_updates))
 
         if logging.getLogger().isEnabledFor(logging.INFO):
             logging_level = 'default'
@@ -218,5 +256,6 @@ class BrowserApp(MonitorApp):
     def make_available(self):
         self.verify_installed('flask')
         self.verify_installed('flask_sockets')
+        self.verify_installed('flask_login')
 
         import_delayed()
