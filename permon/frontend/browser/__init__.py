@@ -146,7 +146,7 @@ class BrowserApp(MonitorApp):
     def _add_stat_handler(self):
         data = flask.request.get_json()
         try:
-            stat = backend.get_stats_from_tags(data['tag'])
+            stat = backend.get_stats_from_repr(data)
         except (exceptions.InvalidStatError,
                 exceptions.StatNotAvailableError) as e:
             return flask.Response(str(e), status=400)
@@ -154,7 +154,6 @@ class BrowserApp(MonitorApp):
         if stat in self.stats:
             return flask.Response('Stat already added.', status=400)
 
-        stat.set_settings(data['settings'])
         monitor = self.add_stat(stat)
         return flask.Response(json.dumps(monitor.get_json_info()),
                               status=200, mimetype='application/json')
@@ -162,7 +161,7 @@ class BrowserApp(MonitorApp):
     def _remove_stat_handler(self):
         data = flask.request.get_json()
         try:
-            stat = backend.get_stats_from_tags(data['tag'])
+            stat = backend.get_stats_from_repr(data['tag'])
         except exceptions.InvalidStatError:
             return flask.Response(status=400)
 

@@ -7,15 +7,34 @@ config_dir = user_config_dir('permon', 'bminixhofer')
 config_path = os.path.join(config_dir, 'config.json')
 
 default_config = {
-    'stats': ['core.cpu_usage',
-              'core.ram_usage',
-              'core.read_speed',
-              'core.write_speed'],
+    'stats': [
+        'core.cpu_usage',
+        'core.ram_usage',
+        'core.read_speed',
+        'core.write_speed'
+    ],
     'colors': ['#ed5565', '#ffce54', '#48cfad', '#sd9cec', '#ec87c0',
                '#fc6e51', '#a0d468', '#4fc1e9', '#ac92ec'],
     'verbose': True,
     'password': None
 }
+
+
+def parse_stats(stats):
+    is_one = False
+    if not isinstance(stats, list):
+        is_one = True
+        stats = [stats]
+    else:
+        stats = stats.copy()
+
+    for i in range(len(stats)):
+        if isinstance(stats[i], str):
+            stats[i] = {
+                'tag': stats[i],
+                'settings': {}
+            }
+    return stats[0] if is_one else stats
 
 
 def get_config():

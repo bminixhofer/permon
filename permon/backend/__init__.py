@@ -2,7 +2,7 @@ import os
 from abc import ABC, abstractmethod
 import importlib
 import inspect
-from permon import exceptions
+from permon import exceptions, config
 
 
 class Stat(ABC):
@@ -49,13 +49,13 @@ class Stat(ABC):
 
     @classmethod
     def set_settings(cls, settings):
-        assert set(settings.keys()) == set(cls.default_settings.keys())
+        assert set(settings.keys()).issubset(set(cls.default_settings.keys()))
 
-        for key, value in cls.default_settings.items():
-            key_type = type(value)
+        for key, value in settings.items():
+            key_type = type(cls.default_settings[key])
             # cast the settings value to the type
             # specified in the default settings
-            cls.settings[key] = key_type(settings[key])
+            cls.settings[key] = key_type(value)
 
     @classmethod
     def check_availability(cls):
@@ -111,19 +111,26 @@ def get_all_stats():
     return stats
 
 
-def get_stats_from_tags(tags):
+def get_stats_from_repr(stat_repr):
     is_one = False
-    if not isinstance(tags, list):
+    if not isinstance(stat_repr, list):
         is_one = True
-        tags = [tags]
+        stat_repr = [stat_repr]
 
+    stat_dicts = config.parse_stats(stat_repr)
+    tags = [x['tag'] for x in stat_dicts]
     verify_tags(tags)
 
     stats = []
     for stat in get_all_stats():
-        if stat.tag in tags:
+        try:
+            index = tags.index(stat.tag)
             stat.check_availability()
+            stat.set_settings(stat_dicts[index]['settings'])
+
             stats.append(stat)
+        except ValueError:
+            continue
 
     return stats[0] if is_one else stats
 

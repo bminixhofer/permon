@@ -92,20 +92,32 @@ class MonitorApp(ABC):
         pass
 
     def add_stat(self, stat):
-        previous_stats = config.get_config()['stats'].copy()
-        if stat.tag not in previous_stats:
-            previous_stats.append(stat.tag)
+        stats = config.get_config()['stats'].copy()
+        if stat.tag not in stats:
+            if stat.settings == stat.default_settings:
+                stats.append(stat.tag)
+            else:
+                stats.append({
+                    'tag': stat.tag,
+                    'settings': stat.settings
+                })
         config.set_config({
-            'stats': previous_stats
+            'stats': stats
         })
         logging.info(f'Added stat {stat.tag}')
 
     def remove_stat(self, stat):
-        previous_stats = config.get_config()['stats'].copy()
-        if stat.tag in previous_stats:
-            previous_stats.remove(stat.tag)
+        stats = config.get_config()['stats'].copy()
+        tags = [x['tag'] for x in config.parse_stats(stats)]
+        try:
+            index = tags.index(stat.tag)
+            del stats[index]
+        except ValueError:
+            logging.error((f'Removing stat {stat.tag} failed. '
+                           'Stat might already have been removed.'
+                           ))
         config.set_config({
-            'stats': previous_stats
+            'stats': stats
         })
         logging.info(f'Removed stat {stat.tag}')
 

@@ -44,7 +44,8 @@ def parse_args(args, current_config):
     the path to a private key file for usage with SSL/TLS
     """)
 
-    stat_str = ', '.join(current_config['stats'])
+    stat_tags = [x['tag'] for x in config.parse_stats(current_config['stats'])]
+    stat_str = ', '.join(stat_tags)
     for subparser in subparsers.choices.values():
         subparser.add_argument('stats', nargs='*', default=current_config['stats'], help=f"""
         which stats to display
@@ -92,8 +93,7 @@ def main():
         parser.print_help()
         parser.exit(1)
 
-    stat_tags = args.stats
-    stats = backend.get_stats_from_tags(stat_tags)
+    stats = backend.get_stats_from_repr(args.stats)
 
     # determines which colors are used in frontends that support custom colors
     colors = current_config['colors']
