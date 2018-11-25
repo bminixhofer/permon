@@ -221,7 +221,7 @@ Page {
                         agg += contributor[1];
                         contributorAxis.append(paddingLeft + contributor[0], agg);
                     });
-                    contributorAxis.append('<font color="white">' + '\u00A0'.repeat(statPage.rightMargin) + '</font>', contributorAxis.max);
+                    contributorAxis.append('<font color="white">' + '\u00A0'.repeat(statPage.rightMargin) + '</font>', contributorAxis.max + 1);
 
                     if(model.maximum == null || model.minimum == null) {
                         var dataMax = Math.max.apply(null, values);
