@@ -58,13 +58,13 @@ class NativeApp(MonitorApp):
             'thickness': line_thickness
         }
 
-    def add_stat(self, stat):
+    def add_stat(self, stat, add_to_config=True):
         monitor = NativeMonitor(stat, color=self.next_color(),
                                 **self.monitor_params)
         self.monitor_model.addMonitor(monitor)
-        super(NativeApp, self).add_stat(stat)
+        super(NativeApp, self).add_stat(stat, add_to_config=add_to_config)
 
-    def remove_stat(self, stat):
+    def remove_stat(self, stat, remove_from_config=True):
         monitor_of_stat = None
         for monitor in self.monitors:
             if type(monitor.stat) == stat:
@@ -72,7 +72,8 @@ class NativeApp(MonitorApp):
 
         if monitor_of_stat is not None:
             self.monitor_model.removeMonitor(monitor_of_stat)
-            super(NativeApp, self).remove_stat(stat)
+            super(NativeApp, self).remove_stat(
+                stat, remove_from_config=remove_from_config)
         else:
             logging.error(f'Removing {stat.tag} failed')
 
@@ -101,7 +102,7 @@ class NativeApp(MonitorApp):
             self.qapp.setFont(font)
 
         for stat in self.initial_stats:
-            self.add_stat(stat)
+            self.add_stat(stat, add_to_config=False)
 
         view = QtQuick.QQuickView()
         view.setResizeMode(QtQuick.QQuickView.SizeRootObjectToView)

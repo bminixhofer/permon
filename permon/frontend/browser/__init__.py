@@ -169,7 +169,7 @@ class BrowserApp(MonitorApp):
         return flask.Response(json.dumps(monitor.get_json_info()),
                               status=200, mimetype='application/json')
 
-    def add_stat(self, stat):
+    def add_stat(self, stat, add_to_config=True):
         monitor = BrowserMonitor(stat, color=self.next_color(),
                                  buffer_size=self.buffer_size,
                                  fps=self.fps,
@@ -178,10 +178,10 @@ class BrowserApp(MonitorApp):
         new_index = bisect.bisect(tags, monitor.stat.tag)
 
         self.monitors.insert(new_index, monitor)
-        super(BrowserApp, self).add_stat(stat)
+        super(BrowserApp, self).add_stat(stat, add_to_config=add_to_config)
         return monitor
 
-    def remove_stat(self, stat):
+    def remove_stat(self, stat, remove_from_config=True):
         monitor_of_stat = None
         for monitor in self.monitors:
             if type(monitor.stat) == stat:
@@ -189,7 +189,8 @@ class BrowserApp(MonitorApp):
 
         if monitor_of_stat is not None:
             self.monitors.remove(monitor_of_stat)
-            super(BrowserApp, self).remove_stat(stat)
+            super(BrowserApp, self).remove_stat(
+                stat, remove_from_config=remove_from_config)
         else:
             logging.error(f'Removing {stat.tag} failed')
 
@@ -221,7 +222,7 @@ class BrowserApp(MonitorApp):
         self.sockets = flask_sockets.Sockets(self.app)
 
         for stat in self.initial_stats:
-            self.add_stat(stat)
+            self.add_stat(stat, add_to_config=False)
 
         routings = {
             ('/', 'GET'): [self._get_index],

@@ -91,34 +91,38 @@ class MonitorApp(ABC):
     def initialize(self):
         pass
 
-    def add_stat(self, stat):
-        stats = config.get_config()['stats'].copy()
-        if stat.tag not in stats:
-            if stat.settings == stat.default_settings:
-                stats.append(stat.tag)
-            else:
-                stats.append({
-                    'tag': stat.tag,
-                    'settings': stat.settings
-                })
-        config.set_config({
-            'stats': stats
-        })
+    def add_stat(self, stat, add_to_config=True):
+        if add_to_config:
+            stats = config.get_config()['stats'].copy()
+            tags = [x['tag'] for x in config.parse_stats(stats)]
+
+            if stat.tag not in tags:
+                if stat.settings == stat.default_settings:
+                    stats.append(stat.tag)
+                else:
+                    stats.append({
+                        'tag': stat.tag,
+                        'settings': stat.settings
+                    })
+            config.set_config({
+                'stats': stats
+            })
         logging.info(f'Added stat {stat.tag}')
 
-    def remove_stat(self, stat):
-        stats = config.get_config()['stats'].copy()
-        tags = [x['tag'] for x in config.parse_stats(stats)]
-        try:
-            index = tags.index(stat.tag)
-            del stats[index]
-        except ValueError:
-            logging.error((f'Removing stat {stat.tag} failed. '
-                           'Stat might already have been removed.'
-                           ))
-        config.set_config({
-            'stats': stats
-        })
+    def remove_stat(self, stat, remove_from_config=True):
+        if remove_from_config:
+            stats = config.get_config()['stats'].copy()
+            tags = [x['tag'] for x in config.parse_stats(stats)]
+            try:
+                index = tags.index(stat.tag)
+                del stats[index]
+            except ValueError:
+                logging.error((f'Removing stat {stat.tag} failed. '
+                               'Stat might already have been removed.'
+                               ))
+            config.set_config({
+                'stats': stats
+            })
         logging.info(f'Removed stat {stat.tag}')
 
     def make_available(self):
