@@ -24,7 +24,7 @@ StatPage {
     SettingsDrawer {
         id: settingsDrawer
         y: page.header.height
-        width: page.width * 0.2
+        width: Math.max(page.width * 0.2, 400)
         height: page.height - page.header.height
     }
 }

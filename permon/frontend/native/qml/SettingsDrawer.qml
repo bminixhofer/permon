@@ -62,6 +62,7 @@ Drawer {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.bottomMargin: 40
+                spacing: 8
 
                 Repeater {
                     id: settingsRepeater
@@ -85,7 +86,7 @@ Drawer {
                             text: modelData["defaultValue"]
 
                             background: Rectangle {
-                                implicitWidth: 100
+                                implicitWidth: 220
                                 implicitHeight: 40
                             }
 
