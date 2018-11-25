@@ -1,8 +1,10 @@
 import os
 from abc import ABC, abstractmethod
-import importlib
-import inspect
+import glob
+import runpy
 from permon import exceptions, config
+
+_imported_stats = False
 
 
 class Stat(ABC):
@@ -27,12 +29,11 @@ class Stat(ABC):
     @classmethod
     def _init_tags(cls):
         if not cls._initialized:
-            full_path = inspect.getfile(cls)
-            filename = os.path.splitext(os.path.basename(full_path))[0]
-
+            base = os.path.basename(cls.__module__)
+            root_tag = base[:base.index('.permon.py')]
             # define tag and root_tag
             # base_tag has already been defined by the stat creator
-            cls.root_tag = filename
+            cls.root_tag = root_tag
             cls.tag = f'{cls.root_tag}.{cls.base_tag}'
             cls.settings = cls.default_settings.copy()
 
@@ -89,16 +90,29 @@ class Stat(ABC):
 
 
 def _import_all_stats():
-    file_dir = os.path.dirname(os.path.realpath(__file__))
-    stat_files = os.listdir(os.path.join(file_dir, 'stats'))
-    for f in stat_files:
-        base, ext = os.path.splitext(f)
-        if ext == '.py':
-            importlib.import_module(f'permon.backend.stats.{base}')
+    here = os.path.dirname(os.path.realpath(__file__))
+    default_stat_dir = os.path.join(here, 'stats', '*.permon.py')
+    custom_stat_dir = os.path.join(config.config_dir, 'stats', '*.permon.py')
+
+    default_stat_files = glob.glob(default_stat_dir)
+    custom_stat_files = glob.glob(custom_stat_dir)
+
+    dup = set(os.path.basename(x) for x in default_stat_files).intersection(
+          set(os.path.basename(x) for x in custom_stat_files))
+    assert len(dup) == 0, \
+        ('Custom stat files must not have the same name as default ones. '
+         f'{dup} collides.')
+
+    for path in default_stat_files + custom_stat_files:
+        runpy.run_path(path, run_name=path)
 
 
 def get_all_stats():
-    _import_all_stats()
+    global _imported_stats
+
+    if not _imported_stats:
+        _import_all_stats()
+        _imported_stats = True
 
     if os.name == 'posix':
         stats = Stat.linux_classes
