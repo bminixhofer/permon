@@ -14,6 +14,10 @@ from permon import exceptions
 class JupyterRAMUsage(Stat):
     name = 'RAM Usage of objects in a Python Jupyter Notebook [MB]'
     base_tag = 'ram_usage'
+    default_settings = {
+        'connection info': '',
+        'query interval [s]': 1.
+    }
 
     @classmethod
     def _read_latest_connection_file(cls):
@@ -39,13 +43,19 @@ class JupyterRAMUsage(Stat):
             return json.load(f)
 
     @classmethod
+    def get_connection_info(cls):
+        if len(cls.settings['connection info']) == 0:
+            return cls._read_latest_connection_file()
+        return json.loads(cls.settings['connection info'])
+
+    @classmethod
     def check_availability(cls):
-        if cls._read_latest_connection_file() is None:
-            raise exceptions.StatNotAvailableError(
-                'Could not find any running kernel.')
+            if cls.get_connection_info() is None:
+                raise exceptions.StatNotAvailableError(
+                    'Could not find any running kernel.')
 
     def __init__(self, fps):
-        self.config = self._read_latest_connection_file()
+        self.config = self.get_connection_info()
         data_dir = appdirs.user_data_dir('permon', 'bminixhofer')
         os.makedirs(data_dir, exist_ok=True)
 
@@ -79,7 +89,7 @@ if '_permon_running' not in globals() or not _permon_running:
                 writer = csv.writer(f, delimiter=',')
                 for name, ram in ram_usage:
                     writer.writerow([name, ram])
-            time.sleep(10)
+            time.sleep({self.settings['query interval [s]']})
 
     _permon_thread = threading.Thread(target=_permon_get_ram_usage_per_object)
     _permon_running = True
