@@ -48,6 +48,7 @@ jobs:
           command: |
             . venv/bin/activate
             # start a jupyter notebook to test jupyter.ram_usage
+            export JUPYTER_RUNTIME_DIR=`pwd`/tests/jupyter
             jupyter notebook tests/test_notebook.ipynb --ip=127.0.0.1 &
             pytest . --cov=permon --cov-report=xml --junitxml=test-results/pytest/results.xml --cov-config=setup.cfg -s
 
