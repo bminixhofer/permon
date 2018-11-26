@@ -47,6 +47,8 @@ jobs:
           name: Run Tests
           command: |
             . venv/bin/activate
+            # start a jupyter notebook to test jupyter.ram_usage
+            jupyter notebook tests/test_notebook.ipynb &
             pytest . --cov=permon --cov-report=xml --junitxml=test-results/pytest/results.xml --cov-config=setup.cfg -s
 
       - run:
@@ -54,7 +56,6 @@ jobs:
           command: |
             . venv/bin/activate
             flake8 .
-      
       - run:
           name: Upload Coverage
           command: |
