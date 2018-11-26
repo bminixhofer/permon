@@ -8,7 +8,6 @@ pytest-mock==1.10.0
 coverage==4.5.1
 appdirs==1.4.3
 jupyter==1.0.0
-jupyter-client==5.2.2
 Flask==1.0.2
 Flask-Sockets==0.2.1
 Flask-Login==0.4.1

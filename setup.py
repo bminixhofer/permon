@@ -16,7 +16,7 @@ AUTHOR = 'Benjamin Minixhofer'
 REQUIRES_PYTHON = '>=3.6.0'
 
 REQUIRED = [
-    'psutil', 'appdirs', 'jupyter_client'
+    'psutil', 'appdirs', 'jupyter'
 ]
 
 here = os.path.abspath(os.path.dirname(__file__))
