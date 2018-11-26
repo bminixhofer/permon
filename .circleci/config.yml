@@ -38,6 +38,16 @@ jobs:
             pip install -r requirements.txt
             pip install -e .
 
+      - run:
+          name: Install Chromedriver latest version
+          command: |
+            sudo apt-get update
+            sudo apt-get install lsb-release libappindicator3-1
+            curl -L -o google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+            sudo dpkg -i google-chrome.deb
+            sudo sed -i 's|HERE/chrome"|HERE/chrome" --no-sandbox|g' /opt/google/chrome/google-chrome
+            rm google-chrome.deb
+
       - save_cache:
           paths:
             - ./venv
@@ -47,9 +57,13 @@ jobs:
           name: Run Tests
           command: |
             . venv/bin/activate
-            # start a jupyter notebook to test jupyter.ram_usage
             export JUPYTER_RUNTIME_DIR=`pwd`/tests/jupyter
-            jupyter notebook tests/test_notebook.ipynb --ip=127.0.0.1 &
+            # start a jupyter notebook to test jupyter.ram_usage
+            jupyter notebook --ip=127.0.0.1 &
+            # find the url of our test notebook
+            export NOTEBOOK_URL=http://127.0.0.1:8888/tree/tests/test_notebook.ipynb?`jupyter notebook list | grep -Eo '\token=\S*'`
+            google-chrome --headless $NOTEBOOK_URL
+
             pytest . --cov=permon --cov-report=xml --junitxml=test-results/pytest/results.xml --cov-config=setup.cfg -s
 
       - run:
