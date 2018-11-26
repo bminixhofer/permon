@@ -20,19 +20,37 @@ class JupyterRAMUsage(Stat):
     }
 
     @classmethod
+    def _get_jupyter_runtime_dir(cls):
+        try:
+            return os.environ['JUPYTER_RUNTIME_DIR']
+        except KeyError:
+            pass
+
+        try:
+            return os.path.join(os.environ['XDG_RUNTIME_DIR'],
+                                'jupyter')
+        except KeyError:
+            pass
+
+        try:
+            return os.path.join(sys.prefix,
+                                'share',
+                                'jupyter',
+                                'runtime')
+        except KeyError:
+            pass
+
+        raise exceptions.StatNotAvailableError(
+            'Jupyter runtime dir not found. '
+            'Try setting JUPYTER_RUNTIME_DIR in the environment.')
+
+    @classmethod
     def _read_latest_connection_file(cls):
         """
         Reads the latest jupyter kernel connection file.
         https://jupyter.readthedocs.io/en/latest/projects/jupyter-directories.html.
         """
-        try:
-            runtime_dir = os.path.join(os.environ['XDG_RUNTIME_DIR'],
-                                       'jupyter')
-        except KeyError:
-            runtime_dir = os.path.join(sys.prefix,
-                                       'share',
-                                       'jupyter',
-                                       'runtime')
+        runtime_dir = cls._get_jupyter_runtime_dir()
         files = glob.glob(os.path.join(runtime_dir, 'kernel-*.json'))
         if len(files) == 0:
             return None
