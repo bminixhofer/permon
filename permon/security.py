@@ -5,11 +5,13 @@ import hashlib
 from appdirs import user_data_dir
 from permon import config
 
-secret_path = os.path.join(user_data_dir('permon', 'bminixhofer'),
-                           'SECRET_KEY')
+data_dir = user_data_dir('permon', 'bminixhofer')
+secret_path = os.path.join(data_dir, 'SECRET_KEY')
 
 
 def get_secret_key():
+    os.makedirs(data_dir, exist_ok=True)
+
     if os.path.exists(secret_path):
         return open(secret_path).read()
     else:
