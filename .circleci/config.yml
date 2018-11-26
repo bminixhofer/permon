@@ -8,7 +8,7 @@ jobs:
     docker:
       # specify the version you desire here
       # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
-      - image: circleci/python:3.6.1
+      - image: circleci/python:3.6.1-browsers
 
     working_directory: ~/repo
     branches:
@@ -56,15 +56,17 @@ jobs:
       - run:
           name: Run Tests
           command: |
+            # ensure venv is activated
             . venv/bin/activate
             export JUPYTER_RUNTIME_DIR=`pwd`/tests/jupyter
             # start a jupyter notebook to test jupyter.ram_usage
-            jupyter notebook --ip=127.0.0.1 &
+            jupyter notebook --no-browser --NotebookApp.token='' --ip=127.0.0.1 --port=8888 &
+            sleep 30
             # find the url of our test notebook
-            export NOTEBOOK_URL=http://127.0.0.1:8888/tree/tests/test_notebook.ipynb?`jupyter notebook list | grep -Eo '\token=\S*'`
+            export NOTEBOOK_URL=http://127.0.0.1:8888/notebooks/tests/test_notebook.ipynb?token=''
             google-chrome --headless $NOTEBOOK_URL
 
-            pytest . --cov=permon --cov-report=xml --junitxml=test-results/pytest/results.xml --cov-config=setup.cfg -s
+            pytest tests/ --cov=permon --cov-report=xml --junitxml=test-results/pytest/results.xml --cov-config=setup.cfg -s
 
       - run:
           name: Lint
