@@ -42,8 +42,12 @@ jobs:
           name: Install chrome and node / npm
           command: |
             sudo apt-get update
-            sudo apt install nodejs npm
-            sudo apt-get install lsb-release libappindicator3-1
+            # install node / npm
+            curl -sL https://deb.nodesource.com/setup_10.x | sudo bash -
+            sudo apt-get install -y nodejs
+
+            # install chrome
+            sudo apt-get install -y lsb-release libappindicator3-1
             curl -L -o google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
             sudo dpkg -i google-chrome.deb
             sudo sed -i 's|HERE/chrome"|HERE/chrome" --no-sandbox|g' /opt/google/chrome/google-chrome
