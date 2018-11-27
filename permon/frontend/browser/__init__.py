@@ -206,7 +206,7 @@ class BrowserApp(MonitorApp):
 
         # make the user id a function of the password so that sessions
         # are invalidated when the password changes
-        self.user = User(id=security.encrypt_password(self.password_hash))
+        self.user = User(security.encrypt_password(self.password_hash))
 
         self.app = flask.Flask(__name__)
         self.app.config.update(

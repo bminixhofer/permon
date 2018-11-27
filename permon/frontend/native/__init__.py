@@ -88,6 +88,7 @@ class NativeApp(MonitorApp):
         if self.qapp is None:
             self.qapp = QtWidgets.QApplication(sys.argv)
 
+            # add custom fonts
             font_db = QtGui.QFontDatabase()
             font_paths = [
                 self.get_asset_path('Raleway-Regular.ttf'),
@@ -100,6 +101,20 @@ class NativeApp(MonitorApp):
 
             font = QtGui.QFont('Raleway')
             self.qapp.setFont(font)
+
+            # set favicon
+            icon_info = [
+                ('icons/favicon-16x16.png', (16, 16)),
+                ('icons/favicon-32x32.png', (32, 32)),
+                ('icons/android-chrome-192x192.png', (192, 192)),
+                ('icons/android-chrome-256x256.png', (256, 256))
+            ]
+
+            app_icon = QtGui.QIcon()
+            for path, size in icon_info:
+                app_icon.addFile(
+                    self.get_asset_path(path), QtCore.QSize(*size))
+            self.qapp.setWindowIcon(app_icon)
 
         for stat in self.initial_stats:
             self.add_stat(stat, add_to_config=False)
