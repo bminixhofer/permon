@@ -67,7 +67,7 @@ class NativeApp(MonitorApp):
     def remove_stat(self, stat, remove_from_config=True):
         monitor_of_stat = None
         for monitor in self.monitors:
-            if type(monitor.stat) == stat:
+            if isinstance(monitor.stat, stat):
                 monitor_of_stat = monitor
 
         if monitor_of_stat is not None:
