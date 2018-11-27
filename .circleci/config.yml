@@ -39,9 +39,10 @@ jobs:
             pip install -e .
 
       - run:
-          name: Install Chromedriver latest version
+          name: Install chrome and node / npm
           command: |
             sudo apt-get update
+            sudo apt install nodejs npm
             sudo apt-get install lsb-release libappindicator3-1
             curl -L -o google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
             sudo dpkg -i google-chrome.deb
@@ -56,7 +57,6 @@ jobs:
       - run:
           name: Run Tests
           command: |
-            # ensure venv is activated
             . venv/bin/activate
             export JUPYTER_RUNTIME_DIR=`pwd`/tests/jupyter
             # start a jupyter notebook to test jupyter.ram_usage
@@ -68,11 +68,19 @@ jobs:
 
             pytest tests/ --cov=permon --cov-report=xml --junitxml=test-results/pytest/results.xml --cov-config=setup.cfg -s
 
+            # build javascript
+            npm --prefix permon/frontend/browser/ install
+            npm --prefix permon/frontend/browser/ run build
+
+
       - run:
           name: Lint
           command: |
             . venv/bin/activate
+            # lint python
             flake8 .
+            # lint javascript
+            npm --prefix permon/frontend/browser/ run test
       - run:
           name: Upload Coverage
           command: |

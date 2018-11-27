@@ -24,7 +24,7 @@
     "webpack-cli": "^3.1.2"
   },
   "scripts": {
-    "build": "webpack --display --mode=production errors-only",
+    "build": "webpack --mode=production --display=errors-only",
     "develop": "webpack --watch --progress --mode=development --poll=1000",
     "test": "eslint . --ignore-pattern dist/"
   },
