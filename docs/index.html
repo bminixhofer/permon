@@ -1,0 +1,35 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="style.css" />
+        <script src="index.js" async defer></script>
+    </head>
+    <body>
+        <div class="header">
+            <h1>permon</h1>
+            <code>pip install permon</code>
+        </div>
+        <nav>
+            <button>Introduction</button>
+            <button>Stats</button>
+            <button>Contributor Guide</button>
+        </nav>
+        <div class="content">
+            <p>
+                <h2>What is permon?</h2>
+                <p>
+                    Permon is a tool to display live charts in a clear, uncluttered way. It is developed with a focus on only showing you things you care about, not everything you can monitor in your system.
+                    Permon is designed to work everywhere. It supports Windows, Linux and Mac OS.<br/>
+                    But what if you don't have access to a desktop manager? Or want to check performance of your workstation remotely? Permon has you covered. There are 3 frontends. A terminal frontend, native frontend and browser frontend.
+                </p>
+                <div class="image-container">
+                    <img class="screenshot" src="assets/permon_native.png"/>
+                    <div class="image-selector">
+                        <img class="image-changer" data-target=".screenshot" data-url="assets/permon_terminal.png" src="assets/terminal_icon.png"/>
+                        <img class="image-changer selected" data-target=".screenshot" data-url="assets/permon_native.png" src="assets/native_icon.png"/>
+                        <img class="image-changer" data-target=".screenshot" data-url="assets/permon_browser.png" src="assets/browser_icon.png"/>
+                    </div>
+                </div>
+            </p>
+        </div>
+    </body>
+</html>
