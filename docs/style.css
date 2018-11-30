@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css?family=Raleway|Roboto+Mono');
 
-body {
-    padding: 0 0;
+body, html {
+    padding: 0;
     margin: 0;
 }
 
@@ -11,10 +11,6 @@ body {
     width: 100%;
     text-align: center;
     font-family: Raleway;
-}
-
-.content {
-    padding: 0 5em;
 }
 
 .header::after {
@@ -30,7 +26,7 @@ body {
 }
 
 h1 {
-    margin-top: 0;
+    margin: 0;
     color: #48cfad;
     font-size: 3em;
 }
@@ -41,17 +37,49 @@ h2 {
 }
 
 p {
+    color: #212121;
+    font-family: Raleway;
+    font-size: 1.2em;
+    margin: 0;
+    padding: 1em 0;
+}
+
+ul {
+    margin-left: 2em;
+    list-style: none;
+}
+
+li::before {
+    content: "\2022";
+    color: #333;
+    font-weight: bold;
+    display: inline-block;
+    width: 1em;
+    margin-left: -1em;
+}
+li {
     font-family: Raleway;
     font-size: 1.2em;
 }
 
-code {
-    color: #333;
+.code-header {
+    margin-top: 2em;
+    display: inline-block;
     padding: 0.2em 0.4em;
+    font-size: 1.6em;
+}
+
+pre {
+    display: inline-block;
+}
+
+code {
+    padding: 0.1em 0.3em;
+    font-size: 0.8em;
+    color: #333;
     border-radius: 5px;
     background-color: #EEE;
     font-family: Roboto Mono;
-    font-size: 1.4em;
 }
 
 nav {
@@ -76,7 +104,6 @@ button:first-child {
 
 .screenshot {
     width: 100%;
-    height: 55%;
 }
 
 .image-selector {
@@ -100,6 +127,52 @@ button:first-child {
 }
 
 .image-container {
-    width: 50em;
+    margin-left: 3em;
+    width: 40em;
     position: relative;
+}
+
+.card {
+    padding: 1em 6em;
+    font-size: 1.3em;
+}
+
+.flex-vertical {
+    display: flex;
+    align-items: center;
+    align-content: center;
+    justify-content: space-between;
+}
+
+.arrow {
+    margin-left: 3em;
+}
+
+.card-introduction {
+    margin-top: 1em;
+    margin-bottom: 3em;
+}
+
+.card-everywhere {
+    background-color: #f7f7f7;
+    padding-top: 0.5em;
+    padding-bottom: 2em;
+}
+
+.card-everywhere .image-container {
+    flex-grow: 1;
+    flex-shrink: 0;
+}
+
+.card-opensource {
+    background-color: #f7f7f7;
+}
+
+.github-button {
+    position: relative;
+    top: -10em;
+}
+
+a {
+    color: #48cfad;
 }

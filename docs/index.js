@@ -1,3 +1,5 @@
+hljs.initHighlightingOnLoad();
+
 document.querySelectorAll('.image-changer').forEach((elem) => {
     elem.addEventListener('click', (event) => {
         document.querySelector(elem.dataset.target).src = elem.dataset.url;
