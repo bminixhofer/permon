@@ -92,8 +92,6 @@ class ProcessTracker():
         self.instance = None
 
 
-@Stat.windows
-@Stat.linux
 class CPUStat(Stat):
     name = 'CPU Usage [%]'
     base_tag = 'cpu_usage'
@@ -123,8 +121,6 @@ class CPUStat(Stat):
         return 100 * psutil.cpu_count()
 
 
-@Stat.windows
-@Stat.linux
 class RAMStat(Stat):
     name = 'RAM Usage [MB]'
     base_tag = 'ram_usage'
@@ -150,7 +146,6 @@ class RAMStat(Stat):
         return self._maximum
 
 
-@Stat.linux
 class GPUStat(Stat):
     name = 'vRAM Usage [MB]'
     base_tag = 'vram_usage'
@@ -187,8 +182,6 @@ class GPUStat(Stat):
         return self._maximum
 
 
-@Stat.windows
-@Stat.linux
 class ReadStat(Stat):
     name = 'Disk Read Speed [MB / s]'
     base_tag = 'read_speed'
@@ -215,8 +208,6 @@ class ReadStat(Stat):
         return None
 
 
-@Stat.windows
-@Stat.linux
 class WriteStat(Stat):
     name = 'Disk Write Speed [MB / s]'
     base_tag = 'write_speed'
@@ -243,8 +234,6 @@ class WriteStat(Stat):
         return None
 
 
-@Stat.windows
-@Stat.linux
 class CPUTempStat(Stat):
     name = 'CPU Temperature [°C]'
     base_tag = 'cpu_temp'

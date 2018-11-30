@@ -5,12 +5,19 @@ import runpy
 from permon import exceptions, config
 
 _imported_stats = False
+_stats = None
+
+
+def _get_all_subclasses(cls):
+    """get all subclasses of a class
+    __subclasses__ only returns direct children
+    """
+    return set(cls.__subclasses__()).union(
+        [s for c in cls.__subclasses__() for s in _get_all_subclasses(c)])
 
 
 class Stat(ABC):
     _initialized = False
-    windows_classes = []
-    linux_classes = []
     default_settings = {}
 
     def __init__(self, fps):
@@ -62,18 +69,6 @@ class Stat(ABC):
     def check_availability(cls):
         pass
 
-    @classmethod
-    def windows(cls, check_cls):
-        Stat._validate_stat(check_cls)
-        Stat.windows_classes.append(check_cls)
-        return check_cls
-
-    @classmethod
-    def linux(cls, check_cls):
-        Stat._validate_stat(check_cls)
-        Stat.linux_classes.append(check_cls)
-        return check_cls
-
     @abstractmethod
     def get_stat(self):
         pass
@@ -108,21 +103,18 @@ def _import_all_stats():
 
 
 def get_all_stats():
-    global _imported_stats
+    global _imported_stats, _stats
 
     if not _imported_stats:
         _import_all_stats()
+
+        _stats = _get_all_subclasses(Stat)
+        for stat in _stats:
+            stat._init_tags()
+        _stats = sorted(_stats, key=lambda stat: stat.tag)
         _imported_stats = True
 
-    if os.name == 'posix':
-        stats = Stat.linux_classes
-    elif os.name == 'nt':
-        stats = Stat.windows_classes
-    for stat in stats:
-        stat._init_tags()
-
-    stats = sorted(stats, key=lambda stat: stat.tag)
-    return stats
+    return _stats
 
 
 def get_stats_from_repr(stat_repr):

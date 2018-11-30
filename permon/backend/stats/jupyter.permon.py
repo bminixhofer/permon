@@ -9,8 +9,6 @@ from permon.backend import Stat
 from permon import exceptions
 
 
-@Stat.windows
-@Stat.linux
 class JupyterRAMUsage(Stat):
     name = 'RAM Usage of objects in a Python Jupyter Notebook [MB]'
     base_tag = 'ram_usage'
