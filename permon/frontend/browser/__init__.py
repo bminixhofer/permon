@@ -9,6 +9,8 @@ import secrets
 from permon.frontend import MonitorApp, Monitor
 from permon import backend, exceptions, security, config
 
+# these modules will be imported later because flask
+# might not be installed
 flask = None
 flask_sockets = None
 flask_login = None
@@ -29,6 +31,10 @@ def import_delayed():
 
 
 class BrowserMonitor(Monitor):
+    """
+    A browser monitor. This class only handle updating the stat and providing
+    JSON info about it. The logic is done on the frontend in src/monitors.js.
+    """
     def __init__(self, *args, **kwargs):
         super(BrowserMonitor, self).__init__(*args, **kwargs)
         self.values = []
@@ -81,8 +87,10 @@ class BrowserApp(MonitorApp):
         return flask.send_from_directory('dist', path)
 
     def _get_index(self):
+        # the password hash can be passes as GET parameter
         if not flask_login.current_user.is_authenticated:
             token = flask.request.args.get('token')
+            # if it is not passed or incorrent, redirect to the login page
             if token and token == self.password_hash:
                 flask_login.login_user(self.user)
             else:
@@ -137,6 +145,7 @@ class BrowserApp(MonitorApp):
                 else:
                     stat_updates[monitor.stat.tag] = monitor.value
 
+            # send updates about all currently displayed stats
             try:
                 ws.send(json.dumps(stat_updates))
             except geventwebsocket.exceptions.WebSocketError:
@@ -156,6 +165,7 @@ class BrowserApp(MonitorApp):
         if stat in self.stats:
             return flask.Response('Stat already added.', status=400)
 
+        # send info about the stat when a stat is added successfully
         monitor = self.add_stat(stat)
         return flask.Response(json.dumps(monitor.get_json_info()),
                               status=200, mimetype='application/json')
@@ -168,6 +178,7 @@ class BrowserApp(MonitorApp):
             return flask.Response(status=400)
 
         monitor = self.remove_stat(stat)
+        # send info about the stat if it was removed successfully
         return flask.Response(json.dumps(monitor.get_json_info()),
                               status=200, mimetype='application/json')
 
@@ -177,10 +188,12 @@ class BrowserApp(MonitorApp):
                                  fps=self.fps,
                                  app=self)
         tags = [stat.tag for stat in self.stats]
+        # make sure that the stats stay in alphabetical order
         new_index = bisect.bisect(tags, monitor.stat.tag)
-
         self.monitors.insert(new_index, monitor)
+
         super(BrowserApp, self).add_stat(stat, add_to_config=add_to_config)
+
         return monitor
 
     def remove_stat(self, stat, remove_from_config=True):
@@ -226,6 +239,9 @@ class BrowserApp(MonitorApp):
         for stat in self.initial_stats:
             self.add_stat(stat, add_to_config=False)
 
+        # Routings can not be done in the regular Flask way with
+        # decorators because the app is not available when the class definition
+        # is executed
         routings = {
             ('/', 'GET'): [self._get_index],
             ('/login', 'GET'): [self._get_login],
@@ -288,6 +304,7 @@ class BrowserApp(MonitorApp):
 
         self.stopped = True
         update_thread.join()
+        # delete the monitors explicitly so that threads inside stats stop
         del self.monitors
 
     def update_forever(self):

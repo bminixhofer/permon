@@ -12,7 +12,7 @@ const updateTimeout = Math.max(3000, 1000 / fps * 3);
 // tracks all chart update functions
 const updateFunctions = [];
 
-// stores the latest stat data of every displayed tag
+// stores the latest stat data of every displayed stat
 let currentData = {};
 
 // tracks the current mouse position to keep tooltip on the mouse
@@ -157,6 +157,7 @@ export function setupSocket() {
     if (currentKeys.length > 0 && dataKeysChanged) {
       // window.location.reload();
     }
+    // store the latest update from the WebSocket in currentData
     currentData = eventData;
   };
 }
@@ -183,11 +184,14 @@ export function setupMonitor(stat) {
   const chartElement = document.createElement('div');
   chartElement.classList.add('chart');
 
+  // add title and chart to the container div
+  // the container div has already been added via the index.html template
   chartContainer.appendChild(heading);
   chartContainer.appendChild(chartElement);
 
   let dataIndex = 0;
   function makePoint(x) {
+    // utiltity function to create a 2d point with steadily increasing x
     dataIndex += 1;
     return {
       name: dataIndex,
@@ -234,6 +238,7 @@ export function setupMonitor(stat) {
   let tooltipRepeater;
 
   window.addEventListener('resize', () => {
+    // disable and reenable animation on resize to prevent awkward lagging of the chart
     chart.setOption({
       animation: false,
     });
@@ -244,6 +249,7 @@ export function setupMonitor(stat) {
   });
 
   chartElement.addEventListener('mouseover', (event) => {
+    // register an interval that updates the tooltip position every 100ms on mouse over a chart
     tooltipRepeater = setInterval(() => {
       const rect = chartElement.getBoundingClientRect();
       chart.dispatchAction({
@@ -254,6 +260,7 @@ export function setupMonitor(stat) {
     }, 100);
   });
   chartElement.addEventListener('mouseout', () => {
+    // clear the interval and hide the tip when the mouse moves out of the chart
     chart.dispatchAction({
       type: 'hideTip',
     });
@@ -264,12 +271,15 @@ export function setupMonitor(stat) {
   let contributors;
   function updateChart() {
     data.shift();
+    // set the chart to 0 if no data is available.
     if (!currentData[tag]) {
       value = 0;
       contributors = null;
     } else if (currentData[tag].constructor === Array) {
+      // if the data for the tag is an array, it contains a contributor breakdown
       [value, contributors] = currentData[tag];
     } else {
+      // otherwise, only the value is sent
       value = currentData[tag];
       contributors = null;
     }
@@ -277,11 +287,13 @@ export function setupMonitor(stat) {
     data.push(makePoint(value));
 
     if (contributors) {
+      // clear tickPositiions and labelPositions array
       tickPositions.length = 0;
       labelPositions.length = 0;
+
       let position = 0;
       let labelPosition = 0;
-      let update;
+      let contributorSize;
       let contributorMax;
       if (maximum == null) {
         contributorMax = data.reduce((a, b) => Math.max(b.value[1], a), -Infinity);
@@ -291,9 +303,12 @@ export function setupMonitor(stat) {
       }
 
       contributors.forEach(([key, contributorValue]) => {
-        update = Math.round(contributorValue / contributorMax * categoryResolution);
-        position += update;
-        labelPosition = position - Math.floor(update / 2);
+        contributorSize = Math.round(contributorValue / contributorMax * categoryResolution);
+        // add the contributor size to the start position of the next contributor
+        position += contributorSize;
+        // subtract half of the contributor size to the label position
+        // to make it centered between ticks
+        labelPosition = position - Math.floor(contributorSize / 2);
 
         contributorData[labelPosition] = key;
         tickPositions.push(position);
@@ -313,15 +328,19 @@ export function setupMonitor(stat) {
 
 export function setupMonitors(stats) {
   window.addEventListener('mousemove', (event) => {
+    // we need the mouse position to display tooltips, so keep track of it globally
     mousePos.x = event.pageX;
     mousePos.y = event.pageY;
   });
 
+  // setup a monitor for every stat
   stats.forEach(stat => setupMonitor(stat));
   setInterval(() => {
+    // the app is considered connected if it has recently received a message via WebSockets
     const isConnected = Date.now() - lastUpdateDate < updateTimeout;
     setStatus(isConnected);
     if (isConnected) {
+      // update function contains a function to update each monitor
       updateFunctions.forEach(func => func());
     }
   }, 1000 / fps);

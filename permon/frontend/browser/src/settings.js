@@ -43,6 +43,8 @@ function setupChangeStat(button, select, otherSelect, requestCallback, doneCallb
 
       doneCallback(response);
 
+      // after a monitor has been added / removed the size of the others changes
+      // so emit a resize event even though the browser window has stayed the same size
       window.dispatchEvent(new Event('resize'));
       clearErrorMessage();
     })
@@ -112,6 +114,7 @@ function setupStatSettings(select, stats) {
 
 export default function setupSettings(stats) {
   window.addEventListener('click', (event) => {
+    // when clicking outside of the settings drawer, make it close
     if (![settingsToggle, settingsToggleLabel].includes(event.target)
         && !settingsElement.contains(event.target)) {
       settingsToggle.checked = false;
@@ -128,8 +131,8 @@ export default function setupSettings(stats) {
     chart.id = res.tag;
 
     const childIds = Array.from(charts.children).map(child => child.id);
+    // make sure that the monitor stay in alphabetical order
     const index = bisect(childIds, chart.id);
-
     charts.insertBefore(chart, charts.children[index]);
 
     setupMonitor(res);
