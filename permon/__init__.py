@@ -54,6 +54,12 @@ def parse_args(args, current_config):
         which stats to display
         If none are given, take those from the config file ({stat_str})
         """)
+        subparser.add_argument('--buffer-size', type=int, help="""
+        the number of points displayed on the screen at any time
+        """)
+        subparser.add_argument('--fps', type=int, help="""
+        the frames per second the display moves with
+        """)
         if subparser.prog != 'permon terminal':
             # verbose logging is not possible for permon terminal
             # because it needs standard out to display stats
@@ -123,16 +129,16 @@ def main():
             )
 
         app = browser.BrowserApp(stats, colors=colors,
-                                 buffer_size=50, fps=1,
+                                 buffer_size=args.buffer_size, fps=args.fps,
                                  port=args.port, ip=args.ip,
                                  open_browser=not args.no_browser,
                                  ssl_context=ssl_context)
     elif args.subcommand == 'native':
         app = native.NativeApp(stats, colors=colors,
-                               buffer_size=500, fps=10)
+                               buffer_size=args.buffer_size, fps=args.fps)
     elif args.subcommand == 'terminal':
         app = terminal.TerminalApp(stats, colors=colors,
-                                   buffer_size=500, fps=10)
+                                   buffer_size=args.buffer_size, fps=args.fps)
 
     # app.make_available checks if the app is available
     # i. e. all needed modules are installed and prompts the user to

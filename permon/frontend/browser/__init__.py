@@ -61,8 +61,10 @@ class BrowserMonitor(Monitor):
 
 
 class BrowserApp(MonitorApp):
-    def __init__(self, stats, colors, buffer_size, fps, port, ip,
-                 open_browser, ssl_context=None):
+    def __init__(self, stats, colors, port, ip, open_browser,
+                 buffer_size=None, fps=None, ssl_context=None):
+        buffer_size = buffer_size or 50
+        fps = fps or 1
         super(BrowserApp, self).__init__(stats, colors, buffer_size, fps)
 
         self.port = port

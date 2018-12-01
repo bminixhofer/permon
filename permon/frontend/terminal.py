@@ -170,6 +170,11 @@ class TerminalMonitor(Monitor):
 
 
 class TerminalApp(MonitorApp):
+    def __init__(self, stats, colors, buffer_size=None, fps=None):
+        buffer_size = buffer_size or 500
+        fps = fps or 10
+        super(TerminalApp, self).__init__(stats, colors, buffer_size, fps)
+
     def initialize(self):
         self.term = blessings.Terminal()
         self.colors = [self.term.green, self.term.red, self.term.blue,

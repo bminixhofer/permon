@@ -48,7 +48,10 @@ class NativeApp(MonitorApp):
     qapp = None
     fonts = None
 
-    def __init__(self, stats, colors, buffer_size, fps, line_thickness=2):
+    def __init__(self, stats, colors, buffer_size=None, fps=None,
+                 line_thickness=2):
+        buffer_size = buffer_size or 500
+        fps = fps or 10
         super(NativeApp, self).__init__(stats, colors, buffer_size, fps)
 
         self.monitor_params = {
