@@ -1,22 +1,24 @@
 import os
-from abc import ABC, abstractmethod
+from abc import ABC, ABCMeta, abstractmethod
 import glob
 import runpy
 from permon import exceptions, config
 
-_imported_stats = False
-_stats = None
+
+class MetaStat(ABCMeta):
+    """Stat metaclass. Used to keep track of all descendants of Stat."""
+    stat_classes = []
+
+    def __new__(cls, *args, **kwargs):
+        new_class = super().__new__(cls, *args, **kwargs)
+        # register the class as stat if it does not immediately inherit ABC
+        if ABC not in new_class.__bases__:
+            new_class._init_tags()
+            cls.stat_classes.append(new_class)
+        return new_class
 
 
-def _get_all_subclasses(cls):
-    """get all subclasses of a class
-    __subclasses__ only returns direct children
-    """
-    return set(cls.__subclasses__()).union(
-        [s for c in cls.__subclasses__() for s in _get_all_subclasses(c)])
-
-
-class Stat(ABC):
+class Stat(ABC, metaclass=MetaStat):
     """
     Core class representing all stats.
     Stats are only ever instantiated when they are really displayed.
@@ -153,18 +155,14 @@ def get_all_stats():
     Get all stat classes. Does not check whether the stat
     is available.
     """
-    global _imported_stats, _stats
 
-    if not _imported_stats:
+    stats = MetaStat.stat_classes
+    # if there are no stats registered, try importing all stats
+    if len(stats) == 0:
         _import_all_stats()
+        stats = sorted(stats, key=lambda stat: stat.tag)
 
-        _stats = _get_all_subclasses(Stat)
-        for stat in _stats:
-            stat._init_tags()
-        _stats = sorted(_stats, key=lambda stat: stat.tag)
-        _imported_stats = True
-
-    return _stats
+    return stats
 
 
 def get_stats_from_repr(stat_repr):
