@@ -7,6 +7,10 @@ from permon.backend import Stat
 
 
 class MonitorModel(QtCore.QAbstractListModel):
+    """
+    Model to manage communication between QML and Python concerning
+    adding and removing of monitors.
+    """
     def __init__(self, parent=None):
         super(MonitorModel, self).__init__(parent)
 
@@ -16,6 +20,7 @@ class MonitorModel(QtCore.QAbstractListModel):
             monitor.update()
             return monitor.value
 
+        # determine which properties of a monitor are exposed to QML
         self.exposed_properties = {
             'tag': lambda monitor: monitor.stat.tag,
             'minimum': lambda monitor: monitor.stat.minimum,
@@ -64,6 +69,10 @@ class MonitorModel(QtCore.QAbstractListModel):
 
 
 class SettingsModel(QtCore.QObject):
+    """
+    Model to manage communication between QML and Python concerning
+    changing settings.
+    """
     statAdded = QtCore.Signal(Stat)
     statRemoved = QtCore.Signal(Stat)
 
@@ -91,6 +100,7 @@ class SettingsModel(QtCore.QObject):
 
     @QtCore.Slot(int, result=str)
     def getSettings(self, index):
+        """Get the current settings for the stat at index `index`."""
         stat = self.app.get_not_displayed_stats()[index]
         settings_list = [{
             'name': key,
@@ -101,6 +111,10 @@ class SettingsModel(QtCore.QObject):
 
     @QtCore.Slot(bool, result=str)
     def getStats(self, displayed):
+        """
+        If `displayed` is true, get all displayed stat classes.
+        Otherwise, get all stat classes that are not displayed.
+        """
         stats = self.app.get_displayed_stats() if displayed else \
-                self.app.get_not_displayed_stats()
+            self.app.get_not_displayed_stats()
         return json.dumps([stat.name for stat in stats])

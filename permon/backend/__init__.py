@@ -20,7 +20,7 @@ class MetaStat(ABCMeta):
 
 class Stat(ABC, metaclass=MetaStat):
     """
-    Core class representing all stats.
+    Base class for all stats.
     Stats are only ever instantiated when they are really displayed.
     Most of the time the class itself is used to represent a stat.
     """

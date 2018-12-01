@@ -5,8 +5,8 @@ import QtQuick.Window 2.2
 StatPage {
     id: page
 
-    height: Screen.desktopAvailableHeight * 0.8
-    width: Screen.desktopAvailableWidth * 0.8
+    height: Math.max(Screen.desktopAvailableHeight * 0.8, 1080)
+    width: Math.max(Screen.desktopAvailableWidth * 0.8, 1920)
 
     onSettingsButtonClicked: {
         if(settingsDrawer.opened) {

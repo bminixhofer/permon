@@ -4,6 +4,8 @@ import logging
 import signal
 from permon.frontend import Monitor, MonitorApp
 
+# these modules will be imported later because PySide2
+# might not be installed
 QtWidgets = None
 QtGui = None
 QtCore = None
@@ -52,18 +54,17 @@ class NativeApp(MonitorApp):
                  line_thickness=2):
         buffer_size = buffer_size or 500
         fps = fps or 10
+        self.line_thickness = line_thickness
+
         super(NativeApp, self).__init__(stats, colors, buffer_size, fps)
 
-        self.monitor_params = {
-            'buffer_size': buffer_size,
-            'fps': fps,
-            'app': self,
-            'thickness': line_thickness
-        }
-
     def add_stat(self, stat, add_to_config=True):
-        monitor = NativeMonitor(stat, color=self.next_color(),
-                                **self.monitor_params)
+        monitor = NativeMonitor(stat,
+                                color=self.next_color(),
+                                buffer_size=self.buffer_size,
+                                fps=self.fps,
+                                app=self,
+                                thickness=self.line_thickness)
         self.monitor_model.addMonitor(monitor)
         super(NativeApp, self).add_stat(stat, add_to_config=add_to_config)
 
@@ -81,10 +82,14 @@ class NativeApp(MonitorApp):
             logging.error(f'Removing {stat.tag} failed')
 
     def initialize(self):
+        # create a MonitorModel to communicate with the QML view
         self.monitor_model = MonitorModel()
         self.monitors = self.monitor_model.monitors
 
+        # create a SettingsModel to communicate with the settings drawer
+        # in the QML view
         self.settings_model = SettingsModel(self)
+        # connect the statAdded and statRemoved signals
         self.settings_model.statAdded.connect(self.add_stat)
         self.settings_model.statRemoved.connect(self.remove_stat)
 
@@ -126,9 +131,11 @@ class NativeApp(MonitorApp):
         view.setResizeMode(QtQuick.QQuickView.SizeRootObjectToView)
 
         root_context = view.rootContext()
+        # make monitor model and settings model available in QML
         root_context.setContextProperty('monitorModel', self.monitor_model)
         root_context.setContextProperty('settingsModel', self.settings_model)
 
+        # qml/view.qml is the root QML file
         qml_file = os.path.join(os.path.dirname(__file__), 'qml', 'view.qml')
         view.setSource(QtCore.QUrl.fromLocalFile(os.path.abspath(qml_file)))
 

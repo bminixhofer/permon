@@ -13,6 +13,10 @@ except ImportError:
 
 
 class Monitor(ABC):
+    """
+    Base class for all monitors.
+    A monitor wraps a stat by adding a way to display it.
+    """
     def __init__(self, stat, buffer_size, fps, color, app):
         # the only place a stat is ever instantiated
         self.stat = stat(fps=fps)
@@ -31,18 +35,30 @@ class Monitor(ABC):
 
     @abstractmethod
     def update(self):
+        """
+        Update the monitor by i. e. fetching the latest value from its stat.
+        """
         pass
 
 
 class MonitorApp(ABC):
+    """
+    Base class for all monitor apps.
+    A monitor app consists of one or more `Monitor` instances to display stats.
+    """
     @classmethod
     def get_asset_path(cls, *relative_path):
+        """Get an asset from the shared asset directory for all frontends."""
         directory_path = os.path.dirname(__file__)
         absolute_path = os.path.join(directory_path, 'assets', *relative_path)
         return absolute_path
 
     @classmethod
     def verify_installed(cls, package_name):
+        """
+        Verify the package with `package_name` is installed.
+        If it is not installed, prompt the user to install it.
+        """
         spec = util.find_spec(package_name)
         if spec is None or spec.loader is None:
             choice = input(f'Required package "{package_name}" is '
@@ -68,21 +84,32 @@ class MonitorApp(ABC):
             raise exceptions.NoStatError()
 
     def get_all_stats(self):
+        """Get all stat classes that could be displayed in the frontend."""
         return backend.get_all_stats()
 
     def get_displayed_stats(self):
+        """Get all stat classes that are currently displayed."""
         return [type(monitor.stat) for monitor in self.monitors]
 
     def get_not_displayed_stats(self):
+        """
+        Get all stat classes that are currently not displayed
+        but could be tried to display.
+        """
         stats = set(self.get_all_stats()) - set(self.get_displayed_stats())
         return sorted(list(stats), key=lambda stat: stat.tag)
 
     def next_color(self):
+        """
+        Get the least used color of displayed monitors to determine
+        which color the next monitor should have.
+        """
         color_counts = OrderedDict([(color, 0) for color in self.colors])
         for monitor in self.monitors:
             color_counts[monitor.color] += 1
 
         min_count = min(color_counts.values())
+        # return the first color with the least amount of usages
         for color, count in color_counts.items():
             if count == min_count:
                 return color
@@ -92,6 +119,10 @@ class MonitorApp(ABC):
         pass
 
     def add_stat(self, stat, add_to_config=True):
+        """
+        Adds `stat` to the displayed stats and if `add_to_config`
+        is true to the user configuration.
+        """
         if add_to_config:
             stats = config.get_config()['stats'].copy()
             tags = [x['tag'] for x in config.parse_stats(stats)]
@@ -110,6 +141,10 @@ class MonitorApp(ABC):
         logging.info(f'Added stat {stat.tag}')
 
     def remove_stat(self, stat, remove_from_config=True):
+        """
+        Removes `stat` from the displayed stats and if `remove_from_config`
+        is true from the user configuration.
+        """
         if remove_from_config:
             stats = config.get_config()['stats'].copy()
             tags = [x['tag'] for x in config.parse_stats(stats)]
@@ -126,12 +161,18 @@ class MonitorApp(ABC):
         logging.info(f'Removed stat {stat.tag}')
 
     def make_available(self):
+        """
+        Try to make the frontend available by i. e. prompting the user to
+        install required modules.
+        """
         pass
 
     def update(self):
+        """Update the app by updating every monitor."""
         for monitor in self.monitors:
             monitor.update()
 
     @property
     def stats(self):
+        """Get all stat instances from the currently displayed monitors."""
         return [monitor.stat for monitor in self.monitors]

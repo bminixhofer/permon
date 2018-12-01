@@ -125,7 +125,8 @@ class TerminalMonitor(Monitor):
                     len(contrib_axis[mid_index]) - 1
 
                 contrib_axis[mid_index] += \
-                    ' ' + utils.format_bar_label(name, max_len=max_label_len)
+                    ' ' + utils.format_contributor_label(name,
+                                                         max_len=max_label_len)
 
                 if len(contrib_axis) >= get_cell(self.values[-1]) + 1:
                     break

@@ -1,4 +1,8 @@
 def format_labels(axis_values):
+    """
+    Format the labels of an axis. Rounds the labels to some value based on the
+    maximum value of the axis.
+    """
     max_value = abs(max(axis_values))
 
     def format_value(x):
@@ -16,7 +20,7 @@ def format_labels(axis_values):
     return [format_value(x) for x in axis_values]
 
 
-def format_bar_label(label, max_len=15):
+def format_contributor_label(label, max_len=15):
     fill = '...'
 
     if len(label) > max_len:
