@@ -10,10 +10,19 @@ from permon import exceptions
 
 
 class JupyterRAMUsage(Stat):
+    """
+    Tracks the RAM usage of all variables in a user-specified jupyter notebook.
+    If no connection info is given in the settings, take the kernel with the
+    latest start date.
+    Note that RAM tracked in this way is not equal to the actual RAM
+    the OS needs because some further optimization is done by e. g. numpy
+    to reduce the OS memory usage.
+    """
     name = 'RAM Usage of objects in a Python Jupyter Notebook [MB]'
     base_tag = 'ram_usage'
     default_settings = {
         'connection info': '',
+        # how often the memory usage is read in the jupyter notebook
         'query interval [s]': 1.
     }
 
@@ -35,15 +44,23 @@ class JupyterRAMUsage(Stat):
 
     @classmethod
     def get_connection_info(cls):
+        """
+        Get the target kernel connection info.
+        Returns a dictionary of the connection info supplied
+        in the settings, or the latest started kernel if none is given.
+        Retuns `None` if no kernel has been found.
+        """
         if len(cls.settings['connection info']) == 0:
             return cls._read_latest_connection_file()
         return json.loads(cls.settings['connection info'])
 
     @classmethod
     def check_availability(cls):
-            if cls.get_connection_info() is None:
-                raise exceptions.StatNotAvailableError(
-                    'Could not find any running kernel.')
+        # the stat is not available if no suitable connection info
+        # can be found
+        if cls.get_connection_info() is None:
+            raise exceptions.StatNotAvailableError(
+                'Could not find any running kernel.')
 
     def __init__(self, fps):
         self.config = self.get_connection_info()
@@ -53,6 +70,10 @@ class JupyterRAMUsage(Stat):
         self.usage_file = os.path.join(data_dir, 'jupyter_ram_usage.csv')
         open(self.usage_file, 'w').close()
 
+        # self.setup_code is the code that is run in the notebook when the
+        # stat is instantiated. It starts a thread which reads the memory
+        # usage of all public variables in a set interval and saves it to a
+        # csv file in the user data directory
         self.setup_code = f"""
 if '_permon_running' not in globals() or not _permon_running:
     import threading
@@ -96,10 +117,13 @@ _permon_running = False
         super(JupyterRAMUsage, self).__init__(fps=fps)
 
     def __del__(self):
+        # stop the thread running in the jupyter notebook
+        # and stop the connection to the kernel upon deletion
         self.client.execute(self.teardown_code)
         self.client.stop_channels()
 
     def get_stat(self):
+        # reads the csv file the setup code has written to
         ram_usage = []
         with open(self.usage_file, 'r') as f:
             reader = csv.reader(f)
@@ -107,8 +131,10 @@ _permon_running = False
                 ram_usage.append(
                     (row[0], float(row[1]) / 1000**2)
                 )
+        # sort the ram_usage list so that the largest variables come first
         ram_usage = sorted(ram_usage, key=lambda x: x[1], reverse=True)
 
+        # return the sum of RAM usage and the variables taking up the most RAM
         return sum(x[1] for x in ram_usage), ram_usage[:5]
 
     @property

@@ -17,10 +17,19 @@ def _get_all_subclasses(cls):
 
 
 class Stat(ABC):
+    """
+    Core class representing all stats.
+    Stats are only ever instantiated when they are really displayed.
+    Most of the time the class itself is used to represent a stat.
+    """
     _initialized = False
     default_settings = {}
 
     def __init__(self, fps):
+        """
+        Construct a stat.
+        self.get_stat must already work when this is called.
+        """
         if not self._initialized:
             raise exceptions.InvalidStatError(
                 'The stat class is not initialized.')
@@ -31,10 +40,17 @@ class Stat(ABC):
             raise exceptions.InvalidStatError(
                 'Unavailable stats can not be instantiated.')
         self.fps = fps
+        # check if the class returns a tuple. in that case, it contains a
+        # breakdown of contributors to the stat
         self.has_contributor_breakdown = isinstance(self.get_stat(), tuple)
 
     @classmethod
     def _init_tags(cls):
+        """
+        Initialise the tags of the stat class.
+        Must be called before anything else is done with the stat class.
+        """
+        cls._validate_stat()
         if not cls._initialized:
             base = os.path.basename(cls.__module__)
             root_tag = base[:base.index('.permon.py')]
@@ -47,16 +63,24 @@ class Stat(ABC):
             cls._initialized = True
 
     @classmethod
-    def _validate_stat(cls, check_cls):
-        if not hasattr(check_cls, 'name'):
+    def _validate_stat(cls):
+        """
+        Make sure that the stat has a static name and base_tag attribute.
+        """
+        if not hasattr(cls, 'name'):
             raise exceptions.InvalidStatError(
                 'Stats must have a static name attribute.')
-        if not hasattr(check_cls, 'base_tag'):
+        if not hasattr(cls, 'base_tag'):
             raise exceptions.InvalidStatError(
                 'Stats must have a static tag attribute.')
 
     @classmethod
     def set_settings(cls, settings):
+        """
+        Set the settings of a stat.
+        Passed settings are merged into the default settings of the stat.
+        The settings are set on the stat class, NOT an instance of the stat.
+        """
         assert set(settings.keys()).issubset(set(cls.default_settings.keys()))
 
         for key, value in settings.items():
@@ -67,24 +91,46 @@ class Stat(ABC):
 
     @classmethod
     def check_availability(cls):
+        """
+        Check if the stat is available.
+        This must raise a `permon.exceptions.StatNotAvailableError`
+        if the stat is not available.
+        """
         pass
 
     @abstractmethod
     def get_stat(self):
+        """
+        Get the current value of the stat.
+        This must be defined by the stat creator.
+        """
         pass
 
     @property
     @abstractmethod
     def minimum(self):
+        """
+        Get the minimum possible value of the stat.
+        return `None` if the minimum is not predetermined.
+        """
         pass
 
     @property
     @abstractmethod
     def maximum(self):
+        """
+        Get the maximum possible value of the stat.
+        return `None` if the maximum is not predetermined.
+        """
         pass
 
 
 def _import_all_stats():
+    """
+    Import all stats (prepackaged ones and user defined ones).
+    This must only ever be called once. Otherwise they are imported
+    multiple times.
+    """
     here = os.path.dirname(os.path.realpath(__file__))
     default_stat_dir = os.path.join(here, 'stats', '*.permon.py')
     custom_stat_dir = os.path.join(config.config_dir, 'stats', '*.permon.py')
@@ -103,6 +149,10 @@ def _import_all_stats():
 
 
 def get_all_stats():
+    """
+    Get all stat classes. Does not check whether the stat
+    is available.
+    """
     global _imported_stats, _stats
 
     if not _imported_stats:
@@ -118,6 +168,10 @@ def get_all_stats():
 
 
 def get_stats_from_repr(stat_repr):
+    """
+    Get stat classes from a mixed string or dictionary representation
+    of the stats.
+    """
     is_one = False
     if not isinstance(stat_repr, list):
         is_one = True
@@ -142,6 +196,7 @@ def get_stats_from_repr(stat_repr):
 
 
 def verify_tags(tags):
+    """Verify whether all passed tags exist."""
     if not isinstance(tags, list):
         tags = [tags]
 

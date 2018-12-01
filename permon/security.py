@@ -10,6 +10,9 @@ secret_path = os.path.join(data_dir, 'SECRET_KEY')
 
 
 def get_secret_key():
+    """
+    Get the secret key. This key is created once and stays the same afterwards.
+    """
     os.makedirs(data_dir, exist_ok=True)
 
     if os.path.exists(secret_path):
@@ -23,10 +26,12 @@ def get_secret_key():
 
 
 def encrypt_password(password):
+    """Deterministically encrypt a password."""
     return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
 
 def prompt_password():
+    """Prompt the user to set a password."""
     passwords_match = False
     while not passwords_match:
         password = encrypt_password(getpass.getpass('Enter Password: '))

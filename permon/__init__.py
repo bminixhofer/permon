@@ -44,6 +44,9 @@ def parse_args(args, current_config):
     the path to a private key file for usage with SSL/TLS
     """)
 
+    # stats in the config need to be parsed to dictionaries first
+    # because they can be specified by their tag name when the settings are
+    # kept at their default
     stat_tags = [x['tag'] for x in config.parse_stats(current_config['stats'])]
     stat_str = ', '.join(stat_tags)
     for subparser in subparsers.choices.values():
@@ -91,8 +94,9 @@ def main():
 
     if args.subcommand is None:
         parser.print_help()
-        parser.exit(1)
+        sys.exit(1)
 
+    # get the stat classes from the dictionaries representing stats
     stats = backend.get_stats_from_repr(args.stats)
 
     # determines which colors are used in frontends that support custom colors
@@ -104,7 +108,12 @@ def main():
                         datefmt='%d-%m-%Y %I:%M:%S %p',
                         level=logging_level)
 
+    # instantiate the appropriate frontend depending on the frontend argument
+    # specified by the user
+    # instantiating the app only sets some values
+    # the actual UI is launched in app.initialize
     if args.subcommand == 'browser':
+        # set the ssl context if a certfile and keyfile are given for https
         ssl_context = None
         if args.certfile and args.keyfile:
             ssl_context = (args.certfile, args.keyfile)
@@ -125,6 +134,9 @@ def main():
         app = terminal.TerminalApp(stats, colors=colors,
                                    buffer_size=500, fps=10)
 
+    # app.make_available checks if the app is available
+    # i. e. all needed modules are installed and prompts the user to
+    # install them if they are not
     try:
         app.make_available()
     except exceptions.FrontendNotAvailableError as e:
