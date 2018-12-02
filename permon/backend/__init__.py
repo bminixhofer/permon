@@ -55,7 +55,20 @@ class Stat(ABC, metaclass=MetaStat):
         cls._validate_stat()
         if not cls._initialized:
             base = os.path.basename(cls.__module__)
-            root_tag = base[:base.index('.permon.py')]
+            index = None
+            if not base.endswith('.py'):
+                # module was imported regularly, not via runpy
+                root_tag = base.split('.')[-1]
+            else:
+                try:
+                    # check whether it is a user-defined stat
+                    # which must end with .permon.py
+                    index = base.index('.permon.py')
+                except ValueError:
+                    # otherwise, it is a prepackaged stat
+                    # which just ends with .py
+                    index = base.index('.py')
+            root_tag = base[:index]
             # define tag and root_tag
             # base_tag has already been defined by the stat creator
             cls.root_tag = root_tag
@@ -134,7 +147,7 @@ def _import_all_stats():
     multiple times.
     """
     here = os.path.dirname(os.path.realpath(__file__))
-    default_stat_dir = os.path.join(here, 'stats', '*.permon.py')
+    default_stat_dir = os.path.join(here, 'stats', '*.py')
     custom_stat_dir = os.path.join(config.config_dir, 'stats', '*.permon.py')
 
     default_stat_files = glob.glob(default_stat_dir)

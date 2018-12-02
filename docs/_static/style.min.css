@@ -11,9 +11,6 @@ h1 {
   color: #48cfad;
   font-size: 3em; }
 
-h2 {
-  color: #48cfad; }
-
 strong {
   color: #48cfad; }
 
@@ -116,6 +113,8 @@ button a {
 .card {
   padding: 1em 6em;
   font-size: 1.3em; }
+  .card h2 {
+    color: #48cfad; }
 
 .flex {
   display: flex;

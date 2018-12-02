@@ -9,7 +9,6 @@ from permon import exceptions
 
 
 class ProcessTracker():
-    """Singleton wrapper class tracking currently running processes."""
     instance = None
     n_wrapper_instances = 0
 

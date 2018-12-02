@@ -46,6 +46,308 @@
 <h1>User documentation<a class="headerlink" href="#user-documentation" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="what-is-permon">
 <h2>What is permon?<a class="headerlink" href="#what-is-permon" title="Permalink to this headline">¶</a></h2>
+<p>Permon is a tool to display live line charts in a clear, uncluttered way. Permon comes prepackaged
+with a lot of useful stats for monitoring the performance of your PC. It is developed with a focus
+on only showing you things you care about, not everything you can monitor in your system.</p>
+<p>Permon is developed in Python 3. There is a good chance you already have Python on your system. If
+not, install it (recommended: <a class="reference external" href="https://conda.io/miniconda.html/">Miniconda</a>. Run <code class="docutils literal notranslate"><span class="pre">pip</span>
+<span class="pre">install</span> <span class="pre">permon</span></code> in your preferred command line to install permon. Permon can then be started from the command line.</p>
+<div class="section" id="synopsis">
+<h3>Synopsis<a class="headerlink" href="#synopsis" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">permon</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">version</span><span class="p">]</span> <span class="p">{</span><span class="n">terminal</span><span class="p">,</span><span class="n">native</span><span class="p">,</span><span class="n">browser</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">password</span><span class="p">}</span> <span class="o">...</span>
+</pre></div>
+</div>
+<div class="section" id="Positional Arguments">
+<h4>Positional Arguments<a class="headerlink" href="#Positional Arguments" title="Permalink to this headline">¶</a></h4>
+<table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd>subcommand</kbd></td>
+<td><p class="first">Possible choices: terminal, native, browser, config, password</p>
+<p>the subcommand to launch.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">terminal</span></code>, <code class="docutils literal notranslate"><span class="pre">browser</span></code> or <code class="docutils literal notranslate"><span class="pre">native</span></code>, runs the respective frontend.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">config</span></code>, runs command to interact with configuration.</p>
+<p class="last">When <code class="docutils literal notranslate"><span class="pre">password</span></code>, runs command to set permon’s password.</p>
+</td></tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="Named Arguments">
+<h4>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline">¶</a></h4>
+<table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd>--version</kbd></td>
+<td><p class="first">show permon’s version and exit</p>
+<p class="last">Default: False</p>
+</td></tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="Sub-commands:">
+<h4>Sub-commands:<a class="headerlink" href="#Sub-commands:" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="terminal">
+<h5>terminal<a class="headerlink" href="#terminal" title="Permalink to this headline">¶</a></h5>
+<p>Starts permon’s terminal frontend.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">permon</span> <span class="n">terminal</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">buffer</span><span class="o">-</span><span class="n">size</span> <span class="n">BUFFER_SIZE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">fps</span> <span class="n">FPS</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">verbose</span><span class="p">]</span>
+                <span class="p">[</span><span class="n">stats</span> <span class="p">[</span><span class="n">stats</span> <span class="o">...</span><span class="p">]]</span>
+</pre></div>
+</div>
+<div class="section" id="Positional Arguments_repeat1">
+<h6>Positional Arguments<a class="headerlink" href="#Positional Arguments_repeat1" title="Permalink to this headline">¶</a></h6>
+<table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd>stats</kbd></td>
+<td><p class="first">which stats to display
+If none are given, take those from the config file (core.cpu_usage, core.ram_usage, core.read_speed, core.write_speed)</p>
+<p class="last">Default: [‘core.cpu_usage’, ‘core.ram_usage’, ‘core.read_speed’, ‘core.write_speed’]</p>
+</td></tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="Named Arguments_repeat1">
+<h6>Named Arguments<a class="headerlink" href="#Named Arguments_repeat1" title="Permalink to this headline">¶</a></h6>
+<table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd>--buffer-size</kbd></td>
+<td>the number of points displayed on the screen at any time</td></tr>
+<tr><td class="option-group">
+<kbd>--fps</kbd></td>
+<td>the frames per second the display moves with</td></tr>
+<tr><td class="option-group">
+<kbd>--verbose</kbd></td>
+<td><p class="first">whether to enable verbose logging</p>
+<p class="last">Default: True</p>
+</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="native">
+<h5>native<a class="headerlink" href="#native" title="Permalink to this headline">¶</a></h5>
+<p>Starts permon’s native frontend.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">permon</span> <span class="n">native</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">buffer</span><span class="o">-</span><span class="n">size</span> <span class="n">BUFFER_SIZE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">fps</span> <span class="n">FPS</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">verbose</span><span class="p">]</span>
+              <span class="p">[</span><span class="n">stats</span> <span class="p">[</span><span class="n">stats</span> <span class="o">...</span><span class="p">]]</span>
+</pre></div>
+</div>
+<div class="section" id="Positional Arguments_repeat2">
+<h6>Positional Arguments<a class="headerlink" href="#Positional Arguments_repeat2" title="Permalink to this headline">¶</a></h6>
+<table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd>stats</kbd></td>
+<td><p class="first">which stats to display
+If none are given, take those from the config file (core.cpu_usage, core.ram_usage, core.read_speed, core.write_speed)</p>
+<p class="last">Default: [‘core.cpu_usage’, ‘core.ram_usage’, ‘core.read_speed’, ‘core.write_speed’]</p>
+</td></tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="Named Arguments_repeat2">
+<h6>Named Arguments<a class="headerlink" href="#Named Arguments_repeat2" title="Permalink to this headline">¶</a></h6>
+<table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd>--buffer-size</kbd></td>
+<td>the number of points displayed on the screen at any time</td></tr>
+<tr><td class="option-group">
+<kbd>--fps</kbd></td>
+<td>the frames per second the display moves with</td></tr>
+<tr><td class="option-group">
+<kbd>--verbose</kbd></td>
+<td><p class="first">whether to enable verbose logging</p>
+<p class="last">Default: True</p>
+</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="browser">
+<h5>browser<a class="headerlink" href="#browser" title="Permalink to this headline">¶</a></h5>
+<p>Starts permon’s browser frontend.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">permon</span> <span class="n">browser</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">port</span> <span class="n">PORT</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ip</span> <span class="n">IP</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">browser</span><span class="p">]</span>
+               <span class="p">[</span><span class="o">--</span><span class="n">certfile</span> <span class="n">CERTFILE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">keyfile</span> <span class="n">KEYFILE</span><span class="p">]</span>
+               <span class="p">[</span><span class="o">--</span><span class="n">buffer</span><span class="o">-</span><span class="n">size</span> <span class="n">BUFFER_SIZE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">fps</span> <span class="n">FPS</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">verbose</span><span class="p">]</span>
+               <span class="p">[</span><span class="n">stats</span> <span class="p">[</span><span class="n">stats</span> <span class="o">...</span><span class="p">]]</span>
+</pre></div>
+</div>
+<div class="section" id="Positional Arguments_repeat3">
+<h6>Positional Arguments<a class="headerlink" href="#Positional Arguments_repeat3" title="Permalink to this headline">¶</a></h6>
+<table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd>stats</kbd></td>
+<td><p class="first">which stats to display
+If none are given, take those from the config file (core.cpu_usage, core.ram_usage, core.read_speed, core.write_speed)</p>
+<p class="last">Default: [‘core.cpu_usage’, ‘core.ram_usage’, ‘core.read_speed’, ‘core.write_speed’]</p>
+</td></tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="Named Arguments_repeat3">
+<h6>Named Arguments<a class="headerlink" href="#Named Arguments_repeat3" title="Permalink to this headline">¶</a></h6>
+<table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd>--port</kbd></td>
+<td><p class="first">the port permon will listen on</p>
+<p class="last">Default: 1234</p>
+</td></tr>
+<tr><td class="option-group">
+<kbd>--ip</kbd></td>
+<td><p class="first">the IP address permon will listen on</p>
+<p class="last">Default: “localhost”</p>
+</td></tr>
+<tr><td class="option-group">
+<kbd>--no-browser</kbd></td>
+<td><p class="first">don’t open permon in a browser after startup</p>
+<p class="last">Default: False</p>
+</td></tr>
+<tr><td class="option-group">
+<kbd>--certfile</kbd></td>
+<td>the path to an SSL/TLS certificate file</td></tr>
+<tr><td class="option-group">
+<kbd>--keyfile</kbd></td>
+<td>the path to a private key file for usage with SSL/TLS</td></tr>
+<tr><td class="option-group">
+<kbd>--buffer-size</kbd></td>
+<td>the number of points displayed on the screen at any time</td></tr>
+<tr><td class="option-group">
+<kbd>--fps</kbd></td>
+<td>the frames per second the display moves with</td></tr>
+<tr><td class="option-group">
+<kbd>--verbose</kbd></td>
+<td><p class="first">whether to enable verbose logging</p>
+<p class="last">Default: True</p>
+</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="config">
+<h5>config<a class="headerlink" href="#config" title="Permalink to this headline">¶</a></h5>
+<p>Command to interact with the configuration of permon.
+Default configuration:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;stats&quot;</span><span class="o">:</span> <span class="p">[</span>
+        <span class="s2">&quot;core.cpu_usage&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;core.ram_usage&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;core.read_speed&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;core.write_speed&quot;</span>
+    <span class="p">],</span>
+    <span class="s2">&quot;colors&quot;</span><span class="o">:</span> <span class="p">[</span>
+        <span class="s2">&quot;#ed5565&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;#ffce54&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;#48cfad&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;#sd9cec&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;#ec87c0&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;#fc6e51&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;#a0d468&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;#4fc1e9&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;#ac92ec&quot;</span>
+    <span class="p">],</span>
+    <span class="s2">&quot;verbose&quot;</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="s2">&quot;password&quot;</span><span class="o">:</span> <span class="kc">null</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Stats can either be specified by their tag name like in the default config or
+by a dictionary with keys <code class="docutils literal notranslate"><span class="pre">tag</span></code> and <code class="docutils literal notranslate"><span class="pre">settings</span></code> where <code class="docutils literal notranslate"><span class="pre">settings</span></code> is a
+dictionary consisting of keys and values specifying the value of settings
+for the respective stat e. g.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;tag&quot;</span><span class="o">:</span> <span class="s2">&quot;jupyter.ram_usage&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;query interval [s]&quot;</span><span class="o">:</span> <span class="s2">&quot;2&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">permon</span> <span class="n">config</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">{</span><span class="n">edit</span><span class="p">,</span><span class="n">show</span><span class="p">,</span><span class="n">reset</span><span class="p">}</span>
+</pre></div>
+</div>
+<div class="section" id="Positional Arguments_repeat4">
+<h6>Positional Arguments<a class="headerlink" href="#Positional Arguments_repeat4" title="Permalink to this headline">¶</a></h6>
+<table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd>command</kbd></td>
+<td><p class="first">Possible choices: edit, show, reset</p>
+<p>Which command to run.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">edit</span></code>, opens your preferred editor to edit the config.json file.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">show</span></code>, prints your current configuriation file and directory.</p>
+<p class="last">When <code class="docutils literal notranslate"><span class="pre">reset</span></code>, resets configuration to the defaults.</p>
+</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="password">
+<h5>password<a class="headerlink" href="#password" title="Permalink to this headline">¶</a></h5>
+<p>Open dialog to set permon’s password.
+The password is currently only used for authentication in the browser frontend.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">permon</span> <span class="n">password</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="stats">
+<h2>Stats<a class="headerlink" href="#stats" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="permon.backend.stats.core.CPUStat">
+<em class="property">class </em><code class="descclassname">permon.backend.stats.core.</code><code class="descname">CPUStat</code><a class="headerlink" href="#permon.backend.stats.core.CPUStat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tracks the CPU usage of the user.
+Also returns the top contributors to the CPU usage.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="permon.backend.stats.core.RAMStat">
+<em class="property">class </em><code class="descclassname">permon.backend.stats.core.</code><code class="descname">RAMStat</code><a class="headerlink" href="#permon.backend.stats.core.RAMStat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tracks the RAM usage of the user.
+Also returns the top contributors to the RAM usage.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="permon.backend.stats.core.ReadStat">
+<em class="property">class </em><code class="descclassname">permon.backend.stats.core.</code><code class="descname">ReadStat</code><a class="headerlink" href="#permon.backend.stats.core.ReadStat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tracks the disk read speed of the user.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="permon.backend.stats.core.WriteStat">
+<em class="property">class </em><code class="descclassname">permon.backend.stats.core.</code><code class="descname">WriteStat</code><a class="headerlink" href="#permon.backend.stats.core.WriteStat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tracks the disk write speed of the user.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="permon.backend.stats.core.CPUTempStat">
+<em class="property">class </em><code class="descclassname">permon.backend.stats.core.</code><code class="descname">CPUTempStat</code><a class="headerlink" href="#permon.backend.stats.core.CPUTempStat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tracks the temperature of the CPU.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="extending-permon-with-custom-stats">
+<h2>Extending permon with custom stats<a class="headerlink" href="#extending-permon-with-custom-stats" title="Permalink to this headline">¶</a></h2>
 </div>
 </div>
 
@@ -59,7 +361,12 @@
 <h3><a href="../documentation/">Table of Contents</a></h3>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#"> User documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#what-is-permon">What is permon?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#what-is-permon">What is permon?</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#synopsis">Synopsis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#stats">Stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#extending-permon-with-custom-stats">Extending permon with custom stats</a></li>
 </ul>
 </li>
 </ul>
