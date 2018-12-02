@@ -15,18 +15,19 @@ def import_delayed():
 
 
 class TerminalMonitor(Monitor):
-    def __init__(self, stat, buffer_size, fps, color, app,
+    def __init__(self, stat, fps, color, app,
                  resolution, axis_width=10, right_axis_width=20):
-        super(TerminalMonitor, self).__init__(stat, buffer_size,
-                                              fps, color, app)
-
-        self.title = self.stat.name
-        self.resolution = resolution
         self.axis_width = axis_width
         self.r_axis_width = right_axis_width
-        # fill unknown history with the minimum value (or 0 if it is unknown)
+
         axis_space = self.axis_width + self.r_axis_width
-        self.values = [self.stat.minimum or 0.] * (resolution[1] - axis_space)
+        buffer_size = (resolution[1] - axis_space)
+        super(TerminalMonitor, self).__init__(stat, buffer_size,
+                                              fps, color, app)
+        self.title = self.stat.name
+        self.resolution = resolution
+        # fill unknown history with the minimum value (or 0 if it is unknown)
+        self.values = [self.stat.minimum or 0.] * buffer_size
         self.symbols = {
             'axis': ' ┤',
             'right_axis': '├',
@@ -171,10 +172,9 @@ class TerminalMonitor(Monitor):
 
 
 class TerminalApp(MonitorApp):
-    def __init__(self, stats, colors, buffer_size=None, fps=None):
-        buffer_size = buffer_size or 500
+    def __init__(self, stats, buffer_size=None, fps=None):
         fps = fps or 10
-        super(TerminalApp, self).__init__(stats, colors, buffer_size, fps)
+        super(TerminalApp, self).__init__(stats, [None], buffer_size, fps)
 
     def initialize(self):
         self.term = blessings.Terminal()
@@ -193,7 +193,6 @@ class TerminalApp(MonitorApp):
 
         for i, stat in enumerate(self.initial_stats):
             monitor = TerminalMonitor(stat,
-                                      buffer_size=self.buffer_size,
                                       fps=self.fps,
                                       color=self.colors[i],
                                       app=self,
