@@ -1,0 +1,37 @@
+{
+  "name": "permon-docs",
+  "version": "1.0.0",
+  "description": "docs for permon",
+  "main": "webpack.config.js",
+  "dependencies": {
+    "autoprefixer": "^9.3.1",
+    "node-sass": "^4.10.0",
+    "webpack": "^4.26.1"
+  },
+  "devDependencies": {
+    "clean-webpack-plugin": "^1.0.0",
+    "css-loader": "^1.0.1",
+    "eslint": "^5.7.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.14.0",
+    "mini-css-extract-plugin": "^0.4.4",
+    "postcss-loader": "^3.0.0",
+    "sass-loader": "^7.1.0",
+    "style-loader": "^0.23.1",
+    "webpack-cli": "^3.1.2"
+  },
+  "scripts": {
+    "build": "webpack --mode=production --display=errors-only",
+    "test": "eslint src/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bminixhofer/permon.git"
+  },
+  "author": "bminixhofer",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bminixhofer/permon/issues"
+  },
+  "homepage": "https://github.com/bminixhofer/permon#readme"
+}

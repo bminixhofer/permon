@@ -7,9 +7,9 @@ Welcome to permon's documentation!
 ==================================
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 3
 
+    User documentation <userdoc/index>
 
 Indices and tables
 ==================
