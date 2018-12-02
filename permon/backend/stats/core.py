@@ -9,6 +9,11 @@ from permon import exceptions
 
 
 class ProcessTracker():
+    """
+    Singleton wrapper for tracking process information like cpu and
+    RAM usage of each process. Needed by core.ram_usage and core.cpu_usage
+    for their contributor breakdown.
+    """
     instance = None
     n_wrapper_instances = 0
 

@@ -45,7 +45,7 @@
   <div class="section" id="user-documentation">
 <h1>User documentation<a class="headerlink" href="#user-documentation" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="what-is-permon">
-<h2>What is permon?<a class="headerlink" href="#what-is-permon" title="Permalink to this headline">¶</a></h2>
+<h2>What is Permon?<a class="headerlink" href="#what-is-permon" title="Permalink to this headline">¶</a></h2>
 <p>Permon is a tool to display live line charts in a clear, uncluttered way. Permon comes prepackaged
 with a lot of useful stats for monitoring the performance of your PC. It is developed with a focus
 on only showing you things you care about, not everything you can monitor in your system.</p>
@@ -440,7 +440,9 @@ of your stat class.</p>
         <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
 </pre></div>
 </div>
-<p>All stats must inherit from the <code class="docutils literal notranslate"><span class="pre">permon.backend.Stat</span></code> base class.</p>
+<p>All stats must inherit from the <code class="docutils literal notranslate"><span class="pre">permon.backend.Stat</span></code> base class. Also, the parent constructor should be called at the end of <code class="docutils literal notranslate"><span class="pre">__init__</span></code>
+to make sure <code class="docutils literal notranslate"><span class="pre">get_stat</span></code> can run successfully (the parent constructor needs to call it once to check whether the stat has a <a class="reference internal" href="#contributor-breakdown"><span class="std std-ref">contributor breakdown</span></a>).</p>
+<p>View your first custom stat by running <code class="docutils literal notranslate"><span class="pre">permon</span> <span class="pre">native</span> <span class="pre">custom.sine</span></code> (or, of course, use another frontend).</p>
 <div class="section" id="adding-settings-to-a-stat">
 <h3>Adding settings to a stat<a class="headerlink" href="#adding-settings-to-a-stat" title="Permalink to this headline">¶</a></h3>
 <p>Stats can have settings to conventienly change some aspects of the stat. Extending the example from above:</p>
@@ -519,6 +521,52 @@ in <code class="xref py py-meth docutils literal notranslate"><span class="pre">
         <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="adding-a-contributor-breakdown-to-a-stat">
+<span id="contributor-breakdown"></span><h3>Adding a contributor breakdown to a stat<a class="headerlink" href="#adding-a-contributor-breakdown-to-a-stat" title="Permalink to this headline">¶</a></h3>
+<p>Stats can have a contributor breakdown. A contributor breakdown shows what contributes to the stat, e. g. how much of the CPU different
+processes need for <code class="xref py py-meth docutils literal notranslate"><span class="pre">permon.backend.stats.CPUUsage()</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">permon.backend</span> <span class="kn">import</span> <span class="n">Stat</span>
+
+
+<span class="k">class</span> <span class="nc">SineModulationStat</span><span class="p">(</span><span class="n">Stat</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Sine Modulation&#39;</span>
+    <span class="n">base_tag</span> <span class="o">=</span> <span class="s1">&#39;sine_modulation&#39;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fps</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SineModulationStat</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">fps</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_stat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">+=</span> <span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">fps</span>
+
+        <span class="n">sine1</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">)</span>
+        <span class="n">sine2</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">*</span> <span class="mi">10</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">sine1</span> <span class="o">+</span> <span class="n">sine2</span><span class="p">,</span> <span class="p">[</span>
+            <span class="p">(</span><span class="s1">&#39;sine1&#39;</span><span class="p">,</span> <span class="n">sine1</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;sine2&#39;</span><span class="p">,</span> <span class="n">sine2</span><span class="p">)</span>
+        <span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">maximum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># both sines have a maximum of 2 because they are offset by +1</span>
+        <span class="k">return</span> <span class="mi">4</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">minimum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">0</span>
+</pre></div>
+</div>
+<p>Stats with a contributor breakdown must return the stat value and a list containing tuples of <code class="docutils literal notranslate"><span class="pre">(name,</span> <span class="pre">value)</span></code> for every contributor (<cite>sine1</cite> and <cite>sine2</cite> in the above example).
+Permon will automatically handle the rest.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p>The contributor breakdown of stats with a minimum of less than zero might have unexpected behaviour because the range of contributors is not well-defined
+in that case.</p>
+<p class="last">Negative contributors are also not handled well at the moment.</p>
+</div>
 <p>That already covers the full functionality of any stat.
 To see how the prepackaged stats are implemented, see the <a class="reference external" href="https://github.com/bminixhofer/permon/blob/dev/permon/backend/stats/core.py">source on github</a>.</p>
 </div>
@@ -535,7 +583,7 @@ To see how the prepackaged stats are implemented, see the <a class="reference ex
 <h3><a href="../documentation/">Table of Contents</a></h3>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#"> User documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#what-is-permon">What is permon?</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#what-is-permon">What is Permon?</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#synopsis">Synopsis</a></li>
 </ul>
 </li>
@@ -543,6 +591,7 @@ To see how the prepackaged stats are implemented, see the <a class="reference ex
 <li class="toctree-l2"><a class="reference internal" href="#extending-permon-with-custom-stats">Extending permon with custom stats</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#adding-settings-to-a-stat">Adding settings to a stat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#making-a-stat-conditionally-available">Making a stat conditionally available</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#adding-a-contributor-breakdown-to-a-stat">Adding a contributor breakdown to a stat</a></li>
 </ul>
 </li>
 </ul>

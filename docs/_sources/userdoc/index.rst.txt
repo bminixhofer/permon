@@ -2,7 +2,7 @@ User documentation
 ==================
 
 
-What is permon?
+What is Permon?
 ---------------
 
 Permon is a tool to display live line charts in a clear, uncluttered way. Permon comes prepackaged
@@ -79,7 +79,10 @@ You can now start creating stats in this file. They will automatically be discov
         def minimum(self):
             return -1
 
-All stats must inherit from the ``permon.backend.Stat`` base class.
+All stats must inherit from the ``permon.backend.Stat`` base class. Also, the parent constructor should be called at the end of ``__init__``
+to make sure ``get_stat`` can run successfully (the parent constructor needs to call it once to check whether the stat has a :ref:`contributor breakdown <contributor-breakdown>`).
+
+View your first custom stat by running ``permon native custom.sine`` (or, of course, use another frontend).
 
 Adding settings to a stat
 """""""""""""""""""""""""
@@ -167,6 +170,57 @@ in :meth:`Stat.check_availability` to e. g. disallow some settings. Further expa
         @property
         def minimum(self):
             return -1
+
+.. _contributor-breakdown:
+
+Adding a contributor breakdown to a stat
+""""""""""""""""""""""""""""""""""""""""
+
+Stats can have a contributor breakdown. A contributor breakdown shows what contributes to the stat, e. g. how much of the CPU different
+processes need for :meth:`permon.backend.stats.CPUUsage`.
+
+.. code-block:: python
+
+    import math
+    from permon.backend import Stat
+
+
+    class SineModulationStat(Stat):
+        name = 'Sine Modulation'
+        base_tag = 'sine_modulation'
+
+        def __init__(self, fps):
+            self.t = 0
+            super(SineModulationStat, self).__init__(fps)
+
+        def get_stat(self):
+            self.t += 1 / self.fps
+
+            sine1 = 1 + math.sin(self.t)
+            sine2 = 1 + math.sin(self.t * 10)
+
+            return sine1 + sine2, [
+                ('sine1', sine1),
+                ('sine2', sine2)
+            ]
+
+        @property
+        def maximum(self):
+            # both sines have a maximum of 2 because they are offset by +1
+            return 4
+
+        @property
+        def minimum(self):
+            return 0
+
+Stats with a contributor breakdown must return the stat value and a list containing tuples of ``(name, value)`` for every contributor (`sine1` and `sine2` in the above example).
+Permon will automatically handle the rest.
+
+.. warning::
+    The contributor breakdown of stats with a minimum of less than zero might have unexpected behaviour because the range of contributors is not well-defined
+    in that case.
+
+    Negative contributors are also not handled well at the moment.
 
 That already covers the full functionality of any stat.
 To see how the prepackaged stats are implemented, see the `source on github <https://github.com/bminixhofer/permon/blob/dev/permon/backend/stats/core.py>`_.

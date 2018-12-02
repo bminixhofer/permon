@@ -10,7 +10,8 @@
             Permon is developed in Python 3. There is a good chance you already have Python on your system. If
             not, install it (recommended: <a href="https://conda.io/miniconda.html">Miniconda</a>). Run <code>pip
                 install permon</code>
-            in your preferred command line and <code>permon --help</code> to see what you can do with permon.
+            in your preferred command line and <code>permon --help</code> to see what you can do with permon or take a look at the <a href="/documentation">documentation</a> for
+            a more in-depth guide.
         </p>
     </div>
     <div class="card card-everywhere">
@@ -45,9 +46,8 @@
         <p>
             Permon can easily be enhanced by adding custom stats. And Permon has, in my biased opinion, done a
             very good job of making this as intuitive as possible.
-            See the code snippet below to see what a custom stat looks like. Custom stats can be added by
-            putting the code in your config directory &mdash; see the <a href="#">documentation</a> for
-            details.
+            The code snippet below shows how a custom stat looks like. See the <a href="/userdoc/#extending-permon-with-custom-stats">documentation on extending Permon</a> to learn how
+            to add your first custom stat.
         </p>
         <div class="flex">
             <pre><code class="custom-stat python">import math
@@ -94,17 +94,21 @@ class SineStat(Stat):
         <h2>Permon is open source</h2>
         <p>
             Permon is open source and published on <a href="https://github.com/bminixhofer/permon">Github</a>.
-            What makes Permon special is that it has many components like:
+            What makes Permon special is that it has many components like
         </p>
         <ul>
             <li>Object orientation in Python</li>
             <li>Drawing in a terminal</li>
             <li>Developing a GUI app in Python</li>
             <li>Making a secure web server, including communication via WebSockets</li>
+            <li>Automatically generating documentation via Sphinx</li>
+            <li>Unit testing the Python code</li>
+            <li>Continous Integration via CircleCI</li>
         </ul>
         <p>
             while still being relatively small (~2k LoC) and thus easy to get into for a beginner &mdash;
-            especially because a huge focus has been put on documentation during development.
+            especially because a huge focus has been put on documentation during development. Check out the <a href="/contributordoc">Contributor documentation</a> to
+            see how permon works and how you can improve it.
         </p>
     </div>
 </div>
