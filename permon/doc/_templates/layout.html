@@ -1,0 +1,27 @@
+{% extends '!layout.html' %}
+
+{%- block extrahead %}
+<meta name="sourcename" content="{{ sourcename }}" />
+{% if "index.rst" in sourcename %}
+    <link rel="stylesheet" href="_static/remove_sphinx_style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/highlight.min.js"></script>
+    <script src="_static/index.js" async defer></script>
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+{% endif %}
+{% endblock %}
+
+{% block header %}
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+<div class="header">
+    <h1>permon<br/><a class="github-button" href="https://github.com/bminixhofer/permon" data-size="large" data-show-count="true"
+        aria-label="Star bminixhofer/permon on GitHub">Star</a></h1>
+    <br />
+    <code class="code-header">pip install permon</code>
+</div>
+<nav>
+    <button><a href="/">Introduction</a></button>
+    <button><a href="/documentation">Documentation</a></button>
+</nav>
+{% endblock %}
+{% set css_files = css_files + ['_static/custom.css'] %}

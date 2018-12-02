@@ -10,7 +10,6 @@ body, html {
     position: relative;
     width: 100%;
     text-align: center;
-    font-family: Raleway;
 }
 
 .header::after {
@@ -25,6 +24,10 @@ body, html {
     z-index: -1;
 }
 
+body, h1, h2, h3, h4, h5, h6, p, button, li {
+    font-family: Raleway, 'Arial', sans-serif !important;
+}
+
 h1 {
     margin: 0;
     color: #48cfad;
@@ -33,7 +36,6 @@ h1 {
 
 h2 {
     color: #48cfad;
-    font-family: Raleway;
 }
 
 strong {
@@ -42,7 +44,6 @@ strong {
 
 p {
     color: #212121;
-    font-family: Raleway;
     font-size: 1.2em;
     margin: 0;
     padding: 1em 0;
@@ -62,7 +63,6 @@ li::before {
     margin-left: -1em;
 }
 li {
-    font-family: Raleway;
     font-size: 1.2em;
 }
 
@@ -74,6 +74,7 @@ li {
 }
 
 pre {
+    background: none;
     display: inline-block;
 }
 
@@ -93,10 +94,10 @@ nav {
 }
 
 button {
+    outline: none;
     padding: 0.2em 0;
     border: none;
     background: none;
-    font-family: Raleway;
     font-size: 1.5em;
     flex: 1;
     opacity: 0.4;
@@ -180,7 +181,7 @@ button:first-child {
 }
 
 .card-everywhere p {
-    width: 30em;
+    width: 25em;
 }
 
 .card-everywhere .image-container {
@@ -192,13 +193,24 @@ button:first-child {
     background-color: #f7f7f7;
 }
 
+/* the .github-button class will be replaced by a shadow root, so make .github-button invisible and style the inserted span*/
 .github-button {
-    position: relative;
-    top: -10em;
+    display: none;
+}
+
+.header h1 span {
+    left: 50%;
+    transform: translateX(-50%);
+    position: absolute;
 }
 
 a {
     color: #48cfad;
+}
+
+button a {
+    color: #333;
+    text-decoration: none;
 }
 
 @media (max-aspect-ratio: 4/3) {
