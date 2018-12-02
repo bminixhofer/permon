@@ -1,5 +1,5 @@
 {% extends '!layout.html' %}
-{% set is_introduction = "index.rst" in sourcename %}
+{% set is_introduction = "index.rst.txt" == sourcename %}
 
 {% if is_introduction %}
     {% set title = "Introduction" %}
