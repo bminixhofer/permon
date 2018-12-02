@@ -11,9 +11,30 @@ from permon import exceptions
 
 class JupyterRAMUsage(Stat):
     """
-    Tracks the RAM usage of all variables in a user-specified jupyter notebook.
-    If no connection info is given in the settings, take the kernel with the
-    latest start date.
+    tag: ``jupyter.ram_usage``
+
+    settings:
+
+    .. code-block:: javascript
+
+        {
+            "connection info": "",
+            "query interval [s]": 1
+        }
+
+    Tracks the RAM usage of all variables in
+    a user-specified jupyter notebook. If no connection info is given in the
+    settings, take the kernel with the latest start date.
+
+    ``connection info`` must be a string containing the info displayed when
+    running ``%connect_info`` in a jupyter notebook
+    (you can directly copy-paste it).
+
+    ``query interval [s]`` specifies how often the thread running in the
+    jupyter notebook should read the variables. The lower this is, the higher
+    the resolution of the stat but it might start affecting the speed of
+    your notebook when too low.
+
     Note that RAM tracked in this way is not equal to the actual RAM
     the OS needs because some further optimization is done by e. g. numpy
     to reduce the OS memory usage.

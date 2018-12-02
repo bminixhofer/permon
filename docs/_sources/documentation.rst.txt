@@ -10,10 +10,3 @@ Welcome to permon's documentation!
    :maxdepth: 3
 
     User documentation <userdoc/index>
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

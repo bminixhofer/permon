@@ -107,15 +107,15 @@ class ProcessTracker():
 
 class CPUStat(Stat):
     """
+    tag: ``core.cpu_usage``
+
+    settings: none
+
     Tracks the CPU usage of the user.
     Also returns the top contributors to the CPU usage.
     """
     name = 'CPU Usage [%]'
     base_tag = 'cpu_usage'
-    default_settings = {
-        'smoothing': 3,
-        'fit': 'best'
-    }
 
     def __init__(self, fps):
         # get a new wrapper around the process tracker singleton
@@ -145,6 +145,10 @@ class CPUStat(Stat):
 
 class RAMStat(Stat):
     """
+    tag: ``core.ram_usage``
+
+    settings: none
+
     Tracks the RAM usage of the user.
     Also returns the top contributors to the RAM usage.
     """
@@ -177,7 +181,17 @@ class RAMStat(Stat):
 
 
 class GPUStat(Stat):
-    """Tracks the current vRAM usage of the user."""
+    """
+    tag: ``core.vram_usage``
+
+    settings: none
+
+    Tracks the current vRAM usage of the user.
+    Currently only works for NVIDIA GPUs and ``nvidia-smi``
+    must be installed. To check if it is installed, type ``nvidia-smi``
+    in your command line and see if the command was found.
+
+    """
     name = 'vRAM Usage [MB]'
     base_tag = 'vram_usage'
 
@@ -223,7 +237,13 @@ class GPUStat(Stat):
 
 
 class ReadStat(Stat):
-    """Tracks the disk read speed of the user."""
+    """
+    tag: ``core.read_speed``
+
+    settings: none
+
+    Tracks the disk read speed of the user.
+    """
     name = 'Disk Read Speed [MB / s]'
     base_tag = 'read_speed'
 
@@ -259,7 +279,13 @@ class ReadStat(Stat):
 
 
 class WriteStat(Stat):
-    """Tracks the disk write speed of the user."""
+    """
+    tag: ``core.write_speed``
+
+    settings: none
+
+    Tracks the disk write speed of the user.
+    """
     name = 'Disk Write Speed [MB / s]'
     base_tag = 'write_speed'
 
@@ -295,7 +321,13 @@ class WriteStat(Stat):
 
 
 class CPUTempStat(Stat):
-    """Tracks the temperature of the CPU."""
+    """
+    tag: ``core.cpu_temp``
+
+    settings: none
+
+    Tracks the CPU temperature of the user.
+    """
     name = 'CPU Temperature [°C]'
     base_tag = 'cpu_temp'
 

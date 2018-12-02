@@ -87,10 +87,6 @@ the frames per second the display moves with
 whether to enable verbose logging
             """)
 
-    stat_with_setting_example = {
-        'tag': 'jupyter.ram_usage',
-        'query interval [s]': '2'
-    }
     config_parser = subparsers.add_parser('config', help=f"""
 Command to interact with the configuration of permon.
 Default configuration:
@@ -106,7 +102,18 @@ for the respective stat e. g.
 
 .. code-block:: javascript
 
-{textwrap.indent(json.dumps(stat_with_setting_example, indent=4), ' ' * 4)}
+        ...
+        "stats": [
+            {{
+                "tag": "jupyter.ram_usage",
+                "settings": {{
+                    "connection info": "",
+                    "query interval [s]": 1
+                }}
+            }}
+        ]
+        ...
+
     """)
     config_parser.add_argument('command', choices=['edit', 'show', 'reset'], help=f"""
 Which command to run.

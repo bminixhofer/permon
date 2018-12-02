@@ -273,10 +273,17 @@ Default configuration:</p>
 by a dictionary with keys <code class="docutils literal notranslate"><span class="pre">tag</span></code> and <code class="docutils literal notranslate"><span class="pre">settings</span></code> where <code class="docutils literal notranslate"><span class="pre">settings</span></code> is a
 dictionary consisting of keys and values specifying the value of settings
 for the respective stat e. g.</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-    <span class="s2">&quot;tag&quot;</span><span class="o">:</span> <span class="s2">&quot;jupyter.ram_usage&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;query interval [s]&quot;</span><span class="o">:</span> <span class="s2">&quot;2&quot;</span>
-<span class="p">}</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="p">...</span>
+<span class="s2">&quot;stats&quot;</span><span class="o">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;tag&quot;</span><span class="o">:</span> <span class="s2">&quot;jupyter.ram_usage&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;settings&quot;</span><span class="o">:</span> <span class="p">{</span>
+            <span class="s2">&quot;connection info&quot;</span><span class="o">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;query interval [s]&quot;</span><span class="o">:</span> <span class="mi">1</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">]</span>
+<span class="p">...</span>
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">permon</span> <span class="n">config</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">{</span><span class="n">edit</span><span class="p">,</span><span class="n">show</span><span class="p">,</span><span class="n">reset</span><span class="p">}</span>
@@ -313,41 +320,208 @@ The password is currently only used for authentication in the browser frontend.<
 </div>
 <div class="section" id="stats">
 <h2>Stats<a class="headerlink" href="#stats" title="Permalink to this headline">¶</a></h2>
+<p>Permon comes prepackaged with some useful stats to monitor the performance of your PC. You can also add custom stats to Permon.
+See <a class="reference internal" href="#extending-permon-with-custom-stats">Extending permon with custom stats</a> to see how to do that. The following stats are always part of Permon:</p>
 <dl class="class">
 <dt id="permon.backend.stats.core.CPUStat">
 <em class="property">class </em><code class="descclassname">permon.backend.stats.core.</code><code class="descname">CPUStat</code><a class="headerlink" href="#permon.backend.stats.core.CPUStat" title="Permalink to this definition">¶</a></dt>
-<dd><p>Tracks the CPU usage of the user.
+<dd><p>tag: <code class="docutils literal notranslate"><span class="pre">core.cpu_usage</span></code></p>
+<p>settings: none</p>
+<p>Tracks the CPU usage of the user.
 Also returns the top contributors to the CPU usage.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="permon.backend.stats.core.RAMStat">
 <em class="property">class </em><code class="descclassname">permon.backend.stats.core.</code><code class="descname">RAMStat</code><a class="headerlink" href="#permon.backend.stats.core.RAMStat" title="Permalink to this definition">¶</a></dt>
-<dd><p>Tracks the RAM usage of the user.
+<dd><p>tag: <code class="docutils literal notranslate"><span class="pre">core.ram_usage</span></code></p>
+<p>settings: none</p>
+<p>Tracks the RAM usage of the user.
 Also returns the top contributors to the RAM usage.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="permon.backend.stats.core.GPUStat">
+<em class="property">class </em><code class="descclassname">permon.backend.stats.core.</code><code class="descname">GPUStat</code><a class="headerlink" href="#permon.backend.stats.core.GPUStat" title="Permalink to this definition">¶</a></dt>
+<dd><p>tag: <code class="docutils literal notranslate"><span class="pre">core.vram_usage</span></code></p>
+<p>settings: none</p>
+<p>Tracks the current vRAM usage of the user.
+Currently only works for NVIDIA GPUs and <code class="docutils literal notranslate"><span class="pre">nvidia-smi</span></code>
+must be installed. To check if it is installed, type <code class="docutils literal notranslate"><span class="pre">nvidia-smi</span></code>
+in your command line and see if the command was found.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="permon.backend.stats.core.ReadStat">
 <em class="property">class </em><code class="descclassname">permon.backend.stats.core.</code><code class="descname">ReadStat</code><a class="headerlink" href="#permon.backend.stats.core.ReadStat" title="Permalink to this definition">¶</a></dt>
-<dd><p>Tracks the disk read speed of the user.</p>
+<dd><p>tag: <code class="docutils literal notranslate"><span class="pre">core.read_speed</span></code></p>
+<p>settings: none</p>
+<p>Tracks the disk read speed of the user.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="permon.backend.stats.core.WriteStat">
 <em class="property">class </em><code class="descclassname">permon.backend.stats.core.</code><code class="descname">WriteStat</code><a class="headerlink" href="#permon.backend.stats.core.WriteStat" title="Permalink to this definition">¶</a></dt>
-<dd><p>Tracks the disk write speed of the user.</p>
+<dd><p>tag: <code class="docutils literal notranslate"><span class="pre">core.write_speed</span></code></p>
+<p>settings: none</p>
+<p>Tracks the disk write speed of the user.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="permon.backend.stats.core.CPUTempStat">
 <em class="property">class </em><code class="descclassname">permon.backend.stats.core.</code><code class="descname">CPUTempStat</code><a class="headerlink" href="#permon.backend.stats.core.CPUTempStat" title="Permalink to this definition">¶</a></dt>
-<dd><p>Tracks the temperature of the CPU.</p>
+<dd><p>tag: <code class="docutils literal notranslate"><span class="pre">core.cpu_temp</span></code></p>
+<p>settings: none</p>
+<p>Tracks the CPU temperature of the user.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="permon.backend.stats.jupyter.JupyterRAMUsage">
+<em class="property">class </em><code class="descclassname">permon.backend.stats.jupyter.</code><code class="descname">JupyterRAMUsage</code><a class="headerlink" href="#permon.backend.stats.jupyter.JupyterRAMUsage" title="Permalink to this definition">¶</a></dt>
+<dd><p>tag: <code class="docutils literal notranslate"><span class="pre">jupyter.ram_usage</span></code></p>
+<p>settings:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;connection info&quot;</span><span class="o">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;query interval [s]&quot;</span><span class="o">:</span> <span class="mi">1</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Tracks the RAM usage of all variables in
+a user-specified jupyter notebook. If no connection info is given in the
+settings, take the kernel with the latest start date.</p>
+<p><code class="docutils literal notranslate"><span class="pre">connection</span> <span class="pre">info</span></code> must be a string containing the info displayed when
+running <code class="docutils literal notranslate"><span class="pre">%connect_info</span></code> in a jupyter notebook
+(you can directly copy-paste it).</p>
+<p><code class="docutils literal notranslate"><span class="pre">query</span> <span class="pre">interval</span> <span class="pre">[s]</span></code> specifies how often the thread running in the
+jupyter notebook should read the variables. The lower this is, the higher
+the resolution of the stat but it might start affecting the speed of
+your notebook when too low.</p>
+<p>Note that RAM tracked in this way is not equal to the actual RAM
+the OS needs because some further optimization is done by e. g. numpy
+to reduce the OS memory usage.</p>
 </dd></dl>
 
 </div>
 <div class="section" id="extending-permon-with-custom-stats">
 <h2>Extending permon with custom stats<a class="headerlink" href="#extending-permon-with-custom-stats" title="Permalink to this headline">¶</a></h2>
+<p>Permon can be extended by adding custom stats. Custom stats have to be put in the <code class="docutils literal notranslate"><span class="pre">stats</span></code> subdirectory of the user
+config directory. You can find your user config directory by executing <code class="docutils literal notranslate"><span class="pre">permon</span> <span class="pre">config</span> <span class="pre">show</span></code> and looking for <em>Config directory</em>.</p>
+<div class="admonition hint">
+<p class="first admonition-title">Hint</p>
+<p class="last">On Linux, execute <code class="docutils literal notranslate"><span class="pre">cd</span> <span class="pre">`permon</span> <span class="pre">config</span> <span class="pre">show</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">-o</span> <span class="pre">&quot;\S*/permon$&quot;`</span></code> to directly change your directory to permon’s config directory.</p>
+</div>
+<p>In the config directory, make a subdirectory <code class="docutils literal notranslate"><span class="pre">stats</span></code> and create a file called <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;.permon.py</span></code> in the subdirectory where <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;</span></code> is the name for
+your suite of stats e. g. <code class="docutils literal notranslate"><span class="pre">custom.permon.py</span></code>.</p>
+<p>The tag of your stat will then be <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;.&lt;base_tag&gt;</span></code> where <code class="docutils literal notranslate"><span class="pre">&lt;base_tag&gt;</span></code> is the static <code class="docutils literal notranslate"><span class="pre">base_tag</span></code> attribute
+of your stat class.</p>
+<p>You can now start creating stats in this file. They will automatically be discovered by permon. A simple custom stat could look like this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">permon.backend</span> <span class="kn">import</span> <span class="n">Stat</span>
+
+
+<span class="k">class</span> <span class="nc">SineStat</span><span class="p">(</span><span class="n">Stat</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Sine&#39;</span>
+    <span class="n">base_tag</span> <span class="o">=</span> <span class="s1">&#39;sine&#39;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fps</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SineStat</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">fps</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_stat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">+=</span> <span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">fps</span>
+        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">maximum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">1</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">minimum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+</pre></div>
+</div>
+<p>All stats must inherit from the <code class="docutils literal notranslate"><span class="pre">permon.backend.Stat</span></code> base class.</p>
+<div class="section" id="adding-settings-to-a-stat">
+<h3>Adding settings to a stat<a class="headerlink" href="#adding-settings-to-a-stat" title="Permalink to this headline">¶</a></h3>
+<p>Stats can have settings to conventienly change some aspects of the stat. Extending the example from above:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">permon.backend</span> <span class="kn">import</span> <span class="n">Stat</span>
+
+
+<span class="k">class</span> <span class="nc">SineStat</span><span class="p">(</span><span class="n">Stat</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Sine&#39;</span>
+    <span class="n">base_tag</span> <span class="o">=</span> <span class="s1">&#39;sine&#39;</span>
+    <span class="n">default_settings</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;speed&#39;</span><span class="p">:</span> <span class="mf">1.</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fps</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SineStat</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">fps</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_stat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">+=</span> <span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">fps</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;speed&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">maximum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">1</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">minimum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+</pre></div>
+</div>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">default_settings</span></code> only stores the default settings. In the calculation, <code class="docutils literal notranslate"><span class="pre">self.settings</span></code> is used because it stores the settings that
+are entered in the UI.</p>
+<p>Every setting must have a default value. Every value should be a basic python data type (string, float, integer, …) because
+permon will automatically cast the user-entered string to the type specified in the <code class="docutils literal notranslate"><span class="pre">default_settings</span></code>.</p>
+<p>If you need more advanced data types like JSON, make the default value a string and manually convert it to the needed data type afterwards.</p>
+</div>
+<div class="section" id="making-a-stat-conditionally-available">
+<h3>Making a stat conditionally available<a class="headerlink" href="#making-a-stat-conditionally-available" title="Permalink to this headline">¶</a></h3>
+<p>Some stats are not always available, like <code class="xref py py-meth docutils literal notranslate"><span class="pre">permon.backend.stats.JupyterRAMUsage()</span></code> which needs <code class="docutils literal notranslate"><span class="pre">nvidia-smi</span></code> installed.</p>
+<p>To add some logic to check whether your stat is available or not, implement the <code class="xref py py-meth docutils literal notranslate"><span class="pre">Stat.check_availability()</span></code> method.
+This method must raise a <code class="xref py py-meth docutils literal notranslate"><span class="pre">permon.exceptions.StatNotAvailableError()</span></code> if the stat is not available. <code class="docutils literal notranslate"><span class="pre">cls.settings</span></code> can also be used
+in <code class="xref py py-meth docutils literal notranslate"><span class="pre">Stat.check_availability()</span></code> to e. g. disallow some settings. Further expanding the example from above:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">permon.backend</span> <span class="kn">import</span> <span class="n">Stat</span>
+<span class="kn">from</span> <span class="nn">permon</span> <span class="kn">import</span> <span class="n">exceptions</span>
+
+
+<span class="k">class</span> <span class="nc">SineStat</span><span class="p">(</span><span class="n">Stat</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Sine&#39;</span>
+    <span class="n">base_tag</span> <span class="o">=</span> <span class="s1">&#39;sine&#39;</span>
+    <span class="n">default_settings</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;speed&#39;</span><span class="p">:</span> <span class="mf">1.</span>
+    <span class="p">}</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">check_availability</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;speed&#39;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">StatNotAvailableError</span><span class="p">(</span>
+                <span class="s1">&#39;Speed must be greater than zero.&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fps</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SineStat</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">fps</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_stat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">+=</span> <span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">fps</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;speed&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">maximum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">1</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">minimum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+</pre></div>
+</div>
+<p>That already covers the full functionality of any stat.
+To see how the prepackaged stats are implemented, see the <a class="reference external" href="https://github.com/bminixhofer/permon/blob/dev/permon/backend/stats/core.py">source on github</a>.</p>
+</div>
 </div>
 </div>
 
@@ -366,7 +540,11 @@ Also returns the top contributors to the RAM usage.</p>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#stats">Stats</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#extending-permon-with-custom-stats">Extending permon with custom stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#extending-permon-with-custom-stats">Extending permon with custom stats</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#adding-settings-to-a-stat">Adding settings to a stat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#making-a-stat-conditionally-available">Making a stat conditionally available</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
