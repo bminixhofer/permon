@@ -170,6 +170,3 @@ texinfo_documents = [
      author, 'permon', 'One line description of project.',
      'Miscellaneous'),
 ]
-
-
-
