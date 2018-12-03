@@ -11,3 +11,5 @@ jupyter==1.0.0
 Flask==1.0.2
 Flask-Sockets==0.2.1
 Flask-Login==0.4.1
+Sphinx==1.8.2
+sphinx-argparse==0.2.5
