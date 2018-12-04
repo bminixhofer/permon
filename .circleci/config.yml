@@ -31,14 +31,6 @@ jobs:
       #       sudo apt update -yqq
 
       - run:
-          name: Install dependencies and module
-          command: |
-            python3 -m venv venv
-            . venv/bin/activate
-            pip install -r requirements.txt
-            pip install .
-
-      - run:
           name: Install chrome and node / npm
           command: |
             sudo apt-get update
@@ -52,6 +44,15 @@ jobs:
             sudo dpkg -i google-chrome.deb
             sudo sed -i 's|HERE/chrome"|HERE/chrome" --no-sandbox|g' /opt/google/chrome/google-chrome
             rm google-chrome.deb
+
+      - run:
+          name: Install dependencies and module
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt
+            pip install .
+            ./bin/init.sh
 
       - save_cache:
           paths:
@@ -73,28 +74,17 @@ jobs:
 
             pytest tests/ --cov=permon --cov-report=xml --junitxml=test-results/pytest/results.xml --cov-config=setup.cfg -s
 
-            # build javascript
-            npm --prefix permon/frontend/browser/ install
-            npm --prefix permon/frontend/browser/ run build
-
       - run:
-          name: Build Documentation
+          name: Build
           command: |
             . venv/bin/activate
-
-            npm --prefix permon/doc/ install
-            ./permon/doc/make.sh
+            ./bin/build.sh
 
       - run:
           name: Lint
           command: |
             . venv/bin/activate
-            # lint python
-            flake8 .
-            # lint browser frontend javascript
-            npm --prefix permon/frontend/browser/ run test
-            # lint javascript in docs
-            npm --prefix permon/doc/ run test
+            ./bin/lint.sh
       - run:
           name: Upload Coverage
           command: |
