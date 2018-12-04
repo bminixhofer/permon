@@ -80,7 +80,18 @@ setup(
         'console_scripts': ['permon=permon:main'],
     },
     install_requires=REQUIRED,
-    include_package_data=True,
+    package_data={
+        'permon': [
+            'VERSION',
+            'backend/stats/*.py',
+            'frontend/assets/*',
+            'frontend/assets/**/*',
+            'frontend/native/qml/*',
+            'frontend/browser/dist/*',
+            'frontend/browser/static/*.html',
+            'frontend/browser/templates/*.html'
+        ]
+    },
     license='MIT',
     classifiers=[
         # Trove classifiers
