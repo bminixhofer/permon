@@ -10,3 +10,4 @@ Welcome to permon's documentation!
    :maxdepth: 3
 
     User documentation <userdoc/index>
+    Contributor documentation <contributordoc/index>
