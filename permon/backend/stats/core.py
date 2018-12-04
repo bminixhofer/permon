@@ -40,7 +40,7 @@ class ProcessTracker():
             self._stop = False
             self._stopped = False
             self.processes = {}
-            self.contributors = defaultdict(lambda: {})
+            self.contributors = defaultdict(lambda: [])
 
             # start a thread for continuously reading all processes
             self._thread = threading.Thread(target=self._read_processes)
@@ -64,18 +64,13 @@ class ProcessTracker():
                         _processes[name]['cpu'] += proc.cpu_percent()
                         _processes[name]['ram'] += proc.memory_info().vms
 
-                used_memory = psutil.virtual_memory().used / 1000**2
-                self.contributors['cpu'] = self.get_contributors('cpu')
-                self.contributors['ram'] = self.get_contributors(
-                    'ram', adapt_to=used_memory)
-                self.processes = _processes
+                    # sleep for a short time to allow the UI thread to continue
+                    time.sleep(0.02)
 
-                # check if the thread should be stopped every 0.1 seconds
-                # minimal sacrifice in performance for more responsive quitting
-                for _ in range(10):
-                    time.sleep(0.1)
-                    if self._stop:
-                        break
+                # used_memory = psutil.virtual_memory().used / 1000**2
+                self.contributors['cpu'] = self.get_contributors('cpu')
+                self.contributors['ram'] = self.get_contributors('ram')
+                self.processes = _processes
 
             self._stopped = True
 
@@ -172,7 +167,8 @@ class RAMStat(Stat):
         # get the currently used memory from psutil
         actual_memory = psutil.virtual_memory().used / 1000**2
         # get the contributors from the process tracker
-        contributors = self.proc_tracker.contributors['ram']
+        contributors = self.proc_tracker.get_contributors(
+            'ram', adapt_to=actual_memory)
 
         return actual_memory, contributors
 
