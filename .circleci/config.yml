@@ -77,6 +77,11 @@ jobs:
             npm --prefix permon/frontend/browser/ install
             npm --prefix permon/frontend/browser/ run build
 
+      - run:
+          name: Build Documentation
+          command: |
+            . venv/bin/activate
+            ./permon/doc/make.sh
 
       - run:
           name: Lint
@@ -84,8 +89,10 @@ jobs:
             . venv/bin/activate
             # lint python
             flake8 .
-            # lint javascript
+            # lint browser frontend javascript
             npm --prefix permon/frontend/browser/ run test
+            # lint javascript in docs
+            npm --prefix permon/doc/ run test
       - run:
           name: Upload Coverage
           command: |

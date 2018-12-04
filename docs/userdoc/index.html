@@ -93,7 +93,7 @@ not, install it (recommended: <a class="reference external" href="https://conda.
 <div class="section" id="terminal">
 <h5>terminal<a class="headerlink" href="#terminal" title="Permalink to this headline">¶</a></h5>
 <p>Starts permon’s terminal frontend.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">permon</span> <span class="n">terminal</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">buffer</span><span class="o">-</span><span class="n">size</span> <span class="n">BUFFER_SIZE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">fps</span> <span class="n">FPS</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">verbose</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">permon</span> <span class="n">terminal</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">fps</span> <span class="n">FPS</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">verbose</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">buffer</span><span class="o">-</span><span class="n">size</span> <span class="n">BUFFER_SIZE</span><span class="p">]</span>
                 <span class="p">[</span><span class="n">stats</span> <span class="p">[</span><span class="n">stats</span> <span class="o">...</span><span class="p">]]</span>
 </pre></div>
 </div>
@@ -106,8 +106,8 @@ not, install it (recommended: <a class="reference external" href="https://conda.
 <tr><td class="option-group">
 <kbd>stats</kbd></td>
 <td><p class="first">which stats to display
-If none are given, take those from the config file (core.cpu_usage, core.ram_usage, core.read_speed, core.write_speed)</p>
-<p class="last">Default: [‘core.cpu_usage’, ‘core.ram_usage’, ‘core.read_speed’, ‘core.write_speed’]</p>
+If none are given, take those from the config file (core.read_speed, core.write_speed, core.ram_usage, core.cpu_usage, custom.sine_modulation)</p>
+<p class="last">Default: [‘core.read_speed’, ‘core.write_speed’, ‘core.ram_usage’, ‘core.cpu_usage’, ‘custom.sine_modulation’]</p>
 </td></tr>
 </tbody>
 </table>
@@ -119,9 +119,6 @@ If none are given, take those from the config file (core.cpu_usage, core.ram_usa
 <col class="description" />
 <tbody valign="top">
 <tr><td class="option-group">
-<kbd>--buffer-size</kbd></td>
-<td>the number of points displayed on the screen at any time</td></tr>
-<tr><td class="option-group">
 <kbd>--fps</kbd></td>
 <td>the frames per second the display moves with</td></tr>
 <tr><td class="option-group">
@@ -129,6 +126,9 @@ If none are given, take those from the config file (core.cpu_usage, core.ram_usa
 <td><p class="first">whether to enable verbose logging</p>
 <p class="last">Default: True</p>
 </td></tr>
+<tr><td class="option-group">
+<kbd>--buffer-size</kbd></td>
+<td>the number of points displayed on the screen at any time</td></tr>
 </tbody>
 </table>
 </div>
@@ -136,7 +136,7 @@ If none are given, take those from the config file (core.cpu_usage, core.ram_usa
 <div class="section" id="native">
 <h5>native<a class="headerlink" href="#native" title="Permalink to this headline">¶</a></h5>
 <p>Starts permon’s native frontend.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">permon</span> <span class="n">native</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">buffer</span><span class="o">-</span><span class="n">size</span> <span class="n">BUFFER_SIZE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">fps</span> <span class="n">FPS</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">verbose</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">permon</span> <span class="n">native</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">fps</span> <span class="n">FPS</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">verbose</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">buffer</span><span class="o">-</span><span class="n">size</span> <span class="n">BUFFER_SIZE</span><span class="p">]</span>
               <span class="p">[</span><span class="n">stats</span> <span class="p">[</span><span class="n">stats</span> <span class="o">...</span><span class="p">]]</span>
 </pre></div>
 </div>
@@ -149,8 +149,8 @@ If none are given, take those from the config file (core.cpu_usage, core.ram_usa
 <tr><td class="option-group">
 <kbd>stats</kbd></td>
 <td><p class="first">which stats to display
-If none are given, take those from the config file (core.cpu_usage, core.ram_usage, core.read_speed, core.write_speed)</p>
-<p class="last">Default: [‘core.cpu_usage’, ‘core.ram_usage’, ‘core.read_speed’, ‘core.write_speed’]</p>
+If none are given, take those from the config file (core.read_speed, core.write_speed, core.ram_usage, core.cpu_usage, custom.sine_modulation)</p>
+<p class="last">Default: [‘core.read_speed’, ‘core.write_speed’, ‘core.ram_usage’, ‘core.cpu_usage’, ‘custom.sine_modulation’]</p>
 </td></tr>
 </tbody>
 </table>
@@ -162,9 +162,6 @@ If none are given, take those from the config file (core.cpu_usage, core.ram_usa
 <col class="description" />
 <tbody valign="top">
 <tr><td class="option-group">
-<kbd>--buffer-size</kbd></td>
-<td>the number of points displayed on the screen at any time</td></tr>
-<tr><td class="option-group">
 <kbd>--fps</kbd></td>
 <td>the frames per second the display moves with</td></tr>
 <tr><td class="option-group">
@@ -172,6 +169,9 @@ If none are given, take those from the config file (core.cpu_usage, core.ram_usa
 <td><p class="first">whether to enable verbose logging</p>
 <p class="last">Default: True</p>
 </td></tr>
+<tr><td class="option-group">
+<kbd>--buffer-size</kbd></td>
+<td>the number of points displayed on the screen at any time</td></tr>
 </tbody>
 </table>
 </div>
@@ -180,8 +180,8 @@ If none are given, take those from the config file (core.cpu_usage, core.ram_usa
 <h5>browser<a class="headerlink" href="#browser" title="Permalink to this headline">¶</a></h5>
 <p>Starts permon’s browser frontend.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">permon</span> <span class="n">browser</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">port</span> <span class="n">PORT</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ip</span> <span class="n">IP</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">browser</span><span class="p">]</span>
-               <span class="p">[</span><span class="o">--</span><span class="n">certfile</span> <span class="n">CERTFILE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">keyfile</span> <span class="n">KEYFILE</span><span class="p">]</span>
-               <span class="p">[</span><span class="o">--</span><span class="n">buffer</span><span class="o">-</span><span class="n">size</span> <span class="n">BUFFER_SIZE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">fps</span> <span class="n">FPS</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">verbose</span><span class="p">]</span>
+               <span class="p">[</span><span class="o">--</span><span class="n">certfile</span> <span class="n">CERTFILE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">keyfile</span> <span class="n">KEYFILE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">fps</span> <span class="n">FPS</span><span class="p">]</span>
+               <span class="p">[</span><span class="o">--</span><span class="n">verbose</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">buffer</span><span class="o">-</span><span class="n">size</span> <span class="n">BUFFER_SIZE</span><span class="p">]</span>
                <span class="p">[</span><span class="n">stats</span> <span class="p">[</span><span class="n">stats</span> <span class="o">...</span><span class="p">]]</span>
 </pre></div>
 </div>
@@ -194,8 +194,8 @@ If none are given, take those from the config file (core.cpu_usage, core.ram_usa
 <tr><td class="option-group">
 <kbd>stats</kbd></td>
 <td><p class="first">which stats to display
-If none are given, take those from the config file (core.cpu_usage, core.ram_usage, core.read_speed, core.write_speed)</p>
-<p class="last">Default: [‘core.cpu_usage’, ‘core.ram_usage’, ‘core.read_speed’, ‘core.write_speed’]</p>
+If none are given, take those from the config file (core.read_speed, core.write_speed, core.ram_usage, core.cpu_usage, custom.sine_modulation)</p>
+<p class="last">Default: [‘core.read_speed’, ‘core.write_speed’, ‘core.ram_usage’, ‘core.cpu_usage’, ‘custom.sine_modulation’]</p>
 </td></tr>
 </tbody>
 </table>
@@ -228,9 +228,6 @@ If none are given, take those from the config file (core.cpu_usage, core.ram_usa
 <kbd>--keyfile</kbd></td>
 <td>the path to a private key file for usage with SSL/TLS</td></tr>
 <tr><td class="option-group">
-<kbd>--buffer-size</kbd></td>
-<td>the number of points displayed on the screen at any time</td></tr>
-<tr><td class="option-group">
 <kbd>--fps</kbd></td>
 <td>the frames per second the display moves with</td></tr>
 <tr><td class="option-group">
@@ -238,6 +235,9 @@ If none are given, take those from the config file (core.cpu_usage, core.ram_usa
 <td><p class="first">whether to enable verbose logging</p>
 <p class="last">Default: True</p>
 </td></tr>
+<tr><td class="option-group">
+<kbd>--buffer-size</kbd></td>
+<td>the number of points displayed on the screen at any time</td></tr>
 </tbody>
 </table>
 </div>
