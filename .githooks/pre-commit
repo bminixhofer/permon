@@ -1,6 +1,9 @@
 #!/bin/sh
 set -e
-BINARY_DIR=`dirname "$0"`/../bin/
-${BINARY_DIR}/build.sh
-${BINARY_DIR}/lint.sh
-
+PROJECT_ROOT=`dirname "$0"`/../
+# build and lint the project
+${PROJECT_ROOT}/bin/build.sh
+${PROJECT_ROOT}/bin/lint.sh
+# add build directories
+git add ${PROJECT_ROOT}/docs/
+git add ${PROJECT_ROOT}/permon/frontend/browser/dist/
