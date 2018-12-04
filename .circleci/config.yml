@@ -81,6 +81,8 @@ jobs:
           name: Build Documentation
           command: |
             . venv/bin/activate
+
+            npm --prefix permon/doc/ install
             ./permon/doc/make.sh
 
       - run:
