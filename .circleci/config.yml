@@ -52,6 +52,7 @@ jobs:
             . venv/bin/activate
             pip install -r requirements.txt
             pip install .
+            export MODULE_LOCATION=`pip show permon | grep "^Location" | grep -o "\/.*"`/permon/
             ./bin/init.sh
 
       - save_cache:
@@ -72,7 +73,7 @@ jobs:
             # the request rarely fails for some reason, so run it 10 times
             for i in `seq 10`; do google-chrome --headless $NOTEBOOK_URL; done
 
-            pytest tests/ --cov=permon --cov-report=xml --junitxml=test-results/pytest/results.xml --cov-config=setup.cfg -s
+            pytest tests/ --cov=${MODULE_LOCATION} --cov-report=xml --junitxml=test-results/pytest/results.xml --cov-config=setup.cfg -s
 
       - run:
           name: Build
