@@ -429,15 +429,20 @@ of your stat class.</p>
         <span class="nb">super</span><span class="p">(</span><span class="n">SineStat</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">fps</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">get_stat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># get_stat is called once per frame to fetch the latest value for the stat</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">+=</span> <span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">fps</span>
         <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">maximum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># sets the maximum value for the stat</span>
+        <span class="c1"># if the stat has no fixed maximum, make it return None</span>
         <span class="k">return</span> <span class="mi">1</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">minimum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># sets the minimum value for the stat</span>
+        <span class="c1"># if the stat has no fixed minimum, make it return None</span>
         <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
 </pre></div>
 </div>

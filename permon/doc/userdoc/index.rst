@@ -68,15 +68,20 @@ You can now start creating stats in this file. They will automatically be discov
             super(SineStat, self).__init__(fps)
 
         def get_stat(self):
+            # get_stat is called once per frame to fetch the latest value for the stat
             self.t += 1 / self.fps
             return math.sin(self.t)
 
         @property
         def maximum(self):
+            # sets the maximum value for the stat
+            # if the stat has no fixed maximum, make it return None
             return 1
 
         @property
         def minimum(self):
+            # sets the minimum value for the stat
+            # if the stat has no fixed minimum, make it return None
             return -1
 
 All stats must inherit from the ``permon.backend.Stat`` base class. Also, the parent constructor should be called at the end of ``__init__``
