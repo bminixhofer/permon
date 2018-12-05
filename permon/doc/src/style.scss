@@ -209,6 +209,10 @@ button a {
     }
 }
 
+.body > .section#introduction h1:first-child {
+    display: None;
+}
+
 @media (max-aspect-ratio: 4/3) {
     .card-extensible .flex {
         flex-direction: column;
