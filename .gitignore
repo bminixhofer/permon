@@ -4,6 +4,9 @@
 # javascript stuff
 node_modules/
 
+# shinx
+.doctrees
+
 # pytest files
 .pytest_cache/
 
