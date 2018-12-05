@@ -16,7 +16,10 @@ AUTHOR = 'Benjamin Minixhofer'
 REQUIRES_PYTHON = '>=3.6.0'
 
 REQUIRED = [
-    'psutil', 'appdirs', 'jupyter'
+    'psutil',  # required for measuring RAM, CPU etc
+    'appdirs',  # required to find out user config and data directorires
+    'jupyter',  # required to measure ram usage in a jupyter notebook
+    'pympler'  # required to measure the size of the variables in the notebook
 ]
 
 here = os.path.abspath(os.path.dirname(__file__))

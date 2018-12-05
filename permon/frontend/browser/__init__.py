@@ -178,6 +178,10 @@ class BrowserApp(MonitorApp):
             return flask.Response(status=400)
 
         monitor = self.remove_stat(stat)
+
+        if monitor is None:
+            return flask.Response('Stat already removed.', status=400)
+
         # send info about the stat if it was removed successfully
         return flask.Response(json.dumps(monitor.get_json_info()),
                               status=200, mimetype='application/json')
