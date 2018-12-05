@@ -1,23 +1,27 @@
 {% extends '!layout.html' %}
 {% set is_introduction = "index.rst.txt" == sourcename %}
 
+{% if not release_url %}
+    {% set release_url = "/" %}
+{% endif %}
+
 {%- block extrahead %}
-    <link rel="apple-touch-icon" sizes="180x180" href="/_static/assets/icon/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/_static/assets/icon/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/_static/assets/icon/favicon-16x16.png">
-    <link rel="manifest" href="/_static/assets/icon/site.webmanifest">
-    <link rel="mask-icon" href="/_static/assets/icon/safari-pinned-tab.svg" color="#5bbad5">
-    <link rel="shortcut icon" href="/_static/assets/icon/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{release_url}}_static/assets/icon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{release_url}}_static/assets/icon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{release_url}}_static/assets/icon/favicon-16x16.png">
+    <link rel="manifest" href="{{release_url}}_static/assets/icon/site.webmanifest">
+    <link rel="mask-icon" href="{{release_url}}_static/assets/icon/safari-pinned-tab.svg" color="#5bbad5">
+    <link rel="shortcut icon" href="{{release_url}}_static/assets/icon/favicon.ico">
     <meta name="msapplication-TileColor" content="#da532c">
-    <meta name="msapplication-config" content="/_static/assets/icon/browserconfig.xml">
+    <meta name="msapplication-config" content="{{release_url}}_static/assets/icon/browserconfig.xml">
     <meta name="theme-color" content="#48cfad">
-    <link rel="stylesheet" href="/_static/style.min.css">
+    <link rel="stylesheet" href="{{release_url}}_static/style.min.css">
     <script async defer src="https://buttons.github.io/buttons.js"></script>
     {% if is_introduction %}
-        <link rel="stylesheet" href="/_static/remove_sphinx_style.css" />
+        <link rel="stylesheet" href="{{release_url}}_static/remove_sphinx_style.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/styles/atom-one-dark.min.css">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/highlight.min.js"></script>
-        <script src="/_static/app.min.js" async defer></script>
+        <script src="{{release_url}}_static/app.min.js" async defer></script>
         <script async defer src="https://buttons.github.io/buttons.js"></script>
     {% endif %}
 {% endblock %}
@@ -29,8 +33,8 @@
     <br />
     <code>pip install permon</code>
     <nav>
-        <button {% if is_introduction %}class="selected"{% endif %}><a href="/">Introduction</a></button>
-        <button {% if not is_introduction %}class="selected"{% endif %}><a href="/documentation">Documentation</a></button>
+        <button {% if is_introduction %}class="selected"{% endif %}><a href="{{release_url}}">Introduction</a></button>
+        <button {% if not is_introduction %}class="selected"{% endif %}><a href="{{release_url}}documentation">Documentation</a></button>
     </nav>
 </div>
 {% endblock %}
