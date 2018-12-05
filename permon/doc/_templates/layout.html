@@ -18,10 +18,11 @@
     <link rel="stylesheet" href="{{release_url}}_static/style.min.css">
     <script async defer src="https://buttons.github.io/buttons.js"></script>
     {% if is_introduction %}
-        <link rel="stylesheet" href="{{release_url}}_static/remove_sphinx_style.css" />
+        <base href="{{release_url}}">
+        <link rel="stylesheet" href="_static/remove_sphinx_style.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/styles/atom-one-dark.min.css">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/highlight.min.js"></script>
-        <script src="{{release_url}}_static/app.min.js" async defer></script>
+        <script src="_static/app.min.js" async defer></script>
         <script async defer src="https://buttons.github.io/buttons.js"></script>
     {% endif %}
 {% endblock %}

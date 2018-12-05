@@ -28,10 +28,11 @@
     <link rel="stylesheet" href="https://bminixhofer.github.io/permon/_static/style.min.css">
     <script async defer src="https://buttons.github.io/buttons.js"></script>
     
-        <link rel="stylesheet" href="https://bminixhofer.github.io/permon/_static/remove_sphinx_style.css" />
+        <base href="https://bminixhofer.github.io/permon/">
+        <link rel="stylesheet" href="_static/remove_sphinx_style.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/styles/atom-one-dark.min.css">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/highlight.min.js"></script>
-        <script src="https://bminixhofer.github.io/permon/_static/app.min.js" async defer></script>
+        <script src="_static/app.min.js" async defer></script>
         <script async defer src="https://buttons.github.io/buttons.js"></script>
     
 
@@ -69,7 +70,7 @@
             Permon is developed in Python 3. There is a good chance you already have Python on your system. If
             not, install it (recommended: <a href="https://conda.io/miniconda.html">Miniconda</a>). Run <code>pip
                 install permon</code>
-            in your preferred command line and <code>permon --help</code> to see what you can do with permon or take a look at the <a href="/documentation">documentation</a> for
+            in your preferred command line and <code>permon --help</code> to see what you can do with permon or take a look at the <a href="documentation">documentation</a> for
             a more in-depth guide.
         </p>
     </div>
@@ -105,7 +106,7 @@
         <p>
             Permon can easily be enhanced by adding custom stats. And Permon has, in my biased opinion, done a
             very good job of making this as intuitive as possible.
-            The code snippet below shows how a custom stat looks like. See the <a href="/userdoc/#extending-permon-with-custom-stats">documentation on extending Permon</a> to learn how
+            The code snippet below shows how a custom stat looks like. See the <a href="userdoc/#extending-permon-with-custom-stats">documentation on extending Permon</a> to learn how
             to add your first custom stat.
         </p>
         <div class="flex">
@@ -166,7 +167,7 @@ class SineStat(Stat):
         </ul>
         <p>
             while still being relatively small (~2k LoC) and thus easy to get into for a beginner &mdash;
-            especially because a huge focus has been put on documentation during development. Check out the <a href="/contributordoc">Contributor documentation</a> to
+            especially because a huge focus has been put on documentation during development. Check out the <a href="contributordoc">Contributor documentation</a> to
             see how permon works and how you can improve it.
         </p>
     </div>
