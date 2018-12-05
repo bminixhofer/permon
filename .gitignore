@@ -1,3 +1,15 @@
+# qt binary files
+*.qmlc
+
+# javascript stuff
+node_modules/
+
+# shinx
+.doctrees
+
+# pytest files
+.pytest_cache/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

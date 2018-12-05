@@ -1,0 +1,114 @@
+<div class="content">
+    <div class="card card-introduction">
+        <h2>What is permon?</h2>
+        <p>
+            Permon is a tool to display live line charts in a clear, uncluttered way. Permon comes prepackaged
+            with a lot of useful stats for monitoring the performance of your PC. It is developed with a focus
+            on only showing you things you care about, not everything you can monitor in your system.
+            <br />
+            <br />
+            Permon is developed in Python 3. There is a good chance you already have Python on your system. If
+            not, install it (recommended: <a href="https://conda.io/miniconda.html">Miniconda</a>). Run <code>pip
+                install permon</code>
+            in your preferred command line and <code>permon --help</code> to see what you can do with permon or take a look at the <a href="/documentation">documentation</a> for
+            a more in-depth guide.
+        </p>
+    </div>
+    <div class="card card-everywhere">
+        <h2>Permon works everywhere</h2>
+        <div class="flex">
+            <p>
+                Permon is designed to work everywhere. It supports Windows, Linux and <a href="https://github.com/bminixhofer/permon/issues/9">soon Mac OS</a>.<br />
+                But what if you don't have access to a desktop manager? Or want to check performance of your
+                workstation remotely? Permon has you covered.
+                You can choose from three frontends. A <strong>terminal</strong> frontend, <strong>native</strong>
+                frontend and <strong>browser</strong> frontend.
+            </p>
+            <div class="image-container">
+                <div class="screenshot" id="everywhere-screen">
+                    <img src="_static/assets/permon_terminal.png" />
+                    <img src="_static/assets/permon_native.png" />
+                    <img src="_static/assets/permon_browser.png" />
+                </div>
+                <div class="image-selector">
+                    <img src="_static/assets/terminal_icon.png" class="image-changer" data-target="#everywhere-screen"
+                        data-child="0" />
+                    <img src="_static/assets/native_icon.png" class="image-changer selected" data-target="#everywhere-screen"
+                        data-child="1" />
+                    <img src="_static/assets/browser_icon.png" class="image-changer" data-target="#everywhere-screen"
+                        data-child="2" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card card-extensible">
+        <h2>Permon is extensible</h2>
+        <p>
+            Permon can easily be enhanced by adding custom stats. And Permon has, in my biased opinion, done a
+            very good job of making this as intuitive as possible.
+            The code snippet below shows how a custom stat looks like. See the <a href="/userdoc/#extending-permon-with-custom-stats">documentation on extending Permon</a> to learn how
+            to add your first custom stat.
+        </p>
+        <div class="flex">
+            <pre><code class="custom-stat python">import math
+from permon.backend import Stat
+
+class SineStat(Stat):
+    base_tag = 'sine'
+    name = 'Sine'
+
+    def __init__(self, fps):
+        self.t = 0
+        super(SineStat, self).__init__(fps)
+
+    def get_stat(self):
+        self.t += 1 / self.fps
+        return math.sin(self.t)
+
+    @property
+    def minimum(self):
+        return -1
+
+    @property
+    def maximum(self):
+        return 1</code></pre>
+            <img class="arrow" src="_static/assets/arrow-right.png" />
+            <div class="image-container">
+                <div class="screenshot" id="extensible-screen">
+                    <video src="_static/assets/terminal_sine_small.mp4" autoplay muted loop></video>
+                    <video src="_static/assets/native_sine_small.mp4" autoplay muted loop></video>
+                    <video src="_static/assets/browser_sine_small.mp4" autoplay muted loop></video>
+                </div>
+                <div class="image-selector">
+                    <img src="_static/assets/terminal_icon.png" class="image-changer" data-target="#extensible-screen"
+                        data-child="0" />
+                    <img src="_static/assets/native_icon.png" class="image-changer selected" data-target="#extensible-screen"
+                        data-child="1" />
+                    <img src="_static/assets/browser_icon.png" class="image-changer" data-target="#extensible-screen"
+                        data-child="2" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card card-opensource">
+        <h2>Permon is open source</h2>
+        <p>
+            Permon is open source and published on <a href="https://github.com/bminixhofer/permon">Github</a>.
+            What makes Permon special is that it has many components like
+        </p>
+        <ul>
+            <li>Object orientation in Python</li>
+            <li>Drawing in a terminal</li>
+            <li>Developing a GUI app in Python</li>
+            <li>Making a secure web server, including communication via WebSockets</li>
+            <li>Automatically generating documentation via Sphinx</li>
+            <li>Unit testing the Python code</li>
+            <li>Continous Integration via CircleCI</li>
+        </ul>
+        <p>
+            while still being relatively small (~2k LoC) and thus easy to get into for a beginner &mdash;
+            especially because a huge focus has been put on documentation during development. Check out the <a href="/contributordoc">Contributor documentation</a> to
+            see how permon works and how you can improve it.
+        </p>
+    </div>
+</div>

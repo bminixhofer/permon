@@ -1,0 +1,199 @@
+@font-face {
+  font-family: Raleway;
+  src: url("/assets/Raleway-Regular.ttf") format("truetype"); }
+
+@font-face {
+  font-family: Roboto Mono;
+  src: url("/assets/RobotoMono-Regular.ttf") format("truetype"); }
+
+html {
+  font-size: 10px;
+  overflow: hidden; }
+
+body {
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  background-color: white;
+  position: relative; }
+
+.header {
+  background-color: #333;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 4rem;
+  padding: 0.2em 0.8em 0.2em 0.2em;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23); }
+  .header .error-message {
+    margin-left: auto;
+    margin-right: 1em; }
+  .header .status-badge {
+    font-size: 1.2em;
+    font-weight: bold;
+    font-family: Raleway;
+    color: #f5f5f5;
+    margin-right: 1em;
+    border-radius: 3px;
+    padding: 0.5em;
+    background-color: #ed5565;
+    box-shadow: 0px 0px 10px 2px #ed5565; }
+    .header .status-badge.connected {
+      background-color: #48cfad;
+      box-shadow: 0px 0px 10px 2px #48cfad; }
+  .header #settings-toggle {
+    display: none; }
+    .header #settings-toggle:checked ~ .settings {
+      right: 0; }
+  .header .settings-toggle-label {
+    width: 2.5em;
+    height: 2.5em;
+    cursor: pointer;
+    background-image: url("/assets/settings.svg");
+    background-size: cover;
+    background-repeat: no-repeat; }
+
+.login-form {
+  text-align: center;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%); }
+  .login-form input[type="password"] {
+    outline: none;
+    border: none;
+    font-size: 3em;
+    margin-bottom: 0.5em;
+    padding: 0.2em 0.3em;
+    width: 12em;
+    max-width: 80vw;
+    box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.4); }
+  .login-form .error-message {
+    height: 2.5em; }
+
+.charts {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  height: calc(100% - 5rem);
+  padding-top: 0.5em; }
+  .charts .chart-container {
+    height: 100%;
+    position: relative; }
+    .charts .chart-container h2 {
+      margin: 0 0 0 60px;
+      height: 2em; }
+    .charts .chart-container .chart {
+      position: absolute;
+      height: calc(100% - 2em);
+      width: 100%;
+      right: 0;
+      top: 2em; }
+
+.settings {
+  z-index: 1;
+  position: absolute;
+  height: calc(100% - 5.4rem);
+  width: 25rem;
+  top: 4.4rem;
+  background-color: rgba(255, 255, 255, 0.95);
+  right: -27rem;
+  transition: right 0.2s;
+  display: flex;
+  justify-content: flex-start;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0.5em 1em;
+  box-shadow: 0 0px 6px rgba(0, 0, 0, 0.16), 0 0px 6px rgba(0, 0, 0, 0.23); }
+  .settings > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex: 1; }
+  .settings input[type="button"] {
+    margin-top: auto;
+    align-self: flex-end; }
+  .settings select {
+    width: 100%; }
+  .settings .stat-settings {
+    padding: 0.3em 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; }
+    .settings .stat-settings .stat-setting {
+      display: flex;
+      justify-content: space-between;
+      align-items: initial;
+      width: 100%; }
+      .settings .stat-settings .stat-setting label {
+        flex: 1;
+        font-size: 1.5em;
+        line-height: 3em; }
+      .settings .stat-settings .stat-setting input {
+        margin: 0.3em;
+        flex: 1; }
+
+select {
+  height: 2em;
+  font-size: 1.2em;
+  padding: 0.3em;
+  background: none;
+  border: none;
+  outline: none;
+  color: #333;
+  background-color: #dedede; }
+
+h1 {
+  color: white;
+  font-family: Raleway;
+  font-size: 2.5rem; }
+
+h2 {
+  margin: 0.3em 0 0.3em 0;
+  font-size: 1.7em; }
+
+h3 {
+  margin: 0.3em;
+  font-size: 1.5em; }
+
+label {
+  font-size: 1.2em; }
+
+h2, h3, label {
+  font-weight: 300;
+  font-family: Raleway;
+  color: #333;
+  text-transform: capitalize; }
+
+input[type="button"], input[type="submit"] {
+  cursor: pointer;
+  background-color: #48cfad;
+  color: #f5f5f5;
+  font-family: Raleway;
+  border: none;
+  outline: none;
+  font-size: 1.5em;
+  font-weight: bolder;
+  text-align: center;
+  width: 5em;
+  height: 2.5em;
+  padding: 0.1em 0.1em;
+  box-shadow: 5px 5px 20px rgba(0, 0, 0, 0.4), 0 3px 6px rgba(0, 0, 0, 0.23); }
+
+input[type="text"] {
+  font-family: Roboto Mono;
+  text-align: right;
+  padding: 0.3em;
+  width: 7em;
+  border: none;
+  box-shadow: 5px 5px 20px rgba(0, 0, 0, 0.4), 0 3px 6px rgba(0, 0, 0, 0.23);
+  outline: none; }
+
+.error-message {
+  font-size: 1.2em;
+  font-family: Roboto Mono;
+  color: #ed5565; }
+

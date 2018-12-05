@@ -1,0 +1,95 @@
+# Python CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-python/ for more details
+#
+version: 2
+jobs:
+  build:
+    docker:
+      # specify the version you desire here
+      # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
+      - image: circleci/python:3.6.1-browsers
+
+    working_directory: ~/repo
+    branches:
+      only:
+        - dev
+
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "requirements.txt" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+      # - run:
+      #     name: Install pre dependencies
+      #     command: |
+      #       sudo apt update -yqq
+
+      - run:
+          name: Install chrome and node / npm
+          command: |
+            sudo apt-get update
+            # install node / npm
+            curl -sL https://deb.nodesource.com/setup_10.x | sudo bash -
+            sudo apt-get install -y nodejs
+
+            # install chrome
+            sudo apt-get install -y lsb-release libappindicator3-1
+            curl -L -o google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+            sudo dpkg -i google-chrome.deb
+            sudo sed -i 's|HERE/chrome"|HERE/chrome" --no-sandbox|g' /opt/google/chrome/google-chrome
+            rm google-chrome.deb
+
+      - run:
+          name: Install dependencies and module
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt
+            pip install .
+            ./bin/init.sh
+
+      - save_cache:
+          paths:
+            - ./venv
+          key: v1-dependencies-{{ checksum "requirements.txt" }}
+
+      - run:
+          name: Run Tests
+          command: |
+            . venv/bin/activate
+            export JUPYTER_RUNTIME_DIR=`pwd`/tests/jupyter
+            # start a jupyter notebook to test jupyter.ram_usage
+            jupyter notebook --no-browser --NotebookApp.token='' --ip=127.0.0.1 --port=8888 &
+            sleep 30
+            # find the url of our test notebook
+            export NOTEBOOK_URL=http://127.0.0.1:8888/notebooks/tests/test_notebook.ipynb?token=''
+            # the request rarely fails for some reason, so run it 10 times
+            for i in `seq 10`; do google-chrome --headless $NOTEBOOK_URL; done
+
+            MODULE_LOCATION=`pip show permon | grep "^Location" | grep -o "\/.*"`/permon/
+            pytest tests/ --cov=${MODULE_LOCATION} --cov-report=xml --junitxml=test-results/pytest/results.xml --cov-config=setup.cfg -s
+
+      - run:
+          name: Build
+          command: |
+            . venv/bin/activate
+            ./bin/build.sh
+
+      - run:
+          name: Lint
+          command: |
+            . venv/bin/activate
+            ./bin/lint.sh
+      - run:
+          name: Upload Coverage
+          command: |
+            bash <(curl -s https://codecov.io/bash)
+
+      - store_test_results:
+          path: test-results

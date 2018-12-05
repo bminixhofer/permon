@@ -1,0 +1,160 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Contributor documentation &#8212; permon 2.0.0 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex/" />
+    <link rel="search" title="Search" href="../search/" />
+    <link rel="prev" title="User documentation" href="../userdoc/" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/_static/assets/icon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/_static/assets/icon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/_static/assets/icon/favicon-16x16.png">
+    <link rel="manifest" href="/_static/assets/icon/site.webmanifest">
+    <link rel="mask-icon" href="/_static/assets/icon/safari-pinned-tab.svg" color="#5bbad5">
+    <link rel="shortcut icon" href="/_static/assets/icon/favicon.ico">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="msapplication-config" content="/_static/assets/icon/browserconfig.xml">
+    <meta name="theme-color" content="#48cfad">
+    <link rel="stylesheet" href="/_static/style.min.css">
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    
+
+  </head><body>
+<div class="header">
+    <h1>permon<br/><a class="github-button" href="https://github.com/bminixhofer/permon" data-size="large" data-show-count="true"
+        aria-label="Star bminixhofer/permon on GitHub">Star</a></h1>
+    <br />
+    <code>pip install permon</code>
+    <nav>
+        <button ><a href="/">Introduction</a></button>
+        <button class="selected"><a href="/documentation">Documentation</a></button>
+    </nav>
+</div>
+
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="contributor-documentation">
+<h1>Contributor documentation<a class="headerlink" href="#contributor-documentation" title="Permalink to this headline">¶</a></h1>
+<p>To contribute to Permon, first <a class="reference external" href="https://github.com/bminixhofer/permon/issues">find an issue</a> you would like to help solving. If you have suggestions for improvement or found a bug, please
+<a class="reference external" href="https://github.com/bminixhofer/permon/issues/new/choose">open a new issue</a>.
+You are of course also welcome to just play around with Permon without the intent to tackle a specific issue.</p>
+<div class="section" id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h2>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This section assumes you are using commands from the linux shell. Bash scripts which might not work out of the box on windows are also used. See <a class="reference external" href="https://github.com/bminixhofer/permon/issues/8">this issue</a> for progress on
+cross-platform support during development.</p>
+</div>
+<p>First, make sure you have Python &gt;= 3.6 and <a class="reference external" href="https://www.npmjs.com/get-npm">Node.js and npm</a> installed. Node.js and npm are needed for compiling Javascript and Sass for the browser frontend and the documentation.
+Permon is tested on Node.js version 10.x but should work on other recent versions too.</p>
+<p>Afterwards, clone the github repo.</p>
+<p><code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">https://github.com/bminixhofer/permon</span> <span class="pre">--branch=dev</span></code></p>
+<p>Now, <code class="docutils literal notranslate"><span class="pre">cd</span></code> into the directory and run <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">requirements.txt</span></code>. This will install the exact versions of all packages which Permon uses, including those only used during development. You might also want to create
+some sort of <a class="reference external" href="https://docs.python.org/3/tutorial/venv.html">virtual environment</a> first.</p>
+<p>Afterwards, run <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.</span></code>. The <code class="docutils literal notranslate"><span class="pre">-e</span></code> flag tells PIP to install the module into the cloned directory instead of installing it into the directory for Python packages as it would normally do.
+This way, Permon will directly run the code from the cloned directory so changes in the source code will immediately take effect.</p>
+<p>Now, <code class="docutils literal notranslate"><span class="pre">cd</span></code> into the repo and run <code class="docutils literal notranslate"><span class="pre">./bin/init.sh</span></code>. This will:</p>
+<ol class="arabic simple">
+<li>Install the Node modules needed for the documentation and browser frontend.</li>
+<li>Register the hooks in <code class="docutils literal notranslate"><span class="pre">.githooks</span></code> as git hooks.</li>
+</ol>
+<p>At the moment, <code class="docutils literal notranslate"><span class="pre">.githooks</span></code> only consists of a pre-commit hook which will lint your code and build the files in the javascript ecosystem.</p>
+</div>
+<div class="section" id="tools-for-use-during-development">
+<h2>Tools for use during development<a class="headerlink" href="#tools-for-use-during-development" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">bin</span></code> directory contains a couple of useful scripts for use during development. When changing the Python code these are not needed.</p>
+<p>When changing the parts of Permon which need a build they are very useful. In that case,
+it is recommended to use a tool to watch your file system and rebuild on change for smooth development. I would recommend
+<a class="reference external" href="http://eradman.com/entrproject/">entr</a>. For example when writing docs, you can, assuming you are in the project root directory, run</p>
+<p><code class="docutils literal notranslate"><span class="pre">find</span> <span class="pre">permon/doc/</span> <span class="pre">-not</span> <span class="pre">-path</span> <span class="pre">&quot;permon/doc/node_modules/*&quot;</span> <span class="pre">|</span> <span class="pre">entr</span> <span class="pre">./bin/build-docs.sh</span></code></p>
+</div>
+<div class="section" id="permon-s-structure">
+<h2>Permon’s structure<a class="headerlink" href="#permon-s-structure" title="Permalink to this headline">¶</a></h2>
+<p>Permon is built in an object oriented way. Permon consists of one backend. The backend handles everything related to stats. It provides an abstract <code class="docutils literal notranslate"><span class="pre">Stat</span></code> class. Every stat inherits from this class.
+The prepackaged stats are also part of the backend.</p>
+<p>Permon also has a frontend. The frontend provides an abstract <code class="docutils literal notranslate"><span class="pre">MonitorApp</span></code> class. For every different application, a different <code class="docutils literal notranslate"><span class="pre">MonitorApp</span></code> must be implemented e. g. a <code class="docutils literal notranslate"><span class="pre">TerminalApp</span></code>.</p>
+<img alt="../_images/permon_structure.png" src="../_images/permon_structure.png" />
+<p>A <code class="docutils literal notranslate"><span class="pre">MonitorApp</span></code> consists of multiple <code class="docutils literal notranslate"><span class="pre">Monitor</span></code> instances. A monitor wraps a <code class="docutils literal notranslate"><span class="pre">Stat</span></code> with the capability of visually displaying it. The <code class="docutils literal notranslate"><span class="pre">Monitor</span></code> is also the only place where a <code class="docutils literal notranslate"><span class="pre">Stat</span></code> is instantiated.
+This way, an instance exists always only of stats which are currently displayed. The <code class="docutils literal notranslate"><span class="pre">MonitorApp</span></code> can remove, add and change its monitors.</p>
+<p>The choice of which app to instantiate is taken in <code class="docutils literal notranslate"><span class="pre">permon/__init__.py</span></code>. The instantiation only sets some parameters on the app. The actual work is done, in the <code class="docutils literal notranslate"><span class="pre">.initialize</span></code> method of the app. If you want a quick overview of a frontend application, this is the
+first function you should be looking at.</p>
+<p>The likely easiest frontend app to get into is the terminal app. It consists of very few lines of code, all of which are contained in one file: <code class="docutils literal notranslate"><span class="pre">permon/frontend/terminal.py</span></code>.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../documentation/">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../userdoc/"> User documentation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#"> Contributor documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#setup">Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tools-for-use-during-development">Tools for use during development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#permon-s-structure">Permon’s structure</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../documentation/">Documentation overview</a><ul>
+      <li>Previous: <a href="../userdoc/" title="previous chapter">User documentation</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search/" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Benjamin Minixhofer.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/contributordoc/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

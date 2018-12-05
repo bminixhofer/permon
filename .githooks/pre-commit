@@ -1,0 +1,17 @@
+#!/bin/bash
+set -e
+DIRNAME=`dirname "$0"`
+if [[ ${DIRNAME} =~ .githooks$ ]]; then
+    PROJECT_ROOT=${DIRNAME}/..
+elif [[ ${DIRNAME} =~ hooks$ ]]; then
+    PROJECT_ROOT=${DIRNAME}/../..
+else
+    echo 'Running from unknown directory. Exiting..'
+    exit 1
+fi
+# build and lint the project
+${PROJECT_ROOT}/bin/build.sh
+${PROJECT_ROOT}/bin/lint.sh
+# add build directories
+git add ${PROJECT_ROOT}/docs/
+git add ${PROJECT_ROOT}/permon/frontend/browser/dist/

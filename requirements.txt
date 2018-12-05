@@ -1,4 +1,15 @@
 blessings==1.6.1
-numpy==1.14.0
 psutil==5.4.1
-seaborn==0.8.1
+PySide2==5.11.1
+flake8==3.5.0
+pytest==3.7.4
+pytest-cov==2.5.1
+pytest-mock==1.10.0
+coverage==4.5.1
+appdirs==1.4.3
+jupyter==1.0.0
+Flask==1.0.2
+Flask-Sockets==0.2.1
+Flask-Login==0.4.1
+Sphinx==1.8.2
+sphinx-argparse==0.2.5

@@ -1,0 +1,57 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>permon</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/icon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/icon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/icon/favicon-16x16.png">
+    <link rel="manifest" href="/assets/icon/site.webmanifest">
+    <link rel="mask-icon" href="/assets/icon/safari-pinned-tab.svg" color="#5bbad5">
+    <link rel="shortcut icon" href="/assets/icon/favicon.ico">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="msapplication-config" content="/assets/icon/browserconfig.xml">
+    <meta name="theme-color" content="#48cfad">
+    <link rel="stylesheet" href="dist/style.min.css">
+    <script async defer type="text/javascript" src="dist/app.min.js"></script>
+</head>
+
+<body>
+    <div class="header">
+        <h1>permon</h1>
+        <p class="error-message"></p>
+        <div class="status-badge"></div>
+
+        <input type="checkbox" id="settings-toggle" name="settings-toggle"/>
+        <label for="settings-toggle" class="settings-toggle-label"></label>
+        <div class="settings">
+            <div class="stat-adder">
+                <h2>Add Stat</h2>
+                <select>
+                    {% for stat in not_displayed_stats %}
+                        <option value="{{ stat.tag }}">{{ stat.name }}</option>
+                    {% endfor %}
+                </select>
+                <div class="stat-settings"></div>
+                <input type="button" value="Add"/>
+            </div>
+            <div class="stat-remover">
+                <h2>Remove Stat</h2>
+                <select>
+                    {% for stat in displayed_stats %}
+                    <option value="{{ stat.tag }}">{{ stat.name }}</option>
+                    {% endfor %}
+                </select>
+                <input type="button" value="Remove"/>
+            </div>
+        </div>
+    </div>
+    <div data-fps="{{ fps }}" data-buffersize="{{ buffer_size }}"class="charts">
+        {% for stat in displayed_stats %}
+        <div id="{{ stat.tag }}" class="chart-container"></div>
+        {% endfor %}
+    </div>
+</body>
+
+</html>
