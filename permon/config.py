@@ -24,6 +24,24 @@ default_config = {
 }
 
 
+def _escape_windows_path(path):
+    split_path = []
+    _path = path
+    while True:
+        _path, directory = os.path.split(_path)
+
+        if directory:
+            split_path.append(directory)
+        elif path:
+            split_path.append(_path)
+            break
+    split_path.reverse()
+    for i in range(len(split_path)):
+        if ' ' in split_path[i]:
+            split_path[i] = f'\"{split_path[i]}\"'
+    return os.path.join(*split_path)
+
+
 def parse_stats(stats):
     """
     Convert stats from a mixed string or dictionary representation
@@ -75,10 +93,14 @@ def set_config(custom_config):
 def edit_config():
     """Opens an editor for the user to edit the config."""
     set_config(get_config())
+
     if os.name == 'posix':
         subprocess.call(['xdg-open', config_path])
     elif os.name == 'nt':
-        subprocess.call([config_path])
+        escaped_config_path = _escape_windows_path(config_path)
+        os.system(f'start {escaped_config_path}')
+    elif os.name == 'darwin':
+        subprocess.call(['open', config_path])
 
 
 def show_config():
