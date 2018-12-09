@@ -1,6 +1,5 @@
 import time
 import re
-import os
 import threading
 import subprocess
 import psutil
@@ -237,19 +236,20 @@ class CPUTempStat(Stat):
 
     @classmethod
     def check_availability(cls):
-        if os.name == 'nt':
+        try:
+            temps = psutil.sensors_temperatures()
+        except AttributeError:
             raise exceptions.StatNotAvailableError(
-                'psutil.sensors_temperatures() is not available on windows.')
+                'psutil.sensors_temperatures is not available on your system.')
         # psutil.sensors_temperatures returns a dictionary
         # consisting of multiple temperature measurements
         # `coretemp` is the only one currently considered
         # the stat is not available if it does not exist in the dictionary
-        if 'coretemp' not in psutil.sensors_temperatures():
+        if 'coretemp' not in temps:
             raise exceptions.StatNotAvailableError(
                 'CPU temperature sensor could not be found.')
 
     def __init__(self, fps):
-
         critical_temps = [x.critical for x in self.get_core_temps()]
         # set the maximum to the average critical temperature of all cores
         # in the tests so far, the critical temperature of all cores has
@@ -329,7 +329,7 @@ class ProcessTracker():
                         # an AccessDenied error might occur if permon is not
                         # allowed to view the stats of distinct processes
                         # in that case, stop the process tracker thread
-                        self._stop = True
+                        break
 
                     if name not in _processes:
                             _processes[name] = {
