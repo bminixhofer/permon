@@ -2,7 +2,6 @@ import time
 import re
 import os
 import threading
-from collections import defaultdict
 import subprocess
 import psutil
 from permon.backend import Stat
@@ -309,7 +308,6 @@ class ProcessTracker():
             self._stop = False
             self._stopped = False
             self.processes = {}
-            self.contributors = defaultdict(lambda: [])
 
             # start a thread for continuously reading all processes
             self._thread = threading.Thread(target=self._read_processes)
@@ -324,23 +322,29 @@ class ProcessTracker():
 
                 for proc in iterator:
                     name = re.split(r'[\W\s]+', proc.name())[0]
+                    try:
+                        proc_cpu_usage = proc.cpu_percent()
+                        proc_memory = proc.memory_info().vms
+                    except psutil._exceptions.AccessDenied:
+                        # an AccessDenied error might occur if permon is not
+                        # allowed to view the stats of distinct processes
+                        # in that case, stop the process tracker thread
+                        self._stop = True
+
                     if name not in _processes:
-                        _processes[name] = {
-                            'cpu': proc.cpu_percent(),
-                            'ram': proc.memory_info().vms
-                        }
+                            _processes[name] = {
+                                'cpu': proc_cpu_usage,
+                                'ram': proc_memory
+                            }
                     else:
-                        _processes[name]['cpu'] += proc.cpu_percent()
-                        _processes[name]['ram'] += proc.memory_info().vms
+                        _processes[name]['cpu'] += proc_cpu_usage
+                        _processes[name]['ram'] += proc_memory
 
                     # sleep for a short time to allow the UI thread to continue
                     if self._stop:
                         break
                     time.sleep(0.02)
 
-                # used_memory = psutil.virtual_memory().used / 1000**2
-                self.contributors['cpu'] = self.get_contributors('cpu')
-                self.contributors['ram'] = self.get_contributors('ram')
                 self.processes = _processes
 
             self._stopped = True
@@ -352,10 +356,18 @@ class ProcessTracker():
             If adapt_to is not None, scale the contributors such that
             their sum is equal to adapt_to.
             """
+            if not self.processes:
+                return []
+
             processes = self.processes.items()
             contributors = sorted(processes, key=lambda proc: proc[1][tag],
                                   reverse=True)
-            contributors = [[key, value[tag]] for key, value in contributors]
+            contributors = [[key, value[tag]] for key, value in contributors
+                            if value[tag] != 0]
+            # if there are contributors but all of them are zero
+            # return early too
+            if len(contributors) == 0:
+                return []
 
             if adapt_to is not None:
                 value_sum = max(sum(x[1] for x in contributors), 1e-6)
@@ -366,6 +378,7 @@ class ProcessTracker():
                 # into one
                 remainder = adapt_to - sum(x[1] for x in contributors[:n-1])
                 contributors.insert(0, ['other', remainder])
+
             return contributors[:n]
 
     def delete_instance(self):

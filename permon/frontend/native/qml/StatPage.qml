@@ -196,7 +196,7 @@ Page {
                 onTriggered: {
                     timeline++;
 
-                    if(model.value == null) {
+                    if(model.tag == null) {
                         return;
                     }
                     values.push(model.value);
