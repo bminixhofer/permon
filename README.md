@@ -10,7 +10,7 @@ See [permon's website](https://bminixhofer.github.io/permon) for a short overvie
 
 See the [user documentation](https://bminixhofer.github.io/permon/userdoc) for details.
 
-If you want to help or want an insight into how permon is structured, check out the [contributor documentation](https://bminixhofer.github.io/permon/contributordoc).
+If you want to contribute or get an insight into how permon is structured, check out the [contributor documentation](https://bminixhofer.github.io/permon/contributordoc).
 
 ## License
 

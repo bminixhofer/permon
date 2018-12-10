@@ -10,7 +10,8 @@ else
     exit 1
 fi
 # build and lint the project
-${PROJECT_ROOT}/bin/build.sh
+${PROJECT_ROOT}/bin/build-browser.sh
+${PROJECT_ROOT}/bin/build-docs.sh "-A release_url=https://bminixhofer.github.io/permon/"
 ${PROJECT_ROOT}/bin/lint.sh
 # add build directories
 git add ${PROJECT_ROOT}/docs/
