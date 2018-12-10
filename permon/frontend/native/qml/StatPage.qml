@@ -196,6 +196,9 @@ Page {
                 onTriggered: {
                     timeline++;
 
+                    if(model.value == null) {
+                        return;
+                    }
                     values.push(model.value);
                     values.shift();
                     series.append(timeline, values[model.bufferSize - 1]);
@@ -217,11 +220,13 @@ Page {
 
                     var agg = 0;
                     var paddingLeft = '\u00A0';
-                    model.contributors.forEach(function(contributor, index) {
-                        agg += contributor[1];
-                        contributorAxis.append(paddingLeft + contributor[0], agg);
-                    });
-                    contributorAxis.append('<font color="white">' + '\u00A0'.repeat(statPage.rightMargin) + '</font>', contributorAxis.max + 1);
+                    if(model.contributors) {
+                        model.contributors.forEach(function(contributor, index) {
+                            agg += contributor[1];
+                            contributorAxis.append(paddingLeft + contributor[0], agg);
+                            });
+                        contributorAxis.append('<font color="white">' + '\u00A0'.repeat(statPage.rightMargin) + '</font>', contributorAxis.max + 1);
+                    }
 
                     if(model.maximum == null || model.minimum == null) {
                         var dataMax = Math.max.apply(null, values);
