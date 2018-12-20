@@ -1,15 +1,11 @@
 import os
+import sys
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 from importlib import util
 import logging
 from permon import exceptions, backend, config
-
-# support pip 9 and pip >= 10
-try:
-    from pip import main as pipmain
-except ImportError:
-    from pip._internal import main as pipmain
+import subprocess
 
 
 class Monitor(ABC):
@@ -65,7 +61,14 @@ class MonitorApp(ABC):
                            'not installed. Install? (y)es / (n)o: ')
 
             if choice.lower() in ['y', 'yes']:
-                pipmain(['install', package_name])
+                pipargs = ['pip', 'install', package_name]
+                command_str = ' '.join(pipargs)
+
+                return_code = subprocess.call(pipargs)
+                if return_code != 0:
+                    logging.error(f'"{command_str}" failed. '
+                                  f'Please install {package_name} manually.')
+                    sys.exit(return_code)
             else:
                 raise exceptions.FrontendNotAvailableError(
                     f'{package_name} is not installed.')
