@@ -12,6 +12,10 @@
     "webpack": "^4.25.1"
   },
   "devDependencies": {
+    "@babel/core": "^7.2.2",
+    "@babel/preset-env": "^7.2.3",
+    "@babel/preset-react": "^7.0.0",
+    "babel-loader": "^8.0.4",
     "clean-webpack-plugin": "^1.0.0",
     "css-loader": "^1.0.1",
     "eslint": "^5.7.0",
@@ -40,6 +44,7 @@
   ],
   "author": "bminixhofer",
   "license": "MIT",
+  "browserslist": "> 0.25%, not dead",
   "bugs": {
     "url": "https://github.com/bminixhofer/permon/issues"
   },

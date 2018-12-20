@@ -110,7 +110,11 @@ class BrowserApp(MonitorApp):
         return flask.send_from_directory('static', 'login.html')
 
     def _post_login(self):
-        password = flask.request.get_json()['password']
+        json_content = flask.request.get_json()
+        if not json_content:
+            return flask.Response(status=400)
+
+        password = json_content['password']
         if password == self.password_hash:
             flask_login.login_user(self.user)
             return flask.redirect('/')
