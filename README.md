@@ -12,6 +12,16 @@ See the [user documentation](https://bminixhofer.github.io/permon/userdoc) for d
 
 If you want to contribute or get an insight into how permon is structured, check out the [contributor documentation](https://bminixhofer.github.io/permon/contributordoc).
 
+## Quickstart
+
+| Task | Command |
+|---|---|
+| Install permon | `pip install permon` |
+| Run terminal frontend | `permon terminal` |
+| Run native frontend | `permon native` |
+| Run browser frontend | `permon browser` |
+| Everything else | `permon --help` |
+
 ## License
 
 This project uses the MIT License - see the [LICENSE](LICENSE) file for details.

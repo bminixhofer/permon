@@ -334,6 +334,8 @@ class ProcessTracker():
                         _processes[name]['ram'] += proc.memory_info().vms
 
                     # sleep for a short time to allow the UI thread to continue
+                    if self._stop:
+                        break
                     time.sleep(0.02)
 
                 # used_memory = psutil.virtual_memory().used / 1000**2
