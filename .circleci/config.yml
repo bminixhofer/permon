@@ -13,6 +13,7 @@ jobs:
     working_directory: ~/repo
     branches:
       only:
+        - master
         - dev
 
     steps:
