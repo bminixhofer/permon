@@ -1,6 +1,6 @@
 # permon
 
-[![CircleCI](https://circleci.com/gh/bminixhofer/permon/tree/dev.svg?style=svg)](https://circleci.com/gh/bminixhofer/permon/tree/dev)
+[![CircleCI](https://circleci.com/gh/bminixhofer/permon.svg?style=svg)](https://circleci.com/gh/bminixhofer/permon)
 [![codecov](https://codecov.io/gh/bminixhofer/permon/branch/dev/graph/badge.svg)](https://codecov.io/gh/bminixhofer/permon)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/aeb0088ce100440f9077e1da6c6ca4f6)](https://www.codacy.com/app/bminixhofer/permon?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=bminixhofer/permon&amp;utm_campaign=Badge_Grade)
 

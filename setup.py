@@ -9,7 +9,7 @@ from setuptools import setup, Command, find_packages
 
 # Package meta-data.
 NAME = 'permon'
-DESCRIPTION = 'A tool to view GPU, CPU, RAM and disk performance in a clear, uncluttered way.'  # noqa: E501
+DESCRIPTION = 'A tool to monitor everything you want. Clean, simple, extensible and in one place.'  # noqa: E501
 URL = 'https://github.com/bminixhofer/permon'
 EMAIL = 'bminixhofer@gmail.com'
 AUTHOR = 'Benjamin Minixhofer'
