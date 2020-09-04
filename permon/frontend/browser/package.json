@@ -8,7 +8,7 @@
     "clone": "^2.1.2",
     "echarts": "^4.2.0-rc.2",
     "js-sha256": "^0.9.0",
-    "node-sass": "^4.10.0",
+    "node-sass": "^4.13.1",
     "webpack": "^4.25.1"
   },
   "devDependencies": {
